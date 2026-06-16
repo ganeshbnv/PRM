@@ -79,7 +79,7 @@ export function PageEditPage() {
     );
   }
 
-  if (!page) return <div className="p-8 text-gray-500">Page not found</div>;
+  if (!page) return <div className="p-8 text-slate-500">Page not found</div>;
 
   const isPrivate = page.isPrivate;
 
@@ -95,7 +95,7 @@ export function PageEditPage() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className={cn(
             'text-xs',
-            saveStatus === 'saving' ? 'text-gray-400' :
+            saveStatus === 'saving' ? 'text-slate-400' :
             saveStatus === 'saved' ? 'text-green-600' :
             saveStatus === 'error' ? 'text-red-500' : 'text-transparent'
           )}>
@@ -126,7 +126,7 @@ export function PageEditPage() {
               'flex items-center gap-1 px-2 py-1.5 rounded text-sm transition-colors',
               isPrivate
                 ? 'text-amber-600 hover:bg-amber-50'
-                : 'text-gray-500 hover:bg-gray-100'
+                : 'text-slate-500 hover:bg-surface-muted'
             )}
           >
             {isPrivate ? <Lock size={14} /> : <Globe size={14} />}
@@ -135,7 +135,7 @@ export function PageEditPage() {
 
           <button
             onClick={() => navigate(`/spaces/${spaceKey}/${pageId}`)}
-            className="flex items-center gap-1 px-2 py-1.5 rounded text-gray-600 hover:bg-gray-100 text-sm transition-colors"
+            className="flex items-center gap-1 px-2 py-1.5 rounded text-slate-600 hover:bg-surface-muted text-sm transition-colors"
           >
             <Eye size={14} />Preview
           </button>
@@ -154,7 +154,7 @@ export function PageEditPage() {
           value={title}
           onChange={onTitleChange}
           placeholder="Untitled"
-          className="flex-1 text-3xl font-bold text-gray-900 border-none outline-none bg-transparent placeholder:text-gray-300"
+          className="flex-1 text-3xl font-bold text-slate-900 border-none outline-none bg-transparent placeholder:text-slate-300"
         />
       </div>
 

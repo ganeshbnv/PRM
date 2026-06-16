@@ -57,42 +57,42 @@ export function SpacePage() {
   if (loading) {
     return (
       <div className="flex h-full">
-        <div className="w-64 border-r p-4 space-y-2">
-          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8" />)}
+        <div className="w-60 border-r border-surface-border p-3 space-y-1">
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-7 rounded-lg" />)}
         </div>
         <div className="flex-1 p-8">
-          <Skeleton className="h-8 w-64 mb-4" />
-          <Skeleton className="h-4 w-full mb-2" />
-          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-8 w-64 mb-4 rounded-lg" />
+          <Skeleton className="h-4 w-full mb-2 rounded" />
+          <Skeleton className="h-4 w-3/4 rounded" />
         </div>
       </div>
     );
   }
 
-  if (!space) return <div className="p-8 text-gray-500">Space not found</div>;
+  if (!space) return <div className="p-8 text-slate-500">Space not found</div>;
 
   return (
     <div className="flex h-full">
       {/* Page tree panel */}
-      <div className="w-60 border-r flex flex-col flex-shrink-0 overflow-hidden">
-        <div className="p-3 border-b flex items-center justify-between">
+      <div className="w-60 border-r border-surface-border flex flex-col flex-shrink-0 overflow-hidden bg-surface-subtle">
+        <div className="px-3 py-2.5 border-b border-surface-border flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xl">{space.iconEmoji}</span>
-            <span className="font-medium text-sm text-gray-900 truncate">{space.name}</span>
+            <span className="text-lg leading-none">{space.iconEmoji}</span>
+            <span className="font-semibold text-sm text-slate-800 truncate">{space.name}</span>
           </div>
           <button
             onClick={createRootPage}
-            className="p-1 rounded hover:bg-gray-100 text-gray-400 flex-shrink-0"
+            className="p-1.5 rounded-lg hover:bg-surface-border text-slate-400 hover:text-slate-600 flex-shrink-0 transition-colors"
             title="New page"
           >
-            <Plus size={14} />
+            <Plus size={13} />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           {tree.length === 0 ? (
-            <div className="py-8 text-center">
-              <p className="text-xs text-gray-400 mb-2">No pages yet</p>
-              <button onClick={createRootPage} className="text-xs text-brand-600 hover:underline">
+            <div className="py-10 text-center px-4">
+              <p className="text-xs text-slate-400 mb-2">No pages yet</p>
+              <button onClick={createRootPage} className="text-xs text-brand-600 font-medium hover:underline">
                 Create first page
               </button>
             </div>
@@ -109,23 +109,27 @@ export function SpacePage() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-white">
         <Outlet context={{ space, tree, setTree }} />
         {/* Default view when no page is selected */}
         {!window.location.pathname.includes('/spaces/' + spaceKey + '/') && (
-          <div className="p-8">
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-3xl">{space.iconEmoji}</span>
-                <h1 className="text-2xl font-bold text-gray-900">{space.name}</h1>
+          <div className="p-10 max-w-2xl">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-50 to-brand-100 flex items-center justify-center text-2xl border border-brand-100 shadow-sm">
+                {space.iconEmoji}
               </div>
-              {space.description && <p className="text-gray-500">{space.description}</p>}
+              <div>
+                <h1 className="text-heading-lg">{space.name}</h1>
+                {space.description && (
+                  <p className="text-slate-500 text-sm mt-0.5">{space.description}</p>
+                )}
+              </div>
             </div>
             {tree.length === 0 && (
               <EmptyState
-                icon={<FileText size={40} />}
+                icon={<FileText size={36} />}
                 title="This space is empty"
-                description="Create your first page to get started documenting."
+                description="Create your first page to start documenting."
                 action={{ label: 'Create first page', onClick: createRootPage }}
               />
             )}

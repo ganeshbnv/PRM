@@ -120,10 +120,10 @@ function PageTreeItem({ node, spaceKey, depth, onPageCreated, onPageDeleted, onP
     <li>
       <div
         className={cn(
-          'flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer group transition-colors text-sm',
+          'flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer group transition-all text-sm',
           isActive
-            ? 'bg-brand-50 text-brand-700'
-            : 'text-gray-700 hover:bg-gray-100'
+            ? 'bg-brand-50 text-brand-700 font-medium'
+            : 'text-slate-600 hover:bg-surface-muted hover:text-slate-900'
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
         onMouseEnter={() => setHovered(true)}
@@ -142,7 +142,7 @@ function PageTreeItem({ node, spaceKey, depth, onPageCreated, onPageDeleted, onP
         </button>
 
         {/* Folder vs page icon */}
-        <span className={cn('flex-shrink-0', isActive ? 'text-brand-500' : 'text-gray-400')}>
+        <span className={cn('flex-shrink-0', isActive ? 'text-brand-500' : 'text-slate-400')}>
           {hasChildren
             ? expanded
               ? <FolderOpen size={14} />
@@ -160,7 +160,7 @@ function PageTreeItem({ node, spaceKey, depth, onPageCreated, onPageDeleted, onP
             onBlur={commitRename}
             onKeyDown={handleRenameKey}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 text-sm bg-white border border-brand-300 rounded px-1 py-0 outline-none min-w-0"
+            className="flex-1 text-sm bg-white border border-brand-400 rounded-md px-1.5 py-0.5 outline-none ring-2 ring-brand-200 min-w-0"
           />
         ) : (
           <span className="truncate flex-1">{node.title}</span>
@@ -171,7 +171,7 @@ function PageTreeItem({ node, spaceKey, depth, onPageCreated, onPageDeleted, onP
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               onClick={handleAddChild}
-              className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 text-gray-400"
+              className="w-5 h-5 flex items-center justify-center rounded hover:bg-surface-border text-slate-400"
               title="Add child page"
             >
               <Plus size={12} />
@@ -181,7 +181,7 @@ function PageTreeItem({ node, spaceKey, depth, onPageCreated, onPageDeleted, onP
             <div className="relative" ref={menuRef}>
               <button
                 onClick={(e) => { e.stopPropagation(); setShowMenu((v) => !v); }}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 text-gray-400"
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-surface-border text-slate-400"
                 title="More options"
               >
                 <MoreHorizontal size={12} />

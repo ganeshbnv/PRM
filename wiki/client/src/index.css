@@ -3,33 +3,99 @@
 @tailwind utilities;
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   html {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    color: #0f172a;
+    background: #ffffff;
+  }
+
+  body {
+    @apply text-slate-800;
+  }
+
+  /* ── Scrollbar ──────────────────────────────────────────── */
+  ::-webkit-scrollbar           { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track     { background: transparent; }
+  ::-webkit-scrollbar-thumb     { @apply bg-slate-200 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-300; }
+
+  /* dark context scrollbars (sidebar) */
+  .scrollbar-dark::-webkit-scrollbar-thumb     { @apply bg-slate-700; }
+  .scrollbar-dark::-webkit-scrollbar-thumb:hover { @apply bg-slate-600; }
+
+  /* ── Focus ring ─────────────────────────────────────────── */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-1;
   }
 }
 
-/* Tiptap prose styles */
-.prose .ProseMirror {
-  outline: none;
+@layer components {
+  /* ── Typography helpers ─────────────────────────────────── */
+  .text-heading-xl  { @apply text-3xl   font-bold   tracking-tight text-slate-900; }
+  .text-heading-lg  { @apply text-2xl   font-bold   tracking-tight text-slate-900; }
+  .text-heading-md  { @apply text-lg    font-semibold text-slate-900; }
+  .text-heading-sm  { @apply text-base  font-semibold text-slate-900; }
+  .text-label       { @apply text-xs    font-semibold uppercase tracking-widest text-slate-500; }
+  .text-body        { @apply text-sm    leading-relaxed text-slate-700; }
+  .text-muted       { @apply text-xs    text-slate-500; }
+
+  /* ── Card ───────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-xl border border-surface-border shadow-card;
+  }
+  .card-hover {
+    @apply card transition-all duration-150 hover:shadow-card-hover hover:border-brand-200;
+  }
+
+  /* ── Badge ──────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium;
+  }
+  .badge-indigo { @apply badge bg-brand-50 text-brand-700; }
+  .badge-green  { @apply badge bg-green-50 text-green-700; }
+  .badge-amber  { @apply badge bg-amber-50 text-amber-700; }
+  .badge-red    { @apply badge bg-red-50   text-red-700;   }
 }
 
-.prose h1 { @apply text-3xl font-bold text-gray-900 mt-8 mb-4; }
-.prose h2 { @apply text-2xl font-semibold text-gray-900 mt-6 mb-3; }
-.prose h3 { @apply text-xl font-semibold text-gray-900 mt-5 mb-2; }
-.prose p { @apply text-gray-700 leading-relaxed mb-3; }
-.prose ul { @apply list-disc list-inside space-y-1 mb-3; }
-.prose ol { @apply list-decimal list-inside space-y-1 mb-3; }
-.prose blockquote { @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4; }
-.prose pre { @apply bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto my-4 text-sm; }
-.prose code:not(pre code) { @apply bg-gray-100 text-gray-800 rounded px-1.5 py-0.5 text-sm; }
-.prose table { @apply w-full border-collapse border border-gray-300 my-4; }
-.prose th { @apply border border-gray-300 px-3 py-2 bg-gray-50 font-semibold text-left; }
-.prose td { @apply border border-gray-300 px-3 py-2; }
-.prose img { @apply rounded-lg max-w-full my-4; }
-.prose hr { @apply border-gray-200 my-6; }
-.prose a { @apply text-blue-600 underline hover:text-blue-800; }
+/* ── Prose (rich text editor/viewer) ───────────────────────── */
+.prose .ProseMirror { outline: none; }
+
+.prose h1 { @apply text-3xl font-bold text-slate-900 mt-8 mb-4 tracking-tight; }
+.prose h2 { @apply text-2xl font-semibold text-slate-900 mt-7 mb-3 tracking-tight; }
+.prose h3 { @apply text-xl  font-semibold text-slate-900 mt-5 mb-2; }
+.prose p  { @apply text-slate-700 leading-7 mb-4; }
+.prose ul { @apply list-disc list-inside space-y-1.5 mb-4 text-slate-700; }
+.prose ol { @apply list-decimal list-inside space-y-1.5 mb-4 text-slate-700; }
+.prose li { @apply leading-relaxed; }
+
+.prose blockquote {
+  @apply border-l-4 border-brand-300 pl-5 italic text-slate-600 my-5 bg-brand-50 py-2 pr-4 rounded-r-lg;
+}
+
+.prose pre {
+  @apply bg-slate-900 text-slate-100 rounded-xl p-5 overflow-x-auto my-5 text-sm leading-relaxed;
+}
+.prose code:not(pre code) {
+  @apply bg-slate-100 text-brand-700 rounded px-1.5 py-0.5 text-sm font-mono;
+}
+
+.prose table   { @apply w-full border-collapse my-5 text-sm; }
+.prose th      { @apply border border-surface-border px-4 py-2.5 bg-surface-muted font-semibold text-left text-slate-700; }
+.prose td      { @apply border border-surface-border px-4 py-2.5 text-slate-700; }
+.prose img     { @apply rounded-xl max-w-full my-5 shadow-card; }
+.prose hr      { @apply border-surface-border my-8; }
+.prose a       { @apply text-brand-600 underline decoration-brand-200 hover:text-brand-700 hover:decoration-brand-400 transition-colors; }
+.prose strong  { @apply font-semibold text-slate-900; }
 
 /* Task list */
-.prose ul[data-type="taskList"] { @apply list-none pl-0; }
-.prose ul[data-type="taskList"] li { @apply flex items-start gap-2; }
-.prose ul[data-type="taskList"] li input[type="checkbox"] { @apply mt-0.5 rounded; }
+.prose ul[data-type="taskList"]         { @apply list-none pl-0; }
+.prose ul[data-type="taskList"] li      { @apply flex items-start gap-2; }
+.prose ul[data-type="taskList"] li input[type="checkbox"] { @apply mt-0.5 accent-brand-600 rounded; }

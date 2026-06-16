@@ -101,7 +101,7 @@ export function PageViewPage() {
     );
   }
 
-  if (!page) return <div className="p-8 text-gray-500">Page not found</div>;
+  if (!page) return <div className="p-8 text-slate-500">Page not found</div>;
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -123,8 +123,8 @@ export function PageViewPage() {
                 <button
                   onClick={() => setShowExport((v) => !v)}
                   className={cn(
-                    'flex items-center gap-1 px-2.5 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 text-sm transition-colors',
-                    showExport && 'bg-gray-100'
+                    'flex items-center gap-1 px-2.5 py-1.5 rounded-md text-slate-600 hover:bg-surface-muted text-sm transition-colors',
+                    showExport && 'bg-surface-muted'
                   )}
                   title="Export"
                 >
@@ -136,13 +136,13 @@ export function PageViewPage() {
                   <div className="absolute right-0 top-full mt-1 w-36 bg-white border rounded-lg shadow-lg z-20 py-1">
                     <button
                       onClick={exportAsPDF}
-                      className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-surface-subtle transition-colors"
                     >
                       <FileText size={13} />PDF
                     </button>
                     <button
                       onClick={exportAsWord}
-                      className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-surface-subtle transition-colors"
                     >
                       <FileText size={13} />Word (.doc)
                     </button>
@@ -152,14 +152,14 @@ export function PageViewPage() {
 
               <button
                 onClick={() => setSidePanel((v) => v === 'history' ? null : 'history')}
-                className={cn('p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors', sidePanel === 'history' && 'bg-gray-100')}
+                className={cn('p-2 rounded-md text-slate-500 hover:bg-surface-muted transition-colors', sidePanel === 'history' && 'bg-surface-muted')}
                 title="Version history"
               >
                 <History size={16} />
               </button>
               <button
                 onClick={() => setSidePanel((v) => v === 'comments' ? null : 'comments')}
-                className={cn('p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors relative', sidePanel === 'comments' && 'bg-gray-100')}
+                className={cn('p-2 rounded-md text-slate-500 hover:bg-surface-muted transition-colors relative', sidePanel === 'comments' && 'bg-surface-muted')}
                 title="Comments"
               >
                 <MessageSquare size={16} />
@@ -181,7 +181,7 @@ export function PageViewPage() {
           {/* Title */}
           <div className="mb-4 flex items-center gap-3">
             <span className="text-4xl">{page.emoji}</span>
-            <h1 className="text-3xl font-bold text-gray-900">{page.title}</h1>
+            <h1 className="text-heading-xl">{page.title}</h1>
           </div>
 
           <PageMetadata page={page} />
@@ -191,7 +191,7 @@ export function PageViewPage() {
             <button
               onClick={() => setExpanded((v) => !v)}
               title={expanded ? 'Collapse to reading width' : 'Expand to full width'}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors text-xs"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-surface-border text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-surface-subtle transition-colors text-xs"
             >
               <ChevronsLeftRight size={14} />
               {expanded ? 'Collapse' : 'Expand'}
@@ -207,13 +207,13 @@ export function PageViewPage() {
 
       {/* Side panel */}
       {sidePanel && (
-        <div className="w-80 border-l flex-shrink-0 overflow-y-auto p-4">
+        <div className="w-80 border-l border-surface-border flex-shrink-0 overflow-y-auto p-4 bg-surface-subtle">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-gray-900">
+            <h3 className="text-heading-sm">
               {sidePanel === 'comments' ? 'Comments' : 'History'}
             </h3>
-            <button onClick={() => setSidePanel(null)} className="p-1 rounded hover:bg-gray-100 text-gray-400">
-              <ChevronRight size={14} />
+            <button onClick={() => setSidePanel(null)} className="p-1.5 rounded-lg hover:bg-surface-border text-slate-400 transition-colors">
+              <ChevronRight size={13} />
             </button>
           </div>
           {sidePanel === 'comments' && <CommentsPanel pageId={page.id} />}
