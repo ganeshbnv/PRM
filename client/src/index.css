@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-gray-100 antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-border rounded-full;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-card border border-surface-border rounded-xl p-4;
+  }
+
+  .btn {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand-600 hover:bg-brand-700 text-white;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent hover:bg-surface-elevated text-gray-300 hover:text-white;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold;
+  }
+
+  .badge-critical { @apply badge bg-red-900/60 text-red-300 border border-red-700/50; }
+  .badge-high     { @apply badge bg-orange-900/60 text-orange-300 border border-orange-700/50; }
+  .badge-medium   { @apply badge bg-yellow-900/60 text-yellow-300 border border-yellow-700/50; }
+  .badge-low      { @apply badge bg-blue-900/60 text-blue-300 border border-blue-700/50; }
+}
