@@ -20,6 +20,7 @@ import { searchRouter } from './routes/search';
 import { notificationsRouter } from './routes/notifications';
 import { aiRouter } from './routes/ai';
 import { attachmentsRouter, UPLOADS_DIR } from './routes/attachments';
+import { usersRouter } from './routes/users';
 
 const app = express();
 const httpServer = createServer(app);
@@ -55,6 +56,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api', attachmentsRouter);
+app.use('/api/users', usersRouter);
 app.use('/api/uploads', express.static(UPLOADS_DIR));
 
 app.use(errorHandler);

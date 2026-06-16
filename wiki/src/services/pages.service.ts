@@ -6,6 +6,7 @@ const PAGE_SELECT = {
   title: true,
   status: true,
   emoji: true,
+  isPrivate: true,
   position: true,
   createdAt: true,
   updatedAt: true,
@@ -68,14 +69,12 @@ export async function getPage(pageId: string, userId: string) {
   });
   if (!page) throw Errors.notFound('Page');
 
-  // Record view
+  // Record view (non-critical)
   await prisma.pageView.upsert({
     where: { id: `${pageId}:${userId}` },
     update: { viewedAt: new Date() },
     create: { id: `${pageId}:${userId}`, pageId, userId },
-  }).catch(() => {
-    // non-critical
-  });
+  }).catch(() => {});
 
   return page;
 }
@@ -83,7 +82,7 @@ export async function getPage(pageId: string, userId: string) {
 export async function updatePage(
   userId: string,
   pageId: string,
-  data: Partial<{ title: string; content: string; status: string; emoji: string; parentId: string }>
+  data: Partial<{ title: string; content: string; status: string; emoji: string; parentId: string; isPrivate: boolean }>
 ) {
   const page = await prisma.page.findUnique({ where: { id: pageId } });
   if (!page) throw Errors.notFound('Page');
@@ -169,4 +168,34 @@ export async function getVersion(pageId: string, version: number) {
   });
   if (!v) throw Errors.notFound('Version');
   return v;
+}
+
+export async function getPageAccess(pageId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (prisma as any).pageAccess.findMany({
+    where: { pageId },
+    include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+    orderBy: { grantedAt: 'asc' },
+  });
+}
+
+export async function grantPageAccess(authorId: string, pageId: string, userId: string) {
+  const page = await prisma.page.findUnique({ where: { id: pageId } });
+  if (!page) throw Errors.notFound('Page');
+  if (page.creatorId !== authorId) throw Errors.forbidden('Only the page author can grant access');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (prisma as any).pageAccess.upsert({
+    where: { pageId_userId: { pageId, userId } },
+    update: {},
+    create: { pageId, userId },
+    include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+  });
+}
+
+export async function revokePageAccess(authorId: string, pageId: string, userId: string) {
+  const page = await prisma.page.findUnique({ where: { id: pageId } });
+  if (!page) throw Errors.notFound('Page');
+  if (page.creatorId !== authorId) throw Errors.forbidden('Only the page author can revoke access');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (prisma as any).pageAccess.deleteMany({ where: { pageId, userId } });
 }

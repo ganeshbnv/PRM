@@ -139,3 +139,36 @@ pagesRouter.get('/pages/:id/versions/:version', async (req: AuthRequest, res: Re
     next(err);
   }
 });
+
+// Page access management
+pagesRouter.get('/pages/:id/access', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const access = await pagesService.getPageAccess(req.params.id);
+    res.json(access);
+  } catch (err) {
+    next(err);
+  }
+});
+
+pagesRouter.post(
+  '/pages/:id/access',
+  [body('userId').isString().notEmpty()],
+  validate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const entry = await pagesService.grantPageAccess(req.user!.id, req.params.id, (req.body as { userId: string }).userId);
+      res.json(entry);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+pagesRouter.delete('/pages/:id/access/:userId', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    await pagesService.revokePageAccess(req.user!.id, req.params.id, req.params.userId);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});

@@ -25,6 +25,7 @@ model User {
   spaceMemberships SpaceMember[]
   labels           Label[]        @relation("LabelCreator")
   attachments      Attachment[]
+  pageAccesses     PageAccess[]
 }
 
 model Space {
@@ -64,6 +65,7 @@ model Page {
   contentText String    @default("")
   status      String    @default("draft")
   emoji       String    @default("📄")
+  isPrivate   Boolean   @default(false)
   position    Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -82,10 +84,24 @@ model Page {
   views       PageView[]
   labels      PageLabel[]
   attachments Attachment[]
+  pageAccess  PageAccess[]
 
   @@index([spaceId])
   @@index([parentId])
   @@index([creatorId])
+}
+
+model PageAccess {
+  id        String   @id @default(cuid())
+  grantedAt DateTime @default(now())
+
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, userId])
+  @@index([pageId])
 }
 
 model PageVersion {
