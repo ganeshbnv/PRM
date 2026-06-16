@@ -39,3 +39,10 @@ Thumbs.db
 
 # Misc
 *.docx
+
+# Wiki uploaded files (keep folder, ignore contents)
+wiki/uploads/*
+!wiki/uploads/.gitkeep
+
+# User data store (contains hashed passwords)
+server/data/users.json

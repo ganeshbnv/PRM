@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
-    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
-    "build": "npm run build --prefix server && npm run build --prefix client"
+    "dev": "concurrently --names \"server,wiki,client\" -c \"blue,green,cyan\" \"npm run dev --prefix server\" \"npm run dev --prefix wiki\" \"npm run dev --prefix client\"",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix wiki && npm install --prefix client",
+    "build": "npm run build --prefix server && npm run build --prefix wiki && npm run build --prefix client",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "wiki:migrate": "npm run db:migrate --prefix wiki"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
