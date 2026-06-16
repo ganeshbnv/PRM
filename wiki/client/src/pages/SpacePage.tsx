@@ -121,12 +121,14 @@ export function SpacePage() {
               </div>
               {space.description && <p className="text-gray-500">{space.description}</p>}
             </div>
-            <EmptyState
-              icon={<FileText size={40} />}
-              title="This space is empty"
-              description="Create your first page to get started documenting."
-              action={{ label: 'Create first page', onClick: createRootPage }}
-            />
+            {tree.length === 0 && (
+              <EmptyState
+                icon={<FileText size={40} />}
+                title="This space is empty"
+                description="Create your first page to get started documenting."
+                action={{ label: 'Create first page', onClick: createRootPage }}
+              />
+            )}
           </div>
         )}
       </div>
