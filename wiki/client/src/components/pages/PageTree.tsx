@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronRight, ChevronDown, Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MoreHorizontal, Pencil, Trash2, FileText, Folder, FolderOpen } from 'lucide-react';
 import type { PageTreeNode } from '../../types';
 import { pagesApi } from '../../api/pages';
 import { cn } from '../../utils/cn';
@@ -141,7 +141,15 @@ function PageTreeItem({ node, spaceKey, depth, onPageCreated, onPageDeleted, onP
           {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         </button>
 
-        <span className="flex-shrink-0 text-sm">{node.emoji}</span>
+        {/* Folder vs page icon */}
+        <span className={cn('flex-shrink-0', isActive ? 'text-brand-500' : 'text-gray-400')}>
+          {hasChildren
+            ? expanded
+              ? <FolderOpen size={14} />
+              : <Folder size={14} />
+            : <FileText size={14} />
+          }
+        </span>
 
         {/* Title or rename input */}
         {renaming ? (
