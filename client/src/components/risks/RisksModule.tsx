@@ -76,7 +76,7 @@ export function RisksModule() {
               onClick={() => setFilter(filter === s ? 'all' : s)}
             >
               <span className="text-xs text-gray-400 uppercase">{s}</span>
-              <span className={`text-3xl font-bold ${colorMap[s]}`}>{count}</span>
+              <span className={`text-2xl font-bold ${colorMap[s]}`}>{count}</span>
             </div>
           );
         })}

@@ -195,8 +195,8 @@ export function AiInsights({ project, team, iterationPath }: Props) {
               </RadialBarChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold" style={{ color: healthColor }}>{d.healthScore}</span>
-              <span className="text-label text-gray-500">/ 100</span>
+              <span className="text-2xl font-bold" style={{ color: healthColor }}>{d.healthScore}</span>
+              <span className="text-xs text-gray-500">/ 100</span>
             </div>
           </div>
           <span className="text-sm font-semibold" style={{ color: healthColor }}>{d.healthLabel}</span>
@@ -539,10 +539,10 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           <div className="flex items-end gap-4">
             <div className="flex flex-col">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-black text-white leading-none">{doneCount}</span>
+                <span className="text-2xl font-bold text-white leading-none">{doneCount}</span>
                 <span className="text-sm text-gray-600">/ {totalItems}</span>
               </div>
-              <span className="text-label text-gray-600 uppercase tracking-wide mt-1">items done</span>
+              <span className="text-xs text-gray-600 uppercase tracking-wide mt-1">items done</span>
             </div>
             {throughputPerDay > 0 && (
               <>
@@ -672,8 +672,8 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           {/* Big numbers */}
           <div className="flex items-end gap-4">
             <div className="flex flex-col">
-              <span className="text-3xl font-black text-white leading-none">{d.bugCount}</span>
-              <span className="text-label text-gray-600 uppercase tracking-wide mt-1">total bugs</span>
+              <span className="text-2xl font-bold text-white leading-none">{d.bugCount}</span>
+              <span className="text-xs text-gray-600 uppercase tracking-wide mt-1">total bugs</span>
             </div>
             <div className="flex flex-col mb-0.5">
               <span className={`text-xl font-black leading-none ${bugDensityPct > 20 ? 'text-red-400' : bugDensityPct > 10 ? 'text-yellow-400' : 'text-emerald-400'}`}>

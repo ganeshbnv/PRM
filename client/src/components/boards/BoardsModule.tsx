@@ -329,12 +329,12 @@ export function BoardsModule() {
               }}>
               <div className="absolute top-0 left-0 right-0 h-[3px]"
                 style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.25 }} />
-              <span className="text-label uppercase tracking-widest font-semibold mt-1.5"
+              <span className="text-xs uppercase tracking-wide font-semibold mt-1.5"
                 style={{ color: sel ? tile.color : '#64748b' }}>{tile.label}</span>
-              <span className="text-3xl font-black leading-none tabular-nums"
+              <span className="text-2xl font-bold leading-none tabular-nums"
                 style={{ color: sel ? tile.color : '#1e293b' }}>{tile.count}</span>
               {pct !== null && (
-                <span className="text-label font-medium" style={{ color: sel ? tile.color : '#94a3b8' }}>{pct}%</span>
+                <span className="text-xs font-medium" style={{ color: sel ? tile.color : '#94a3b8' }}>{pct}%</span>
               )}
             </button>
           );
@@ -629,7 +629,7 @@ function SprintBurndown({ sprint }: { sprint: SprintStats }) {
     <div className="rounded-xl border border-surface-border bg-surface-card p-5 flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <Tag>Burndown</Tag>
-        <span className="text-3xl font-black text-gray-900 tabular-nums">
+        <span className="text-2xl font-bold text-gray-900 tabular-nums">
           {pct}<span className="text-sm font-normal text-gray-500">%</span>
         </span>
       </div>
