@@ -54,6 +54,15 @@ export async function getMe(userId: string) {
   return user;
 }
 
+export async function updateProfile(userId: string, data: { name?: string; avatarUrl?: string }) {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data,
+    select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
+  });
+  return user;
+}
+
 async function issueTokens(userId: string) {
   const accessToken = signAccessToken(userId);
   const refreshToken = signRefreshToken(userId);

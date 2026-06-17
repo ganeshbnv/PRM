@@ -13,15 +13,25 @@ export default {
           900: '#1a2d8a',
         },
         surface: {
-          DEFAULT: '#0f1117',
-          card: '#1a1d27',
-          elevated: '#222536',
-          border: '#2d3148',
+          DEFAULT: '#0d0d10',
+          card: '#111114',
+          elevated: '#1a1a1f',
+          border: '#252530',
+          raised: '#222236',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+      },
+      keyframes: {
+        'pop-up': {
+          '0%':   { transform: 'scale(0.94) translateY(8px)', opacity: '0' },
+          '100%': { transform: 'scale(1)    translateY(0)',   opacity: '1' },
+        },
+      },
+      animation: {
+        'pop-up': 'pop-up 0.2s cubic-bezier(0.16, 1, 0.3, 1) both',
       },
     },
   },

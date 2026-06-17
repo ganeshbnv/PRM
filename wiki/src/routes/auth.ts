@@ -83,3 +83,19 @@ authRouter.get(
     }
   }
 );
+
+authRouter.patch(
+  '/me',
+  authenticate,
+  [body('name').optional().trim().isLength({ min: 1, max: 100 })],
+  validate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { name, avatarUrl } = req.body as { name?: string; avatarUrl?: string };
+      const user = await authService.updateProfile(req.user!.id, { name, avatarUrl });
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
+  }
+);

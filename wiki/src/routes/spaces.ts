@@ -79,6 +79,49 @@ spacesRouter.put(
   }
 );
 
+// List members
+spacesRouter.get('/:key/members', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    const members = await spacesService.getSpaceMembers(req.params.key);
+    res.json(members);
+  } catch (err) { next(err); }
+});
+
+// Add / update member
+spacesRouter.post('/:key/members',
+  authenticate,
+  [body('userId').isString().notEmpty(), body('role').isIn(['viewer', 'admin'])],
+  validate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { userId, role } = req.body as { userId: string; role: 'viewer' | 'admin' };
+      const member = await spacesService.setSpaceMember(req.user!.id, req.params.key, userId, role);
+      res.json(member);
+    } catch (err) { next(err); }
+  }
+);
+
+// Remove member
+spacesRouter.delete('/:key/members/:userId', authenticate, async (req: AuthRequest, res, next) => {
+  try {
+    await spacesService.removeSpaceMember(req.user!.id, req.params.key, req.params.userId);
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// Update space (isPrivate etc.)
+spacesRouter.patch('/:key',
+  authenticate,
+  [body('isPrivate').optional().isBoolean(), body('name').optional().trim()],
+  validate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const updated = await spacesService.updateSpace(req.user!.id, req.params.key, req.body as Partial<{ name: string; isPrivate: boolean; description: string; iconEmoji: string }>);
+      res.json(updated);
+    } catch (err) { next(err); }
+  }
+);
+
 spacesRouter.delete('/:key', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     await spacesService.deleteSpace(req.user!.id, req.params.key);

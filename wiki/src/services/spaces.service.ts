@@ -82,3 +82,36 @@ export async function deleteSpace(userId: string, key: string) {
   if (!member || member.role !== 'admin') throw Errors.forbidden();
   await prisma.space.delete({ where: { id: space.id } });
 }
+
+export async function getSpaceMembers(key: string) {
+  const space = await prisma.space.findUnique({ where: { key } });
+  if (!space) throw Errors.notFound('Space');
+  return prisma.spaceMember.findMany({
+    where: { spaceId: space.id },
+    include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+    orderBy: { joinedAt: 'asc' },
+  });
+}
+
+export async function setSpaceMember(requesterId: string, key: string, userId: string, role: 'viewer' | 'admin') {
+  const space = await prisma.space.findUnique({ where: { key } });
+  if (!space) throw Errors.notFound('Space');
+  const requesterMember = await prisma.spaceMember.findUnique({ where: { spaceId_userId: { spaceId: space.id, userId: requesterId } } });
+  if (!requesterMember || requesterMember.role !== 'admin') throw Errors.forbidden('Only space admins can manage members');
+  return prisma.spaceMember.upsert({
+    where: { spaceId_userId: { spaceId: space.id, userId } },
+    update: { role },
+    create: { spaceId: space.id, userId, role },
+    include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } },
+  });
+}
+
+export async function removeSpaceMember(requesterId: string, key: string, userId: string) {
+  const space = await prisma.space.findUnique({ where: { key } });
+  if (!space) throw Errors.notFound('Space');
+  // Don't remove the space creator
+  if (space.creatorId === userId) throw Errors.forbidden('Cannot remove the space owner');
+  const requesterMember = await prisma.spaceMember.findUnique({ where: { spaceId_userId: { spaceId: space.id, userId: requesterId } } });
+  if (!requesterMember || requesterMember.role !== 'admin') throw Errors.forbidden('Only space admins can manage members');
+  await prisma.spaceMember.deleteMany({ where: { spaceId: space.id, userId } });
+}

@@ -39,9 +39,31 @@ wikiClient.interceptors.response.use(
 );
 
 export interface WUser { id: string; name: string; email: string; avatarUrl?: string }
-export interface WSpace { id: string; name: string; key: string; description?: string; iconEmoji: string; isPrivate: boolean; _count?: { pages: number } }
-export interface WPageNode { id: string; title: string; emoji: string; parentId: string | null; position: number; children: WPageNode[] }
-export interface WPage { id: string; title: string; content: string; emoji: string; status: string; createdAt: string; updatedAt: string; spaceId: string; parentId?: string; creator: Pick<WUser, 'id' | 'name' | 'avatarUrl'>; space?: Pick<WSpace, 'id' | 'name' | 'key'> }
+export interface WSpace {
+  id: string; name: string; key: string; description?: string; iconEmoji: string; isPrivate: boolean;
+  updatedAt: string;
+  creator?: Pick<WUser, 'id' | 'name' | 'avatarUrl'>;
+  _count?: { pages: number };
+}
+export interface WPageNode { id: string; title: string; emoji: string; parentId: string | null; position: number; isFolder: boolean; children: WPageNode[] }
+export interface WPage {
+  id: string; title: string; content: string; emoji: string;
+  isPrivate?: boolean;
+  isFolder?: boolean;
+  status: string; createdAt: string; updatedAt: string; spaceId: string; parentId?: string;
+  creator: Pick<WUser, 'id' | 'name' | 'avatarUrl'>;
+  space?: Pick<WSpace, 'id' | 'name' | 'key'>
+}
+export interface WPageAccess {
+  id: string;
+  grantedAt: string;
+  role: 'view' | 'manage';
+  user: { id: string; name: string; email: string; avatarUrl?: string };
+}
+export interface WSpaceMember {
+  id: string; role: string; joinedAt: string;
+  user: Pick<WUser, 'id' | 'name' | 'email' | 'avatarUrl'>;
+}
 export interface WComment { id: string; body: string; isResolved: boolean; createdAt: string; author: Pick<WUser, 'id' | 'name' | 'avatarUrl'>; replies?: WComment[] }
 export interface WVersion { id: string; version: number; title: string; comment?: string; createdAt: string; author: Pick<WUser, 'id' | 'name'> }
 export interface WVersionDetail extends WVersion { content: string }
@@ -53,26 +75,47 @@ export const wikiAuth = {
   register: (email: string, name: string, password: string) =>
     wikiClient.post<{ user: WUser; tokens: { accessToken: string; refreshToken: string } }>('/auth/register', { email, name, password }).then(r => r.data),
   me: () => wikiClient.get<WUser>('/auth/me').then(r => r.data),
+  updateProfile: (data: { name?: string; avatarUrl?: string }) =>
+    wikiClient.patch<WUser>('/auth/me', data).then(r => r.data),
 };
 
 export const wikiSpaces = {
   list: () => wikiClient.get<WSpace[]>('/spaces').then(r => r.data),
   create: (data: { name: string; key: string; description?: string; iconEmoji?: string }) =>
     wikiClient.post<WSpace>('/spaces', data).then(r => r.data),
+  update: (key: string, data: { name?: string; isPrivate?: boolean; description?: string; iconEmoji?: string }) =>
+    wikiClient.patch<WSpace>(`/spaces/${key}`, data).then(r => r.data),
+  delete: (key: string) => wikiClient.delete(`/spaces/${key}`).then(r => r.data),
+  getMembers: (key: string) => wikiClient.get<WSpaceMember[]>(`/spaces/${key}/members`).then(r => r.data),
+  setMember: (key: string, userId: string, role: 'viewer' | 'admin') =>
+    wikiClient.post<WSpaceMember>(`/spaces/${key}/members`, { userId, role }).then(r => r.data),
+  removeMember: (key: string, userId: string) =>
+    wikiClient.delete(`/spaces/${key}/members/${userId}`).then(r => r.data),
 };
 
 export const wikiPages = {
   tree: (spaceKey: string) => wikiClient.get<WPageNode[]>(`/spaces/${spaceKey}/pages`).then(r => r.data),
   get: (id: string) => wikiClient.get<WPage>(`/pages/${id}`).then(r => r.data),
-  create: (spaceKey: string, data: { parentId?: string; title?: string }) =>
+  create: (spaceKey: string, data: { parentId?: string; title?: string; isFolder?: boolean }) =>
     wikiClient.post<WPage>(`/spaces/${spaceKey}/pages`, data).then(r => r.data),
-  update: (id: string, data: Partial<Pick<WPage, 'title' | 'content' | 'status' | 'emoji'>>) =>
+  update: (id: string, data: Partial<Pick<WPage, 'title' | 'content' | 'status' | 'emoji' | 'isPrivate'>>) =>
     wikiClient.put<WPage>(`/pages/${id}`, data).then(r => r.data),
   delete: (id: string) => wikiClient.delete(`/pages/${id}`).then(r => r.data),
   move: (id: string, parentId: string | null, position: number) =>
     wikiClient.patch(`/pages/${id}/move`, { parentId, position }).then(r => r.data),
   versions: (id: string) => wikiClient.get<WVersion[]>(`/pages/${id}/versions`).then(r => r.data),
   version: (id: string, v: number) => wikiClient.get<WVersionDetail>(`/pages/${id}/versions/${v}`).then(r => r.data),
+  getAccess: (id: string) => wikiClient.get<WPageAccess[]>(`/pages/${id}/access`).then(r => r.data),
+  grantAccess: (id: string, userId: string, role: 'view' | 'manage' = 'view') =>
+    wikiClient.post<WPageAccess>(`/pages/${id}/access`, { userId, role }).then(r => r.data),
+  updateAccessRole: (id: string, userId: string, role: 'view' | 'manage') =>
+    wikiClient.patch<WPageAccess>(`/pages/${id}/access/${userId}`, { role }).then(r => r.data),
+  revokeAccess: (id: string, userId: string) => wikiClient.delete(`/pages/${id}/access/${userId}`).then(r => r.data),
+};
+
+export const wikiUsers = {
+  list: () => wikiClient.get<WUser[]>('/users').then(r => r.data),
+  search: (q: string) => wikiClient.get<WUser[]>(`/users/search?q=${encodeURIComponent(q)}`).then(r => r.data),
 };
 
 export const wikiAttachments = {

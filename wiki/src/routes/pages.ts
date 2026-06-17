@@ -11,7 +11,7 @@ pagesRouter.use(authenticate);
 // Page tree for a space
 pagesRouter.get('/spaces/:key/pages', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const tree = await pagesService.getPageTree(req.params.key);
+    const tree = await pagesService.getPageTree(req.params.key, req.user!.id);
     res.json(tree);
   } catch (err) {
     next(err);
@@ -25,6 +25,7 @@ pagesRouter.post(
     body('title').optional().trim().isLength({ max: 300 }),
     body('content').optional().isString(),
     body('parentId').optional().isString(),
+    body('isFolder').optional().isBoolean(),
   ],
   validate,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -33,6 +34,7 @@ pagesRouter.post(
         parentId?: string;
         title?: string;
         content?: string;
+        isFolder?: boolean;
       });
       res.status(201).json(page);
     } catch (err) {
@@ -60,6 +62,7 @@ pagesRouter.put(
     body('status').optional().isIn(['draft', 'published', 'archived']),
     body('emoji').optional().isString(),
     body('parentId').optional().isString(),
+    body('isPrivate').optional().isBoolean(),
   ],
   validate,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -152,11 +155,35 @@ pagesRouter.get('/pages/:id/access', async (req: AuthRequest, res: Response, nex
 
 pagesRouter.post(
   '/pages/:id/access',
-  [body('userId').isString().notEmpty()],
+  [body('userId').isString().notEmpty(), body('role').optional().isIn(['view', 'manage'])],
   validate,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const entry = await pagesService.grantPageAccess(req.user!.id, req.params.id, (req.body as { userId: string }).userId);
+      const entry = await pagesService.grantPageAccess(
+        req.user!.id,
+        req.params.id,
+        (req.body as { userId: string; role?: string }).userId,
+        (req.body as { userId: string; role?: string }).role as 'view' | 'manage' | undefined,
+      );
+      res.json(entry);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+pagesRouter.patch(
+  '/pages/:id/access/:userId',
+  [body('role').isIn(['view', 'manage'])],
+  validate,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const entry = await pagesService.updatePageAccessRole(
+        req.user!.id,
+        req.params.id,
+        req.params.userId,
+        (req.body as { role: 'view' | 'manage' }).role,
+      );
       res.json(entry);
     } catch (err) {
       next(err);
