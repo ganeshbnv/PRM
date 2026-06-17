@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
   PanelLeftClose, PanelLeft,
-  Settings, Search, Layers, X, ChevronDown, LayoutDashboard,
+  Settings, Layers, X, ChevronDown, LayoutDashboard,
   Sun, Moon,
 } from 'lucide-react';
 import { FilterBar } from './components/common/FilterBar';
@@ -621,13 +621,6 @@ function Dashboard({ user }: { user: AuthUser }) {
           </div>
 
           <div className="flex-1" />
-
-          {/* Search hint */}
-          <button className="hidden md:flex items-center gap-2 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
-            <Search size={12} />
-            <span>Quick search…</span>
-            <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-200 text-label font-mono">⌘K</kbd>
-          </button>
 
 
           {/* Theme toggle */}
