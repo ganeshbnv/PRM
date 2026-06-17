@@ -281,50 +281,33 @@ export async function getAiInsights(
 
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      const prompt = `You are a senior engineering PM assistant embedded in a sprint intelligence dashboard. Produce a comprehensive, section-by-section analysis of the sprint. Be direct, data-driven, and surface non-obvious patterns. Use every number provided.
+      const prompt = `You are a sharp, opinionated engineering PM embedded in a live sprint dashboard. You have the numbers — your job is to interpret them, not repeat them. Spot patterns, flag risks, and give the PM one clear action per section.
 
 PROJECT: ${project} | TEAM: ${team}
-SPRINT: ${sprintName ?? 'Current'} | ${sprintDaysLeft ?? '?'} days left of ${sprintDaysTotal ?? '?'} (${sprintElapsedPct ?? '?'}% elapsed)
-
-COMPLETION:
-  Total: ${items.length} items | Done: ${resolved} (${completionRate}%) | Open: ${items.length - resolved}
-  Throughput: ${throughputPerDay} items/day actual vs ${neededPerDay ?? '?'} needed/day to finish
-
-WORK BREAKDOWN:
-  By type: ${Object.entries(itemsByType).map(([t,c]) => `${t}: ${c}`).join(', ')}
-  By state: ${Object.entries(stateCounts).map(([s,c]) => `${s}: ${c}`).join(', ')}
-
-QUALITY:
-  Open bugs: ${openBugs.length} | Bug density: ${bugDensityPct}% of all items
-  P1 unresolved: ${p1Unresolved.length} (${p1Unresolved.map(i => i.fields['System.Title']).slice(0,3).join('; ')})
-  P2 unresolved: ${p2Unresolved.length}
-
-RISKS:
-  Stale (3+ days no update): ${staleCount} items${staleItems.length > 0 ? ` — ${staleItems.map(i => i.fields['System.Title']).slice(0,3).join('; ')}` : ''}
-  Unassigned open: ${unassignedCount}
-  Active alerts: ${alerts.map(a => a.title).join('; ') || 'none'}
-
-TEAM:
-${topAssignees.map(a => `  ${a.name}: ${a.count} total, ${a.active} active, ${a.resolved} resolved`).join('\n')}
-
-VELOCITY:
-  Avg past velocity: ${avgVelocity ?? 'n/a'} pts/sprint | Trend: ${velocityTrend}
-  Past sprints: ${pastVelocities.join(', ') || 'no data'}
-
+SPRINT: ${sprintName ?? 'Current'} | ${sprintDaysLeft ?? '?'}d left of ${sprintDaysTotal ?? '?'}d (${sprintElapsedPct ?? '?'}% elapsed)
 HEALTH: ${healthScore}/100 — ${healthLabel}
 
-Write exactly 6 labeled sections. Each section should be 2–3 sentences with specific numbers and actionable insight. Use this exact format (section label in caps, em-dash separator):
-SPRINT PROGRESS — ...
-VELOCITY & PACE — ...
-QUALITY & TESTING — ...
-TEAM WORKLOAD — ...
-RISKS & BLOCKERS — ...
-RECOMMENDED ACTIONS — ...
+COMPLETION: ${resolved}/${items.length} done (${completionRate}%) | Throughput: ${throughputPerDay} items/day actual vs ${neededPerDay ?? '?'} needed
+WORK MIX: ${Object.entries(itemsByType).map(([t,c]) => `${t}:${c}`).join(', ')}
+STATES: ${Object.entries(stateCounts).map(([s,c]) => `${s}:${c}`).join(', ')}
+QUALITY: ${openBugs.length} open bugs (${bugDensityPct}% density) | P1 open: ${p1Unresolved.length} | P2 open: ${p2Unresolved.length}
+RISKS: ${staleCount} stale items | ${unassignedCount} unassigned | Alerts: ${alerts.map(a => a.title).join('; ') || 'none'}
+TEAM: ${topAssignees.map(a => `${a.name.split(' ')[0]}(${a.resolved}done/${a.active}wip)`).join(', ')}
+VELOCITY: avg ${avgVelocity ?? 'n/a'} pts | trend ${velocityTrend} | history: ${pastVelocities.join(',')||'none'}
 
-Be specific. Name individuals when relevant. Highlight what needs immediate PM attention.`;
+Rules:
+- Each section must contain a genuine insight or judgment, NOT a restatement of the numbers above.
+- Use exactly this format — section title in caps, em-dash, then your analysis on the same line:
+
+SPRINT PROGRESS — [What the completion rate actually means given time elapsed. Is the team ahead, behind, or on track? Why?]
+VELOCITY & PACE — [Is throughput sufficient to finish? What does the trend tell you about the team's momentum?]
+QUALITY & TESTING — [Interpret bug density and P1/P2 backlog — is quality improving or degrading? What's the risk if unchecked?]
+TEAM WORKLOAD — [Who is carrying the sprint? Any concentration risk or idle capacity? Name names.]
+RISKS & BLOCKERS — [What is the single biggest threat to sprint success? Be specific and direct.]
+RECOMMENDED ACTIONS — [Three concrete, prioritised actions the PM should take today. Be prescriptive.]`;
 
       const msg = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
       });
