@@ -155,7 +155,11 @@ function DomainInput({ value, onChange }: { value: string; onChange: (v: string)
       <input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value.replace(/[@\s]/g, ''))}
+        onChange={(e) => {
+          const val = e.target.value;
+          // If autofilled with a full email, keep only the part before @
+          onChange(val.includes('@') ? val.split('@')[0] : val.replace(/\s/g, ''));
+        }}
         required
         placeholder="yourname"
         style={{ width: inputWidth, minWidth: 4 }}
