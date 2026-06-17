@@ -463,69 +463,68 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
     <div className="rounded-2xl border border-surface-border overflow-hidden"
       style={{ background: 'linear-gradient(160deg,#0a0c16 0%,#0d1020 60%,#0a0c16 100%)' }}>
 
-      {/* ── Header: Health + AI Summary + Sprint timing ───────────────────────── */}
-      <div className="flex items-center gap-5 px-6 pt-5 pb-4 border-b border-surface-border">
-        {/* Radial health score */}
-        <div className="flex-shrink-0 relative w-[68px] h-[68px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%"
-              startAngle={90} endAngle={-270}
-              data={[{ value: d.healthScore, fill: healthColor }]}>
-              <RadialBar dataKey="value" cornerRadius={6} background={{ fill: '#1e2130' }} />
-            </RadialBarChart>
-          </ResponsiveContainer>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-xl font-black leading-none" style={{ color: healthColor }}>{d.healthScore}</span>
-            <span className="text-[8px] text-gray-600">/100</span>
-          </div>
-        </div>
+      {/* ── Header: meta row + full AI analysis ─────────────────────────────── */}
+      <div className="px-6 pt-5 pb-5 border-b border-surface-border flex flex-col gap-3">
 
-        {/* Label + sprint name + alert pills */}
-        <div className="flex-shrink-0 flex flex-col gap-1 min-w-[110px]">
-          <div className="flex items-center gap-1.5">
+        {/* Top bar: label · sprint name · status · timing · alerts · refresh */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-sm">🧠</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Intelligence</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Sprint Intelligence</span>
           </div>
-          <span className="text-sm font-bold leading-snug" style={{ color: healthColor }}>{d.healthLabel}</span>
-          {d.sprintName && <span className="text-[10px] text-gray-600 truncate max-w-[110px]">{d.sprintName}</span>}
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {critAlerts.length > 0 && (
-              <span className="text-[9px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                🔴 {critAlerts.length} critical
-              </span>
-            )}
-            {warnAlerts.length > 0 && (
-              <span className="text-[9px] font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                🟡 {warnAlerts.length} warn
-              </span>
-            )}
-            {critAlerts.length === 0 && warnAlerts.length === 0 && (
-              <span className="text-[9px] text-emerald-500">✅ Clear</span>
-            )}
-          </div>
+
+          {d.sprintName && (
+            <>
+              <span className="text-gray-700 flex-shrink-0">·</span>
+              <span className="text-xs text-gray-500 flex-shrink-0">{d.sprintName}</span>
+            </>
+          )}
+
+          {/* Health label — text badge only, no score */}
+          <span className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+            style={{ background: `${healthColor}18`, color: healthColor, border: `1px solid ${healthColor}35` }}>
+            {d.healthLabel}
+          </span>
+
+          <div className="flex-1" />
+
+          {/* Alert pills */}
+          {critAlerts.length > 0 && (
+            <span className="flex-shrink-0 text-[9px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">
+              🔴 {critAlerts.length} critical
+            </span>
+          )}
+          {warnAlerts.length > 0 && (
+            <span className="flex-shrink-0 text-[9px] font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full">
+              🟡 {warnAlerts.length} warnings
+            </span>
+          )}
+          {critAlerts.length === 0 && warnAlerts.length === 0 && (
+            <span className="flex-shrink-0 text-[9px] text-emerald-500 font-medium">✅ No alerts</span>
+          )}
+
+          {/* Sprint timing inline */}
+          {d.sprintDaysLeft !== null && d.sprintDaysTotal !== null && (
+            <div className="flex-shrink-0 flex items-center gap-2 pl-2 border-l border-surface-border">
+              <span className="text-sm font-bold text-white">{d.sprintDaysLeft}d left</span>
+              <div className="w-20 bg-surface rounded-full h-1.5">
+                <div className="h-1.5 rounded-full"
+                  style={{ width: `${d.sprintElapsedPct ?? 0}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
+              </div>
+              <span className="text-[10px] text-gray-600">{d.sprintElapsedPct}%</span>
+            </div>
+          )}
+
+          <button onClick={refresh}
+            className="flex-shrink-0 text-gray-600 hover:text-gray-300 text-sm transition-colors ml-1">↺</button>
         </div>
 
-        <div className="w-px h-12 bg-surface-border flex-shrink-0" />
-
-        {/* AI Summary text */}
-        <p className="flex-1 text-sm text-gray-300 leading-relaxed min-w-0">{d.summary}</p>
-
-        {/* Sprint timing */}
-        {d.sprintDaysLeft !== null && d.sprintDaysTotal !== null && (
-          <div className="flex-shrink-0 flex flex-col items-end gap-1.5 w-28">
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-white leading-none">{d.sprintDaysLeft}</span>
-              <span className="text-xs text-gray-600">days left</span>
-            </div>
-            <div className="w-full bg-surface rounded-full h-1.5">
-              <div className="h-1.5 rounded-full"
-                style={{ width: `${d.sprintElapsedPct ?? 0}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
-            </div>
-            <span className="text-[10px] text-gray-600">{d.sprintElapsedPct}% elapsed</span>
-          </div>
-        )}
-
-        <button onClick={refresh} className="flex-shrink-0 text-gray-600 hover:text-gray-300 text-sm transition-colors self-start mt-0.5">↺</button>
+        {/* AI Analysis — full width, multi-line */}
+        <div className="rounded-xl px-4 py-3.5 flex flex-col gap-2"
+          style={{ background: '#07080f', border: '1px solid #1c1f2e' }}>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">AI Analysis</span>
+          <p className="text-sm text-gray-200 leading-[1.75] whitespace-pre-line">{d.summary}</p>
+        </div>
       </div>
 
       {/* ── 3 perspectives ──────────────────────────────────────────────────────── */}
