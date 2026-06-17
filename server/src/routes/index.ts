@@ -127,6 +127,11 @@ router.get('/boards/ai-insights', wrap(async (req) => {
   const project = proj(req);
   const team = req.query.team as string | undefined ?? '';
   const iterationPath = req.query.iterationPath as string | undefined;
+
+  const cacheKey = `ai:${project}:${team}:${iterationPath ?? ''}`;
+  const cached = cacheStore.get(cacheKey);
+  if (cached) return cached;
+
   const [items, sprints] = await Promise.all([
     boardsSvc.getWorkItems({
       project,
@@ -135,7 +140,9 @@ router.get('/boards/ai-insights', wrap(async (req) => {
     }),
     boardsSvc.getSprintStats(project, team),
   ]);
-  return aiSvc.getAiInsights(project, team, items, sprints, iterationPath);
+  const result = await aiSvc.getAiInsights(project, team, items, sprints, iterationPath);
+  cacheStore.set(cacheKey, result, 600); // cache AI result for 10 min
+  return result;
 }));
 
 // ── Risks ─────────────────────────────────────────────────────────────────────
