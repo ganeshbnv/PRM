@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
   PanelLeftClose, PanelLeft,
-  Settings, Bell, Search, Layers, X, ChevronDown, LayoutDashboard,
+  Settings, Search, Layers, X, ChevronDown, LayoutDashboard,
   Sun, Moon,
 } from 'lucide-react';
 import { FilterBar } from './components/common/FilterBar';
@@ -629,10 +629,6 @@ function Dashboard({ user }: { user: AuthUser }) {
             <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-200 text-label font-mono">⌘K</kbd>
           </button>
 
-          {/* Notification bell */}
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-            <Bell size={14} />
-          </button>
 
           {/* Theme toggle */}
           <button
