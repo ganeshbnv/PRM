@@ -920,7 +920,7 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
             <div className="flex items-center gap-1.5">
               <Avatar name={space.creator.name} size="sm" />
               <div className="min-w-0">
-                <span className="text-label text-gray-600 uppercase tracking-wider">Last updated by </span>
+                <span className="text-label text-gray-600">Last updated by </span>
                 <span className="text-label text-gray-400 font-medium truncate">{space.creator.name}</span>
               </div>
             </div>
