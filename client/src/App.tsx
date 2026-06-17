@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
   PanelLeftClose, PanelLeft,
@@ -481,7 +481,8 @@ function Dashboard({ user }: { user: AuthUser }) {
   const [collapsed, setCollapsed] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const [conn, setConn] = useState<{ ok: boolean; label: string } | null>(null);
 
   const { filters } = useFilterStore();
@@ -491,6 +492,17 @@ function Dashboard({ user }: { user: AuthUser }) {
       .then((r) => setConn({ ok: true, label: `${r.org} · ${r.projectCount} projects` }))
       .catch(() => setConn({ ok: false, label: 'Connection failed' }));
   }, []);
+
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    function handler(e: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showProfileMenu]);
 
 
   const hasProject = !!filters.project;
@@ -640,44 +652,35 @@ function Dashboard({ user }: { user: AuthUser }) {
           </button>
 
           {/* Profile / sign out */}
-          <button
-            onClick={() => setShowLogoutConfirm(true)}
-            title="Sign out"
-            className="rounded-full hover:ring-2 hover:ring-brand-400 transition-all flex-shrink-0"
-          >
-            <Avatar name={user.name} size="sm" />
-          </button>
+          <div ref={profileMenuRef} className="relative flex-shrink-0">
+            <button
+              onClick={() => setShowProfileMenu(p => !p)}
+              className={cn(
+                'rounded-full transition-all',
+                showProfileMenu ? 'ring-2 ring-brand-400' : 'hover:ring-2 hover:ring-brand-400',
+              )}
+            >
+              <Avatar name={user.name} size="sm" />
+            </button>
+
+            {showProfileMenu && (
+              <div className="absolute right-0 top-[calc(100%+6px)] z-50 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[140px]">
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-800 truncate">{user.name}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
+                </div>
+                <button
+                  onClick={clearAuth}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
 
           {showSettings && (
             <SettingsModal currentUser={user} onClose={() => setShowSettings(false)} />
-          )}
-
-          {showLogoutConfirm && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-              onClick={(e) => { if (e.target === e.currentTarget) setShowLogoutConfirm(false); }}
-            >
-              <div className="bg-surface-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-white font-semibold text-sm">Sign out?</p>
-                  <p className="text-gray-500 text-xs leading-relaxed">You'll need to sign back in to access Healix Engage.</p>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => setShowLogoutConfirm(false)}
-                    className="text-sm px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/8 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={clearAuth}
-                    className="text-sm font-semibold px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition-colors"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </div>
-            </div>
           )}
 
           {/* Tech Stack icon */}
