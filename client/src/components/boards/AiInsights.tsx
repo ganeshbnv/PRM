@@ -840,14 +840,16 @@ const SECTION_COLORS: Record<string, { label: string; accent: string }> = {
 };
 
 function AiAnalysisSections({ summary }: { summary: string }) {
-  const lines = summary.split('\n').map(l => l.trim()).filter(Boolean);
+  // Strip markdown bold/italic markers that local models add
+  const clean = summary.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1');
+  const lines = clean.split('\n').map(l => l.trim()).filter(Boolean);
 
   const sections: { key: string; label: string; accent: string; body: string }[] = [];
   let currentKey = '';
   let currentBody: string[] = [];
 
   for (const line of lines) {
-    const match = line.match(/^([A-Z][A-Z &]+)\s*[—–-]\s*(.*)/);
+    const match = line.match(/^([A-Z][A-Z &]+)\s*[—–\-]\s*(.*)/);
     if (match) {
       if (currentKey) sections.push({ ...resolveSection(currentKey), body: currentBody.join(' ') });
       currentKey = match[1].trim();
@@ -855,7 +857,6 @@ function AiAnalysisSections({ summary }: { summary: string }) {
     } else if (currentKey) {
       currentBody.push(line);
     } else {
-      // No section parsed yet — treat as plain text
       sections.push({ key: 'plain', label: '', accent: '', body: line });
     }
   }

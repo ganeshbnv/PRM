@@ -2,7 +2,7 @@ import type { SprintStats } from './boards';
 import type { WorkItem } from '../models/ado';
 
 const OLLAMA_HOST  = process.env.OLLAMA_HOST  ?? 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'llama3.2';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'llama3';
 
 export interface AiInsight {
   healthScore: number;
@@ -290,12 +290,18 @@ RISKS: ${staleCount} stale items | ${unassignedCount} unassigned | Alerts: ${ale
 TEAM: ${topAssignees.map(a => `${a.name.split(' ')[0]}(${a.resolved}done/${a.active}wip)`).join(', ')}
 VELOCITY: avg ${avgVelocity ?? 'n/a'} pts | trend ${velocityTrend} | history: ${pastVelocities.join(',')||'none'}
 
-Write exactly 6 sections. Each must contain a genuine insight or judgment — not a restatement of numbers. Use this exact format (section title in caps, em-dash, analysis on the same line):
-SPRINT PROGRESS — <what the completion rate means given time elapsed; is the team ahead, behind, or on track and why>
-VELOCITY & PACE — <is throughput enough to finish; what the trend says about team momentum>
-QUALITY & TESTING — <interpret bug density and P1/P2 backlog; risk if left unchecked>
-TEAM WORKLOAD — <who is carrying the sprint; any concentration risk or idle capacity; name names>
-RISKS & BLOCKERS — <the single biggest threat to sprint success; be direct>
+Output rules — follow exactly or the UI will break:
+- Start your response immediately with "SPRINT PROGRESS —". No preamble, no introduction, no "Here is the output".
+- Exactly 6 lines total, one per section, no blank lines between them.
+- Each line: SECTION TITLE IN CAPS — your analysis. Nothing else on that line.
+- No markdown, no bullet points, no bold, no line breaks within a section.
+- Each section must be 1–2 sentences of genuine insight, NOT a restatement of the numbers.
+
+SPRINT PROGRESS — <what the completion rate means given time elapsed; ahead/behind/on-track and why>
+VELOCITY & PACE — <is throughput enough to finish; what the declining/improving trend signals>
+QUALITY & TESTING — <interpret bug density and P1/P2 backlog; risk to release if unchecked>
+TEAM WORKLOAD — <who is carrying the sprint; concentration risk or idle capacity; name names>
+RISKS & BLOCKERS — <the single biggest threat to sprint success; be direct and specific>
 RECOMMENDED ACTIONS — <three concrete prioritised actions the PM should take today>`;
 
   let summary = '';
