@@ -101,7 +101,7 @@ export function AuthPage() {
                   placeholder="yourname"
                   className="flex-1 min-w-0 px-3 py-2.5 bg-surface-elevated text-white placeholder-gray-500 focus:outline-none text-sm"
                 />
-                <span className="flex items-center px-3 bg-white/[0.04] text-gray-500 text-sm font-medium whitespace-nowrap border-l border-surface-border select-none">
+                <span className="flex items-center px-3 bg-surface-elevated text-gray-500 text-sm font-medium whitespace-nowrap select-none">
                   @globalhealthx.co
                 </span>
               </div>
