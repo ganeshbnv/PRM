@@ -10,6 +10,7 @@ interface AuthResponse {
 export function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,14 +18,20 @@ export function AuthPage() {
 
   const setAuth = useAuthStore((s) => s.setAuth);
 
+  const DOMAIN = 'globalhealthx.co';
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
 
+    const resolvedEmail = mode === 'register' ? `${username.trim()}@${DOMAIN}` : email;
+
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const payload = mode === 'login' ? { email, password } : { email, name, password };
+      const payload = mode === 'login'
+        ? { email: resolvedEmail, password }
+        : { email: resolvedEmail, name, password };
       const { data } = await axios.post<AuthResponse>(endpoint, payload);
       setAuth(data.token, data.user);
     } catch (err: unknown) {
@@ -84,14 +91,30 @@ export function AuthPage() {
 
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@globalhealthx.co"
-              className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
-            />
+            {mode === 'register' ? (
+              <div className="flex rounded-lg overflow-hidden border border-surface-border focus-within:border-brand-500 transition-colors">
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.replace(/[@\s]/g, ''))}
+                  required
+                  placeholder="yourname"
+                  className="flex-1 min-w-0 px-3 py-2.5 bg-surface-elevated text-white placeholder-gray-500 focus:outline-none text-sm"
+                />
+                <span className="flex items-center px-3 bg-white/[0.04] text-gray-500 text-sm font-medium whitespace-nowrap border-l border-surface-border select-none">
+                  @globalhealthx.co
+                </span>
+              </div>
+            ) : (
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@globalhealthx.co"
+                className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
+              />
+            )}
           </div>
 
           <div>
