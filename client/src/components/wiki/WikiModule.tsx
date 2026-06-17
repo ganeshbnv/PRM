@@ -891,8 +891,19 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
         {/* Icon + name row */}
         <div className="flex items-start gap-3 pr-6">
           <span className="text-2xl flex-shrink-0 leading-none mt-0.5">{space.iconEmoji}</span>
-          <div className="min-w-0">
-            <div className="font-semibold text-white group-hover:text-brand-400 transition-colors leading-snug">{space.name}</div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-semibold text-white group-hover:text-brand-400 transition-colors leading-snug">{space.name}</span>
+              <span className={cn(
+                'inline-flex items-center gap-[3px] px-1.5 py-[3px] rounded-full text-[9px] font-bold uppercase tracking-wide flex-shrink-0 border',
+                space.isPrivate
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+              )}>
+                {space.isPrivate ? <Lock size={8} /> : <Globe size={8} />}
+                {space.isPrivate ? 'Private' : 'Public'}
+              </span>
+            </div>
             {space.description && (
               <div className="text-xs text-gray-500 mt-0.5 line-clamp-2 leading-relaxed">{space.description}</div>
             )}
