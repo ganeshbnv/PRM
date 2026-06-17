@@ -162,7 +162,7 @@ export function RisksModule() {
 
 function RiskRow({ risk }: { risk: Risk }) {
   return (
-    <div className={`card flex gap-4 items-start ${risk.severity === 'critical' ? 'border-red-700/60 bg-red-900/10' : risk.severity === 'high' ? 'border-orange-700/50 bg-orange-900/10' : ''}`}>
+    <div className={`card flex gap-4 items-start ${risk.severity === 'critical' ? 'border-red-200 bg-red-50' : risk.severity === 'high' ? 'border-orange-200 bg-orange-50' : ''}`}>
       <span className="text-xl mt-0.5">{CATEGORY_ICONS[risk.category]}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">

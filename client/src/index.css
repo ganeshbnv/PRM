@@ -40,8 +40,8 @@
 .text-gray-300 { color: #475569; }
 .text-gray-400 { color: #64748b; }
 .text-gray-500 { color: #64748b; }
-.text-gray-600 { color: #94a3b8; }
-.text-gray-700 { color: #cbd5e1; }
+.text-gray-600 { color: #64748b; }
+.text-gray-700 { color: #94a3b8; }
 
 /* ── Accent colors: *-400 and lighter → *-700 for WCAG-safe contrast ─────── */
 
@@ -107,8 +107,12 @@
 .hover\:bg-gray-800:hover { background-color: #e2e8f0; }
 
 .bg-gray-900              { background-color: #f8fafc; }
+.bg-gray-700\/60          { background-color: #e2e8f0; }
+.hover\:bg-gray-700:hover { background-color: #e2e8f0; }
+.hover\:bg-gray-700\/60:hover { background-color: #e2e8f0; }
 .border-gray-700          { border-color: #cbd5e1; }
 .border-gray-700\/50      { border-color: rgb(203 213 225 / 0.5); }
+.border-gray-700\/60      { border-color: rgb(203 213 225 / 0.6); }
 .hover\:text-gray-700:hover { color: #1e293b; }
 
 /* ── Dark tint backgrounds → light semantic equivalents ───────────────────── */
@@ -128,6 +132,35 @@
 
 .bg-brand-900\/40   { background-color: #dbeafe; }
 .bg-black\/30       { background-color: #f1f5f9; }
+
+/* ── Emerald 950 dark tints → light green ─────────────────────────────────── */
+
+.bg-emerald-950\/25  { background-color: #d1fae5; }
+.bg-emerald-950\/50  { background-color: #a7f3d0; }
+.bg-emerald-950\/60  { background-color: #6ee7b7; }
+.border-emerald-800\/40 { border-color: #6ee7b7; }
+.border-emerald-900\/30 { border-color: #6ee7b7; }
+.border-emerald-900\/40 { border-color: #34d399; }
+
+/* ── Blue 950 dark tints → light blue ────────────────────────────────────── */
+
+.bg-blue-950\/20    { background-color: #dbeafe; }
+.bg-blue-950\/60    { background-color: #bfdbfe; }
+.border-blue-900\/25  { border-color: #93c5fd; }
+.border-blue-900\/40  { border-color: #60a5fa; }
+
+/* ── Amber 900 dark tints → light amber ──────────────────────────────────── */
+
+.bg-amber-900\/20   { background-color: #fffbeb; }
+.bg-amber-900\/30   { background-color: #fef3c7; }
+.hover\:bg-amber-900\/20:hover { background-color: #fef3c7; }
+.border-amber-900\/40  { border-color: #fbbf24; }
+
+/* ── Red/orange 900 additional light tints ────────────────────────────────── */
+
+.bg-red-900\/10     { background-color: #fef2f2; }
+.border-red-700\/60 { border-color: #fca5a5; }
+.bg-orange-900\/10  { background-color: #fff7ed; }
 
 /* ── Surface utilities ───────────────────────────────────────────────────── */
 

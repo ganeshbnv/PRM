@@ -479,8 +479,8 @@ function TBtn({ active, onClick, title, children, danger }: {
         active
           ? 'bg-brand-600/30 text-brand-300 ring-1 ring-brand-500/40'
           : danger
-          ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20'
-          : 'text-gray-400 hover:text-white hover:bg-gray-700/60',
+          ? 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100',
       )}>
       {children}
     </button>
@@ -505,7 +505,7 @@ function ColorPicker({ label, colors, onPick, current, isHighlight }: {
         onMouseDown={e => { e.preventDefault(); setOpen(v => !v); }}
         title={isHighlight ? 'Highlight color' : 'Text color'}
         className={cn('h-7 px-1.5 flex flex-col items-center justify-center gap-0.5 rounded transition-all',
-          open ? 'bg-gray-700/60 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700/60')}>
+          open ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100')}>
         <span className="text-xs leading-none">{label}</span>
         <span className="w-4 h-1 rounded-sm" style={{ background: current ?? (isHighlight ? '#fef08a' : '#ffffff') }} />
       </button>
@@ -1140,8 +1140,8 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
           <button
             onClick={e => { e.stopPropagation(); onAdd(true); setOpen(false); }}
             className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-100 transition-colors">
-            <span className="w-6 h-6 flex items-center justify-center rounded bg-amber-900/30 flex-shrink-0">
-              <Folder size={13} className="text-amber-400" />
+            <span className="w-6 h-6 flex items-center justify-center rounded bg-amber-100 flex-shrink-0">
+              <Folder size={13} className="text-amber-600" />
             </span>
             <div>
               <div className="font-medium">New Folder</div>
@@ -1708,11 +1708,11 @@ function RolePicker({ role, onChange, disabled }: {
             'px-2.5 py-1.5 transition-colors leading-none whitespace-nowrap',
             role === o.value
               ? o.value === 'none'
-                ? 'bg-gray-600 text-white'
+                ? 'bg-gray-200 text-gray-700'
                 : o.value === 'view'
                 ? 'bg-sky-600 text-white'
                 : 'bg-brand-600 text-white'
-              : 'text-gray-500 hover:text-gray-200 hover:bg-white/6',
+              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100',
           )}
         >
           {o.label}
@@ -1982,10 +1982,10 @@ function SpaceRolePicker({ role, onChange, disabled }: {
         <button key={o.value} onClick={() => onChange(o.value)}
           className={cn('px-2.5 py-1.5 transition-colors leading-none whitespace-nowrap',
             role === o.value
-              ? o.value === 'none'   ? 'bg-gray-600 text-white'
+              ? o.value === 'none'   ? 'bg-gray-200 text-gray-700'
               : o.value === 'viewer' ? 'bg-sky-600 text-white'
               :                       'bg-brand-600 text-white'
-              : 'text-gray-500 hover:text-gray-200 hover:bg-white/6')}>
+              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100')}>
           {o.label}
         </button>
       ))}
@@ -2420,7 +2420,7 @@ ${contentRef.current}
             <button onClick={() => setShowAccessModal(true)}
               title={pageState.isPrivate ? 'Private — manage access' : 'Public — manage access'}
               className={cn('flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg transition-colors',
-                pageState.isPrivate ? 'text-amber-400 hover:bg-amber-900/20' : 'text-gray-400 hover:text-white hover:bg-surface-elevated')}>
+                pageState.isPrivate ? 'text-amber-600 hover:bg-amber-50' : 'text-gray-500 hover:text-gray-900 hover:bg-surface-elevated')}>
               {visibilityIcon}{visibilityLabel}
             </button>
 
@@ -2877,7 +2877,7 @@ function SpaceView({ space, onBack, currentUser }: {
               <h2 className="text-base font-semibold text-white mb-1">{space.name}</h2>
               {space.description && <p className="text-sm text-gray-500 mb-4 max-w-xs">{space.description}</p>}
               <div className="flex items-center gap-2">
-                <button onClick={() => addItem(undefined, true)} className="flex items-center gap-1.5 text-sm bg-surface-elevated hover:bg-gray-700 text-gray-300 px-3 py-2 rounded-lg transition-colors border border-surface-border"><Folder size={14} className="text-amber-400" />New Folder</button>
+                <button onClick={() => addItem(undefined, true)} className="flex items-center gap-1.5 text-sm bg-surface-elevated hover:bg-gray-100 text-gray-600 px-3 py-2 rounded-lg transition-colors border border-surface-border"><Folder size={14} className="text-amber-500" />New Folder</button>
                 <button onClick={() => addItem(undefined, false)} className="flex items-center gap-1.5 text-sm bg-brand-600 hover:bg-brand-700 text-white px-3 py-2 rounded-lg transition-colors"><Plus size={14} />New Page</button>
               </div>
             </div>

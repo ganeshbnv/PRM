@@ -281,7 +281,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
       <div className="relative w-full h-full bg-surface-card border border-white/10 rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-pop-up">
 
         {/* ── Top header bar ── */}
-        <div className="flex-shrink-0 flex items-center gap-4 px-6 py-4 border-b border-white/6 bg-gradient-to-r from-[#13131a] to-[#0e0e12]">
+        <div className="flex-shrink-0 flex items-center gap-4 px-6 py-4 border-b border-surface-border bg-gradient-to-r from-surface-elevated to-surface-card">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
               <Layers size={16} className="text-white" />
@@ -295,7 +295,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="flex items-center gap-2 ml-4">
-            <span className="flex items-center gap-1.5 text-[10px] bg-emerald-950/50 border border-emerald-800/40 text-emerald-400 rounded-full px-2.5 py-1">
+            <span className="flex items-center gap-1.5 text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full px-2.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               All systems live
             </span>
@@ -414,23 +414,23 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
                         <div className="px-4 pb-5 pt-1 space-y-3 border-t border-white/6">
 
                           {/* Plain English */}
-                          <div className="rounded-xl p-4 bg-emerald-950/25 border border-emerald-900/30">
+                          <div className="rounded-xl p-4 bg-emerald-50 border border-emerald-200">
                             <div className="flex items-center gap-2 mb-2.5">
                               <span className="text-base">💬</span>
-                              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Plain English</span>
-                              <span className="ml-1 text-[9px] text-emerald-800 bg-emerald-950/60 border border-emerald-900/40 rounded-full px-2 py-0.5">Anyone can understand this</span>
+                              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Plain English</span>
+                              <span className="ml-1 text-[9px] text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-0.5">Anyone can understand this</span>
                             </div>
-                            <p className="text-sm text-gray-300 leading-[1.7]">{item.plain}</p>
+                            <p className="text-sm text-gray-700 leading-[1.7]">{item.plain}</p>
                           </div>
 
                           {/* Technical detail */}
-                          <div className="rounded-xl p-4 bg-blue-950/20 border border-blue-900/25">
+                          <div className="rounded-xl p-4 bg-blue-50 border border-blue-200">
                             <div className="flex items-center gap-2 mb-2.5">
                               <span className="text-base">🔬</span>
-                              <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Technical Detail</span>
-                              <span className="ml-1 text-[9px] text-blue-900 bg-blue-950/60 border border-blue-900/40 rounded-full px-2 py-0.5">For engineers</span>
+                              <span className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Technical Detail</span>
+                              <span className="ml-1 text-[9px] text-blue-700 bg-blue-100 border border-blue-200 rounded-full px-2 py-0.5">For engineers</span>
                             </div>
-                            <p className="text-xs text-gray-400 leading-[1.7]">{item.detail}</p>
+                            <p className="text-xs text-gray-600 leading-[1.7]">{item.detail}</p>
                           </div>
                         </div>
                       )}

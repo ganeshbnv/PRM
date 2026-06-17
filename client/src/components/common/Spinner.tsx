@@ -16,7 +16,7 @@ export function LoadingCard({ label = 'Loading…' }: { label?: string }) {
 
 export function ErrorCard({ error }: { error: string }) {
   return (
-    <div className="card border-red-700/50 bg-red-900/20 text-red-300 text-sm py-8 flex items-center justify-center gap-2">
+    <div className="card border-red-200 bg-red-50 text-red-700 text-sm py-8 flex items-center justify-center gap-2">
       <span>⚠</span>
       <span>{error}</span>
     </div>
