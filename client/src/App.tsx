@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Kanban, Bug, UsersRound, GitMerge, ScrollText, TriangleAlert,
+  SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
   RefreshCw, LogOut, PanelLeftClose, PanelLeft,
   Settings, Bell, Search, Layers, X, ChevronDown, LayoutDashboard,
 } from 'lucide-react';
@@ -27,12 +27,12 @@ const NAV_ITEMS: {
   color: string;
   iconBg: string;
 }[] = [
-  { id: 'boards',    label: 'Boards',    icon: Kanban,        description: 'Sprints & kanban',  color: 'text-violet-400',  iconBg: 'bg-violet-500/10'  },
-  { id: 'bugs',      label: 'Bugs',      icon: Bug,           description: 'Issue tracking',    color: 'text-rose-400',    iconBg: 'bg-rose-500/10'    },
-  { id: 'engineers', label: 'Engineers', icon: UsersRound,    description: 'Team directory',    color: 'text-sky-400',     iconBg: 'bg-sky-500/10'     },
-  { id: 'repos',     label: 'Repos',     icon: GitMerge,      description: 'Codebase & PRs',    color: 'text-emerald-400', iconBg: 'bg-emerald-500/10' },
-  { id: 'wiki',      label: 'Wiki',      icon: ScrollText,    description: 'Docs & knowledge',  color: 'text-amber-400',   iconBg: 'bg-amber-500/10'   },
-  { id: 'risks',     label: 'Risks',     icon: TriangleAlert, description: 'Risk register',     color: 'text-red-400',     iconBg: 'bg-red-500/10'     },
+  { id: 'boards',    label: 'Boards',    icon: SquareKanban,  description: 'Sprints & kanban',  color: 'text-violet-400',  iconBg: 'bg-violet-500/10'  },
+  { id: 'bugs',      label: 'Bugs',      icon: CircleDot,     description: 'Issue tracking',    color: 'text-rose-400',    iconBg: 'bg-rose-500/10'    },
+  { id: 'engineers', label: 'Engineers', icon: UserCog,       description: 'Team directory',    color: 'text-sky-400',     iconBg: 'bg-sky-500/10'     },
+  { id: 'repos',     label: 'Repos',     icon: FolderGit2,    description: 'Codebase & PRs',    color: 'text-emerald-400', iconBg: 'bg-emerald-500/10' },
+  { id: 'wiki',      label: 'Wiki',      icon: NotebookPen,   description: 'Docs & knowledge',  color: 'text-amber-400',   iconBg: 'bg-amber-500/10'   },
+  { id: 'risks',     label: 'Risks',     icon: OctagonAlert,  description: 'Risk register',     color: 'text-red-400',     iconBg: 'bg-red-500/10'     },
 ];
 
 // ── Tech Stack ────────────────────────────────────────────────────────────────
