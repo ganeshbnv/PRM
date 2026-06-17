@@ -2991,33 +2991,49 @@ export function WikiModule() {
 
       <style>{`
         .wiki-prose { flex: 1; }
-        .wiki-prose .ProseMirror { outline: none; color: #e5e7eb; line-height: 1.75; min-height: 400px; font-size: 0.9375rem; }
+        .wiki-prose .ProseMirror { outline: none; color: #1e293b; line-height: 1.75; min-height: 400px; font-size: 0.9375rem; }
         .wiki-prose .ProseMirror > * + * { margin-top: 0.5rem; }
-        .wiki-prose .ProseMirror h1 { font-size: 1.75rem; font-weight: 700; color: #fff; margin-top: 1.75rem; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-        .wiki-prose .ProseMirror h2 { font-size: 1.35rem; font-weight: 600; color: #f3f4f6; margin-top: 1.5rem; margin-bottom: 0.4rem; }
-        .wiki-prose .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; color: #f3f4f6; margin-top: 1.25rem; margin-bottom: 0.3rem; }
-        .wiki-prose .ProseMirror p { color: #d1d5db; }
-        .wiki-prose .ProseMirror p.is-empty::before { content: attr(data-placeholder); color: #4b5563; pointer-events: none; float: left; height: 0; }
+        .wiki-prose .ProseMirror h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-top: 1.75rem; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+        .wiki-prose .ProseMirror h2 { font-size: 1.35rem; font-weight: 600; color: #1e293b; margin-top: 1.5rem; margin-bottom: 0.4rem; }
+        .wiki-prose .ProseMirror h3 { font-size: 1.1rem; font-weight: 600; color: #1e293b; margin-top: 1.25rem; margin-bottom: 0.3rem; }
+        .wiki-prose .ProseMirror p { color: #374151; }
+        .wiki-prose .ProseMirror p.is-empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; float: left; height: 0; }
         .wiki-prose .ProseMirror ul { list-style: disc; padding-left: 1.5rem; }
         .wiki-prose .ProseMirror ol { list-style: decimal; padding-left: 1.5rem; }
-        .wiki-prose .ProseMirror li { color: #d1d5db; margin-bottom: 0.15rem; }
+        .wiki-prose .ProseMirror li { color: #374151; margin-bottom: 0.15rem; }
         .wiki-prose .ProseMirror li > p { margin: 0; }
-        .wiki-prose .ProseMirror blockquote { border-left: 3px solid #4b5563; padding-left: 1rem; color: #9ca3af; font-style: italic; margin: 1rem 0; }
-        .wiki-prose .ProseMirror pre { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 1rem 1.25rem; overflow-x: auto; margin: 1rem 0; }
-        .wiki-prose .ProseMirror pre code { background: none; color: #e2e8f0; font-size: 0.85em; padding: 0; }
-        .wiki-prose .ProseMirror code:not(pre code) { background: #1e293b; border: 1px solid #334155; border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.85em; color: #93c5fd; }
+        .wiki-prose .ProseMirror blockquote { border-left: 3px solid #cbd5e1; padding-left: 1rem; color: #64748b; font-style: italic; margin: 1rem 0; }
+        .wiki-prose .ProseMirror pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem 1.25rem; overflow-x: auto; margin: 1rem 0; }
+        .wiki-prose .ProseMirror pre code { background: none; color: #1e293b; font-size: 0.85em; padding: 0; }
+        .wiki-prose .ProseMirror code:not(pre code) { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.85em; color: #4f46e5; }
         .wiki-prose .ProseMirror table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-        .wiki-prose .ProseMirror th { background: #1e293b; font-weight: 600; color: #f1f5f9; text-align: left; }
-        .wiki-prose .ProseMirror th, .wiki-prose .ProseMirror td { border: 1px solid #334155; padding: 0.5rem 0.75rem; color: #d1d5db; }
-        .wiki-prose .ProseMirror hr { border: none; border-top: 1px solid #374151; margin: 1.5rem 0; }
-        .wiki-prose .ProseMirror a { color: #60a5fa; text-decoration: underline; }
-        .wiki-prose .ProseMirror mark { background: #fef08a22; color: #fef08a; border-radius: 2px; padding: 0 2px; }
+        .wiki-prose .ProseMirror th { background: #f1f5f9; font-weight: 600; color: #1e293b; text-align: left; }
+        .wiki-prose .ProseMirror th, .wiki-prose .ProseMirror td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; color: #374151; }
+        .wiki-prose .ProseMirror hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0; }
+        .wiki-prose .ProseMirror a { color: #2563eb; text-decoration: underline; }
+        .wiki-prose .ProseMirror mark { background: #fef9c3; color: #78350f; border-radius: 2px; padding: 0 2px; }
         .wiki-prose .ProseMirror ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
         .wiki-prose .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
         .wiki-prose .ProseMirror ul[data-type="taskList"] li > label { margin-top: 2px; flex-shrink: 0; }
         .wiki-prose .ProseMirror ul[data-type="taskList"] li input[type="checkbox"] { width: 14px; height: 14px; accent-color: #6366f1; cursor: pointer; }
         .wiki-prose .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { opacity: 0.5; text-decoration: line-through; }
-        .wiki-prose .ProseMirror .selectedCell { background: #3730a330; }
+        .wiki-prose .ProseMirror .selectedCell { background: #dbeafe; }
+        html.dark .wiki-prose .ProseMirror { color: #e5e7eb; }
+        html.dark .wiki-prose .ProseMirror h1 { color: #fff; }
+        html.dark .wiki-prose .ProseMirror h2, html.dark .wiki-prose .ProseMirror h3 { color: #f3f4f6; }
+        html.dark .wiki-prose .ProseMirror p { color: #d1d5db; }
+        html.dark .wiki-prose .ProseMirror p.is-empty::before { color: #4b5563; }
+        html.dark .wiki-prose .ProseMirror li { color: #d1d5db; }
+        html.dark .wiki-prose .ProseMirror blockquote { border-left-color: #4b5563; color: #9ca3af; }
+        html.dark .wiki-prose .ProseMirror pre { background: #0f172a; border-color: #1e293b; }
+        html.dark .wiki-prose .ProseMirror pre code { color: #e2e8f0; }
+        html.dark .wiki-prose .ProseMirror code:not(pre code) { background: #1e293b; border-color: #334155; color: #93c5fd; }
+        html.dark .wiki-prose .ProseMirror th { background: #1e293b; color: #f1f5f9; }
+        html.dark .wiki-prose .ProseMirror th, html.dark .wiki-prose .ProseMirror td { border-color: #334155; color: #d1d5db; }
+        html.dark .wiki-prose .ProseMirror hr { border-top-color: #374151; }
+        html.dark .wiki-prose .ProseMirror a { color: #60a5fa; }
+        html.dark .wiki-prose .ProseMirror mark { background: #fef08a22; color: #fef08a; }
+        html.dark .wiki-prose .ProseMirror .selectedCell { background: #3730a330; }
       `}</style>
     </div>
   );
