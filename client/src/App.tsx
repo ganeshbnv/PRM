@@ -290,18 +290,18 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <h2 className="text-white font-bold text-base leading-tight">Tech Stack</h2>
-              <p className="text-gray-500 text-[11px] leading-tight">
+              <p className="text-gray-500 text-label leading-tight">
                 {TECH_STACK.reduce((n, c) => n + c.items.length, 0)} technologies across {TECH_STACK.length} layers
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 ml-4">
-            <span className="flex items-center gap-1.5 text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full px-2.5 py-1">
+            <span className="flex items-center gap-1.5 text-label bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full px-2.5 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               All systems live
             </span>
-            <span className="text-[10px] bg-white/5 border border-white/8 text-gray-500 rounded-full px-2.5 py-1">
+            <span className="text-label bg-white/5 border border-white/8 text-gray-500 rounded-full px-2.5 py-1">
               GlobalHealthX · Internal
             </span>
           </div>
@@ -319,7 +319,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
 
           {/* Left: category nav */}
           <nav className="flex-shrink-0 w-60 border-r border-white/6 flex flex-col bg-surface-elevated py-3 overflow-y-auto">
-            <p className="px-4 mb-2 text-[9px] text-gray-600 uppercase tracking-widest font-semibold">Layers</p>
+            <p className="px-4 mb-2 text-label text-gray-600 uppercase tracking-widest font-semibold">Layers</p>
             {TECH_STACK.map((c, i) => (
               <button
                 key={c.category}
@@ -337,14 +337,14 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
                 <span className="text-xl leading-none mt-0.5 flex-shrink-0">{c.emoji}</span>
                 <div className="min-w-0">
                   <div className="text-xs font-semibold leading-snug">{c.category}</div>
-                  <div className="text-[10px] text-gray-600 mt-0.5 leading-snug">{c.items.length} technologies</div>
+                  <div className="text-label text-gray-600 mt-0.5 leading-snug">{c.items.length} technologies</div>
                 </div>
               </button>
             ))}
 
             {/* Footer */}
             <div className="mt-auto px-4 pt-4 pb-2 border-t border-white/5">
-              <p className="text-[10px] text-gray-700 leading-relaxed">
+              <p className="text-label text-gray-700 leading-relaxed">
                 No data leaves<br />the org's infrastructure
               </p>
             </div>
@@ -396,13 +396,13 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-semibold text-gray-100">{item.name}</span>
                             {item.badge && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded-md font-mono leading-none"
+                              <span className="text-label px-1.5 py-0.5 rounded-md font-mono leading-none"
                                 style={{ background: `${item.color}15`, color: item.color, border: `1px solid ${item.color}30` }}>
                                 {item.badge}
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{item.tagline}</p>
+                          <p className="text-label text-gray-500 mt-0.5 leading-snug">{item.tagline}</p>
                         </div>
 
                         <ChevronDown
@@ -419,8 +419,8 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
                           <div className="rounded-xl p-4 bg-emerald-50 border border-emerald-200">
                             <div className="flex items-center gap-2 mb-2.5">
                               <span className="text-base">💬</span>
-                              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Plain English</span>
-                              <span className="ml-1 text-[9px] text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-0.5">Anyone can understand this</span>
+                              <span className="text-label font-bold text-emerald-700 uppercase tracking-widest">Plain English</span>
+                              <span className="ml-1 text-label text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-0.5">Anyone can understand this</span>
                             </div>
                             <p className="text-sm text-gray-700 leading-[1.7]">{item.plain}</p>
                           </div>
@@ -429,8 +429,8 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
                           <div className="rounded-xl p-4 bg-blue-50 border border-blue-200">
                             <div className="flex items-center gap-2 mb-2.5">
                               <span className="text-base">🔬</span>
-                              <span className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Technical Detail</span>
-                              <span className="ml-1 text-[9px] text-blue-700 bg-blue-100 border border-blue-200 rounded-full px-2 py-0.5">For engineers</span>
+                              <span className="text-label font-bold text-blue-700 uppercase tracking-widest">Technical Detail</span>
+                              <span className="ml-1 text-label text-blue-700 bg-blue-100 border border-blue-200 rounded-full px-2 py-0.5">For engineers</span>
                             </div>
                             <p className="text-xs text-gray-600 leading-[1.7]">{item.detail}</p>
                           </div>
@@ -453,7 +453,7 @@ function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
   return (
     <span className={cn(
       'rounded-full bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center font-semibold text-white flex-shrink-0',
-      size === 'sm' ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs',
+      size === 'sm' ? 'w-6 h-6 text-label' : 'w-8 h-8 text-xs',
     )}>
       {initials}
     </span>
@@ -519,7 +519,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           {/* Wordmark */}
           <div className="relative flex-shrink-0">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-md shadow-brand-500/20">
-              <span className="text-white font-black text-[11px] tracking-tighter select-none">P</span>
+              <span className="text-white font-black text-label tracking-tighter select-none">P</span>
             </div>
             {/* Live dot */}
             {conn?.ok && (
@@ -531,7 +531,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             <>
               <div className="flex-1 min-w-0">
                 <p className="text-gray-900 font-bold text-sm leading-none tracking-tight">PRM</p>
-                <p className="text-gray-600 text-[10px] leading-none mt-[5px]">Project Intelligence</p>
+                <p className="text-gray-600 text-label leading-none mt-[5px]">Project Intelligence</p>
               </div>
               {/* Collapse trigger */}
               <button
@@ -548,7 +548,7 @@ function Dashboard({ user }: { user: AuthUser }) {
         {/* ── Nav ── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2">
           {!collapsed && (
-            <p className="px-2 mb-2 text-[9px] font-semibold uppercase tracking-[0.12em] text-gray-700 select-none">
+            <p className="px-2 mb-2 text-label font-semibold uppercase tracking-[0.12em] text-gray-700 select-none">
               Modules
             </p>
           )}
@@ -587,7 +587,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                   {!collapsed && (
                     <>
                       <span className={cn(
-                        'flex-1 text-left text-[13px] font-medium leading-none tracking-[-0.01em]',
+                        'flex-1 text-left text-sm font-medium leading-none tracking-[-0.01em]',
                         isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 group-hover:text-gray-800',
                       )}>
                         {item.label}
@@ -646,7 +646,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                   'w-[6px] h-[6px] rounded-full flex-shrink-0',
                   conn.ok ? 'bg-emerald-500' : 'bg-red-500',
                 )} />
-                <span className="text-[10px] truncate leading-none">
+                <span className="text-label truncate leading-none">
                   {conn.ok ? conn.label : 'Server offline'}
                 </span>
               </div>
@@ -662,8 +662,8 @@ function Dashboard({ user }: { user: AuthUser }) {
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-gray-800 truncate leading-none">{user.name}</p>
-                  <p className="text-[10px] text-gray-600 leading-none mt-[5px]">GlobalHealthX</p>
+                  <p className="text-sm font-semibold text-gray-800 truncate leading-none">{user.name}</p>
+                  <p className="text-label text-gray-600 leading-none mt-[5px]">GlobalHealthX</p>
                 </div>
                 <button
                   onClick={() => setShowLogoutConfirm(true)}
@@ -695,7 +695,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           <button className="hidden md:flex items-center gap-2 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
             <Search size={12} />
             <span>Quick search…</span>
-            <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-200 text-[10px] font-mono">⌘K</kbd>
+            <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-200 text-label font-mono">⌘K</kbd>
           </button>
 
           {/* Notification bell */}
@@ -809,7 +809,7 @@ function RisksBadge({ project, collapsed }: { project: string; collapsed: boolea
   return (
     <span className={cn(
       'flex-shrink-0 rounded-full bg-red-500 text-white font-bold leading-none flex items-center justify-center',
-      collapsed ? 'w-4 h-4 text-[9px] absolute top-1 right-1' : 'px-1.5 py-0.5 text-[10px]',
+      collapsed ? 'w-4 h-4 text-label absolute top-1 right-1' : 'px-1.5 py-0.5 text-label',
     )}>
       {count}
     </span>

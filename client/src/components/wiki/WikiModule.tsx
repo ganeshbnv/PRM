@@ -333,7 +333,7 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
           ))}
 
           <div className="w-px h-4 bg-white/8 mx-0.5" />
-          <span className="text-[9px] text-gray-600">Fill:</span>
+          <span className="text-label text-gray-600">Fill:</span>
           {SHEET_BG_COLORS.map((bg, idx) => (
             <button key={idx}
               onMouseDown={e => { e.preventDefault(); patchSel({ bg: bg || undefined }); }}
@@ -347,39 +347,39 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
           {sel && (
             <>
               <button onMouseDown={e => { e.preventDefault(); delRow(sel[0]); }} title="Delete selected row"
-                className="h-6 px-1.5 flex items-center rounded text-[10px] text-red-400 hover:bg-red-500/10 transition-colors">−Row</button>
+                className="h-6 px-1.5 flex items-center rounded text-label text-red-400 hover:bg-red-500/10 transition-colors">−Row</button>
               <button onMouseDown={e => { e.preventDefault(); delCol(sel[1]); }} title="Delete selected column"
-                className="h-6 px-1.5 flex items-center rounded text-[10px] text-red-400 hover:bg-red-500/10 transition-colors">−Col</button>
+                className="h-6 px-1.5 flex items-center rounded text-label text-red-400 hover:bg-red-500/10 transition-colors">−Col</button>
               <div className="w-px h-4 bg-white/8 mx-0.5" />
             </>
           )}
           <button onMouseDown={e => { e.preventDefault(); addRow(); }} title="Add row"
-            className="h-6 px-1.5 flex items-center rounded text-[10px] text-emerald-400 hover:bg-emerald-500/10 transition-colors">+Row</button>
+            className="h-6 px-1.5 flex items-center rounded text-label text-emerald-400 hover:bg-emerald-500/10 transition-colors">+Row</button>
           <button onMouseDown={e => { e.preventDefault(); addCol(); }} title="Add column"
-            className="h-6 px-1.5 flex items-center rounded text-[10px] text-emerald-400 hover:bg-emerald-500/10 transition-colors">+Col</button>
+            className="h-6 px-1.5 flex items-center rounded text-label text-emerald-400 hover:bg-emerald-500/10 transition-colors">+Col</button>
 
           {sel && (
-            <span className="ml-auto text-[10px] text-gray-600 font-mono">{colLetter(sel[1])}{sel[0] + 1}</span>
+            <span className="ml-auto text-label text-gray-600 font-mono">{colLetter(sel[1])}{sel[0] + 1}</span>
           )}
         </div>
 
         {/* Grid */}
         <div className="overflow-auto" style={{ maxHeight: '320px' }}>
-          <table className="border-collapse text-[11px] w-full bg-surface" style={{ tableLayout: 'fixed' }}>
+          <table className="border-collapse text-label w-full bg-surface" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                <th className="w-7 min-w-[28px] bg-gray-50 border border-gray-200 text-[9px] text-gray-500 select-none sticky top-0 z-20" />
+                <th className="w-7 min-w-[28px] bg-gray-50 border border-gray-200 text-label text-gray-500 select-none sticky top-0 z-20" />
                 {Array.from({ length: cols }, (_, ci) => (
                   <th key={ci}
-                    className={cn('bg-gray-50 border border-gray-200 text-[10px] font-semibold px-1 py-0.5 min-w-[90px] select-none sticky top-0 z-20 group',
+                    className={cn('bg-gray-50 border border-gray-200 text-label font-semibold px-1 py-0.5 min-w-[90px] select-none sticky top-0 z-20 group',
                       sc === ci ? 'text-brand-600 bg-brand-100' : 'text-gray-500')}>
                     <div className="flex items-center justify-center gap-1">
                       <span>{colLetter(ci)}</span>
                       <span className="hidden group-hover:flex gap-px">
                         <button onMouseDown={e => { e.preventDefault(); sortByCol(ci, true); }} title="Sort A→Z"
-                          className="text-[9px] text-gray-400 hover:text-gray-900 leading-none">↑</button>
+                          className="text-label text-gray-400 hover:text-gray-900 leading-none">↑</button>
                         <button onMouseDown={e => { e.preventDefault(); sortByCol(ci, false); }} title="Sort Z→A"
-                          className="text-[9px] text-gray-400 hover:text-gray-900 leading-none">↓</button>
+                          className="text-label text-gray-400 hover:text-gray-900 leading-none">↓</button>
                       </span>
                     </div>
                   </th>
@@ -390,7 +390,7 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
               {data.map((row, ri) => (
                 <tr key={ri}>
                   <td className={cn(
-                    'bg-gray-50 border border-gray-200 text-center text-[9px] w-7 select-none',
+                    'bg-gray-50 border border-gray-200 text-center text-label w-7 select-none',
                     sr === ri ? 'text-brand-600 bg-brand-100' : 'text-gray-600',
                   )}>
                     {ri + 1}
@@ -611,10 +611,10 @@ function RichEditorToolbar({ editor }: { editor: Editor }) {
         <TBtn active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Underline (⌘U)"><UnderlineIcon size={13} /></TBtn>
         <TBtn active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough"><Strikethrough size={13} /></TBtn>
         <TBtn active={editor.isActive('subscript')} onClick={() => editor.chain().focus().toggleSubscript().run()} title="Subscript">
-          <span className="text-[11px] font-medium leading-none">x<sub>2</sub></span>
+          <span className="text-label font-medium leading-none">x<sub>2</sub></span>
         </TBtn>
         <TBtn active={editor.isActive('superscript')} onClick={() => editor.chain().focus().toggleSuperscript().run()} title="Superscript">
-          <span className="text-[11px] font-medium leading-none">x<sup>2</sup></span>
+          <span className="text-label font-medium leading-none">x<sup>2</sup></span>
         </TBtn>
         <Sep />
 
@@ -652,7 +652,7 @@ function RichEditorToolbar({ editor }: { editor: Editor }) {
         {/* Insert */}
         <TBtn active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} title="Inline code"><Code size={13} /></TBtn>
         <TBtn active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()} title="Code block">
-          <span className="text-[10px] font-mono leading-none">{'{}'}</span>
+          <span className="text-label font-mono leading-none">{'{}'}</span>
         </TBtn>
         <TBtn active={editor.isActive('link')} onClick={() => {
           if (editor.isActive('link')) { editor.chain().focus().unsetLink().run(); return; }
@@ -669,13 +669,13 @@ function RichEditorToolbar({ editor }: { editor: Editor }) {
 
         {/* Font family */}
         <TBtn active={editor.isActive({ fontFamily: 'Georgia, serif' })} onClick={() => editor.chain().focus().setFontFamily('Georgia, serif').run()} title="Serif">
-          <span className="text-[11px]" style={{ fontFamily: 'Georgia, serif' }}>Serif</span>
+          <span className="text-label" style={{ fontFamily: 'Georgia, serif' }}>Serif</span>
         </TBtn>
         <TBtn active={editor.isActive({ fontFamily: 'Consolas, monospace' })} onClick={() => editor.chain().focus().setFontFamily('Consolas, monospace').run()} title="Monospace">
-          <span className="text-[11px] font-mono">Mono</span>
+          <span className="text-label font-mono">Mono</span>
         </TBtn>
         <TBtn active={false} onClick={() => editor.chain().focus().unsetFontFamily().run()} title="Reset font">
-          <span className="text-[11px]">Sans</span>
+          <span className="text-label">Sans</span>
         </TBtn>
 
       </div>
@@ -800,7 +800,7 @@ function RichEditor({
       {/* Footer: word count */}
       <div className="flex-shrink-0 px-6 py-1.5 border-t border-gray-200 bg-gray-50 flex items-center gap-4">
         <span className="text-xs text-gray-500">{words} words · {chars} characters</span>
-        <span className="text-xs text-gray-500 ml-auto">Type <kbd className="px-1 py-0.5 rounded bg-gray-100 text-gray-600 font-mono text-[10px]">/</kbd> for commands</span>
+        <span className="text-xs text-gray-500 ml-auto">Type <kbd className="px-1 py-0.5 rounded bg-gray-100 text-gray-600 font-mono text-label">/</kbd> for commands</span>
       </div>
 
       {/* Slash command menu */}
@@ -822,7 +822,7 @@ function RichEditor({
                   </span>
                   <div>
                     <div className="text-xs font-medium">{cmd.label}</div>
-                    <div className="text-[11px] text-gray-500 mt-0.5">{cmd.description}</div>
+                    <div className="text-label text-gray-500 mt-0.5">{cmd.description}</div>
                   </div>
                 </button>
               </li>
@@ -895,7 +895,7 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-semibold text-white group-hover:text-brand-400 transition-colors leading-snug">{space.name}</span>
               <span className={cn(
-                'inline-flex items-center gap-[3px] px-1.5 py-[3px] rounded-full text-[9px] font-bold uppercase tracking-wide flex-shrink-0 border',
+                'inline-flex items-center gap-[3px] px-1.5 py-[3px] rounded-full text-label font-bold uppercase tracking-wide flex-shrink-0 border',
                 space.isPrivate
                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                   : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -920,8 +920,8 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
             <div className="flex items-center gap-1.5">
               <Avatar name={space.creator.name} size="sm" />
               <div className="min-w-0">
-                <span className="text-[10px] text-gray-600 uppercase tracking-wider">Last updated by </span>
-                <span className="text-[11px] text-gray-400 font-medium truncate">{space.creator.name}</span>
+                <span className="text-label text-gray-600 uppercase tracking-wider">Last updated by </span>
+                <span className="text-label text-gray-400 font-medium truncate">{space.creator.name}</span>
               </div>
             </div>
           )}
@@ -930,13 +930,13 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
           {space.updatedAt && (
             <div className="flex items-center gap-1.5 pl-[26px]">
               <span
-                className="text-[11px] text-gray-500"
+                className="text-label text-gray-500"
                 title={format(new Date(space.updatedAt), 'EEEE, MMMM d, yyyy · h:mm a')}
               >
                 {format(new Date(space.updatedAt), 'MMM d, yyyy · h:mm a')}
               </span>
-              <span className="text-[11px] text-gray-700">·</span>
-              <span className="text-[11px] text-gray-600">
+              <span className="text-label text-gray-700">·</span>
+              <span className="text-label text-gray-600">
                 <Ago date={space.updatedAt} />
               </span>
             </div>
@@ -945,7 +945,7 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
           {/* Page count */}
           {space._count != null && (
             <div className="flex items-center gap-1 pl-[26px] mt-0.5">
-              <span className="text-[11px] text-gray-600">
+              <span className="text-label text-gray-600">
                 {space._count.pages} page{space._count.pages !== 1 ? 's' : ''}
               </span>
             </div>
@@ -1008,7 +1008,7 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
             <Trash2 size={12} className="flex-shrink-0" />
             <div>
               <div>Delete space</div>
-              <div className="text-[10px] text-red-600 mt-0.5">Deletes all pages inside</div>
+              <div className="text-label text-red-600 mt-0.5">Deletes all pages inside</div>
             </div>
           </button>
         </div>,
@@ -1136,7 +1136,7 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 text-xs">
-          <p className="px-3 pt-1.5 pb-1 text-[10px] text-gray-500 uppercase tracking-wider">Add to this space</p>
+          <p className="px-3 pt-1.5 pb-1 text-label text-gray-500 uppercase tracking-wider">Add to this space</p>
           <button
             onClick={e => { e.stopPropagation(); onAdd(true); setOpen(false); }}
             className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-100 transition-colors">
@@ -1145,7 +1145,7 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
             </span>
             <div>
               <div className="font-medium">New Folder</div>
-              <div className="text-[10px] text-gray-500 mt-0.5">Organize pages into a folder</div>
+              <div className="text-label text-gray-500 mt-0.5">Organize pages into a folder</div>
             </div>
           </button>
           <button
@@ -1156,7 +1156,7 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
             </span>
             <div>
               <div className="font-medium">New Page</div>
-              <div className="text-[10px] text-gray-500 mt-0.5">A blank page to write on</div>
+              <div className="text-label text-gray-500 mt-0.5">A blank page to write on</div>
             </div>
           </button>
         </div>
@@ -1290,7 +1290,7 @@ function PageTreeItem({ node, depth, activeId, onSelect, onAdd, drag, onRenamed,
         <Folder size={12} className="text-amber-400 flex-shrink-0" />
         <div>
           <div>New Folder inside</div>
-          <div className="text-[10px] text-gray-600 mt-0.5">Add a sub-folder</div>
+          <div className="text-label text-gray-600 mt-0.5">Add a sub-folder</div>
         </div>
       </button>
 
@@ -1302,7 +1302,7 @@ function PageTreeItem({ node, depth, activeId, onSelect, onAdd, drag, onRenamed,
         <FileText size={12} className="text-brand-400 flex-shrink-0" />
         <div>
           <div>New Page inside</div>
-          <div className="text-[10px] text-gray-600 mt-0.5">Add a child page</div>
+          <div className="text-label text-gray-600 mt-0.5">Add a child page</div>
         </div>
       </button>
 
@@ -1461,7 +1461,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
           <div>
             <h3 className="text-sm font-semibold text-white leading-tight">Version History</h3>
             {versions.length > 0 && (
-              <p className="text-[10px] text-gray-500 leading-tight mt-0.5">
+              <p className="text-label text-gray-500 leading-tight mt-0.5">
                 {versions.length} saved version{versions.length !== 1 ? 's' : ''}
               </p>
             )}
@@ -1488,7 +1488,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
               <History size={18} className="text-gray-600" />
             </div>
             <p className="text-xs font-medium text-gray-400">No versions yet</p>
-            <p className="text-[11px] text-gray-600 leading-relaxed">
+            <p className="text-label text-gray-600 leading-relaxed">
               Save the page to create snapshots you can restore later.
             </p>
           </div>
@@ -1516,7 +1516,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
                       {/* Version number badge + label */}
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className={cn(
-                          'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] flex-shrink-0',
+                          'w-7 h-7 rounded-lg flex items-center justify-center font-bold text-label flex-shrink-0',
                           isLatest
                             ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                             : isSelected
@@ -1534,14 +1534,14 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
                               Version {v.version}
                             </span>
                             {isLatest && (
-                              <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 leading-none">
+                              <span className="inline-flex items-center gap-1 text-label font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 leading-none">
                                 <span className="w-1 h-1 rounded-full bg-emerald-400 inline-block" />
                                 Latest
                               </span>
                             )}
                           </div>
                           {v.title && (
-                            <p className="text-[11px] text-gray-500 truncate mt-0.5 leading-tight">{v.title}</p>
+                            <p className="text-label text-gray-500 truncate mt-0.5 leading-tight">{v.title}</p>
                           )}
                         </div>
                       </div>
@@ -1550,12 +1550,12 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
                     </div>
 
                     <div className="flex items-center gap-3 mt-2 pl-[38px]">
-                      <span className="text-[11px] text-gray-500"><Ago date={v.createdAt} /></span>
-                      <span className="text-[11px] text-gray-700 truncate">{v.author.name}</span>
+                      <span className="text-label text-gray-500"><Ago date={v.createdAt} /></span>
+                      <span className="text-label text-gray-700 truncate">{v.author.name}</span>
                     </div>
 
                     {v.comment && (
-                      <p className="mt-1.5 pl-[38px] text-[11px] text-gray-400 italic line-clamp-2 leading-snug">
+                      <p className="mt-1.5 pl-[38px] text-label text-gray-400 italic line-clamp-2 leading-snug">
                         "{v.comment}"
                       </p>
                     )}
@@ -1583,12 +1583,12 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
                   <div className="flex items-center gap-2 flex-wrap mb-2.5">
                     <span className="text-xs font-bold text-white">Version {selected.version}</span>
                     {versions[0]?.version === selected.version && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
+                      <span className="text-label font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">
                         Latest
                       </span>
                     )}
                     {isCurrentVersion && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/25 text-blue-400">
+                      <span className="text-label font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/25 text-blue-400">
                         Current
                       </span>
                     )}
@@ -1598,27 +1598,27 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
                   <div className="flex items-center gap-2 mb-2">
                     <Avatar name={selected.author.name} size="sm" />
                     <div className="leading-snug">
-                      <span className="text-[10px] text-gray-600 uppercase tracking-wider block">Saved by</span>
-                      <span className="text-[11px] text-gray-300 font-medium">{selected.author.name}</span>
+                      <span className="text-label text-gray-600 uppercase tracking-wider block">Saved by</span>
+                      <span className="text-label text-gray-300 font-medium">{selected.author.name}</span>
                     </div>
                   </div>
 
                   {/* Saved at date-time */}
                   <div className="leading-snug">
-                    <span className="text-[10px] text-gray-600 uppercase tracking-wider block">Saved on</span>
+                    <span className="text-label text-gray-600 uppercase tracking-wider block">Saved on</span>
                     <span
-                      className="text-[11px] text-gray-300 font-medium"
+                      className="text-label text-gray-300 font-medium"
                       title={format(new Date(selected.createdAt), 'EEEE, MMMM d, yyyy · h:mm a')}
                     >
                       {format(new Date(selected.createdAt), 'MMM d, yyyy · h:mm a')}
                     </span>
-                    <span className="text-[11px] text-gray-600 ml-1.5">
+                    <span className="text-label text-gray-600 ml-1.5">
                       (<Ago date={selected.createdAt} />)
                     </span>
                   </div>
 
                   {selected.title && (
-                    <p className="text-[11px] text-gray-500 truncate mt-1.5 italic">{selected.title}</p>
+                    <p className="text-label text-gray-500 truncate mt-1.5 italic">{selected.title}</p>
                   )}
                 </div>
 
@@ -1634,7 +1634,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
               </div>
 
               {/* Changes / Preview toggle */}
-              <div className="flex rounded-lg overflow-hidden border border-white/8 text-[11px] bg-white/3">
+              <div className="flex rounded-lg overflow-hidden border border-white/8 text-label bg-white/3">
                 <button
                   onClick={() => setShowDiff(true)}
                   className={cn(
@@ -1673,7 +1673,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
               <RotateCcw size={16} className="text-gray-600" />
             </div>
             <p className="text-xs font-medium text-gray-400">Select a version</p>
-            <p className="text-[11px] text-gray-600 leading-relaxed">
+            <p className="text-label text-gray-600 leading-relaxed">
               Pick a version from the timeline above to compare changes or preview content.
             </p>
           </div>
@@ -1699,7 +1699,7 @@ function RolePicker({ role, onChange, disabled }: {
     { value: 'manage', label: 'View & Manage'   },
   ];
   return (
-    <div className={cn('flex rounded-lg overflow-hidden border border-white/10 text-[10px] font-semibold', disabled && 'opacity-40 pointer-events-none')}>
+    <div className={cn('flex rounded-lg overflow-hidden border border-white/10 text-label font-semibold', disabled && 'opacity-40 pointer-events-none')}>
       {opts.map(o => (
         <button
           key={o.value}
@@ -1832,7 +1832,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
             </div>
             <div>
               <h3 className="text-sm font-bold text-white leading-tight">Page Access</h3>
-              <p className="text-[10px] text-gray-500 leading-tight mt-0.5 truncate max-w-[260px]">{page.title || 'Untitled'}</p>
+              <p className="text-label text-gray-500 leading-tight mt-0.5 truncate max-w-[260px]">{page.title || 'Untitled'}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors">
@@ -1853,7 +1853,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
 
             {/* ── Visibility ── */}
             <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2.5">Visibility</p>
+              <p className="text-label font-bold text-gray-500 uppercase tracking-widest mb-2.5">Visibility</p>
               <div className="grid grid-cols-3 gap-2">
                 {VISIBILITY_OPTS.map(opt => (
                   <button
@@ -1868,7 +1868,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
                   >
                     <span className={cn('transition-colors', mode === opt.id ? 'text-white' : 'text-gray-500')}>{opt.icon}</span>
                     <span className={cn('text-xs font-semibold leading-tight', mode === opt.id ? 'text-white' : 'text-gray-300')}>{opt.label}</span>
-                    <span className="text-[10px] text-gray-500 leading-snug">{opt.desc}</span>
+                    <span className="text-label text-gray-500 leading-snug">{opt.desc}</span>
                   </button>
                 ))}
               </div>
@@ -1876,7 +1876,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
 
             {/* ── People ── */}
             <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2.5">People</p>
+              <p className="text-label font-bold text-gray-500 uppercase tracking-widest mb-2.5">People</p>
 
               {loading ? (
                 <div className="flex items-center justify-center py-8 gap-2"><Spinner /><span className="text-xs text-gray-500">Loading users…</span></div>
@@ -1890,12 +1890,12 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold text-white truncate">{page.creator.name}</span>
                         {page.creator.id === currentUser.id && (
-                          <span className="text-[9px] text-gray-500">(you)</span>
+                          <span className="text-label text-gray-500">(you)</span>
                         )}
                       </div>
-                      <p className="text-[10px] text-gray-600 truncate mt-0.5">Page author</p>
+                      <p className="text-label text-gray-600 truncate mt-0.5">Page author</p>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-violet-400 flex-shrink-0">
+                    <span className="text-label font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-violet-400 flex-shrink-0">
                       Owner
                     </span>
                   </div>
@@ -1918,7 +1918,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
                             <Avatar name={u.name} size="sm" />
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-semibold text-white truncate">{u.name}</p>
-                              <p className="text-[10px] text-gray-600 truncate">{u.email}</p>
+                              <p className="text-label text-gray-600 truncate">{u.email}</p>
                             </div>
                             <RolePicker role={role} onChange={r => setRole(u.id, r)} disabled={!isAuthor} />
                           </div>
@@ -1932,14 +1932,14 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
             {/* Role legend */}
             {mode === 'restricted' && (
               <div className="rounded-xl bg-white/[0.025] border border-white/6 p-3 space-y-1.5">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Role guide</p>
+                <p className="text-label font-bold text-gray-500 uppercase tracking-widest mb-1">Role guide</p>
                 <div className="flex items-start gap-2">
-                  <span className="text-[10px] font-semibold text-sky-400 w-20 flex-shrink-0 mt-px">View only</span>
-                  <span className="text-[10px] text-gray-500 leading-snug">Can read the page and leave comments. Cannot edit or delete.</span>
+                  <span className="text-label font-semibold text-sky-400 w-20 flex-shrink-0 mt-px">View only</span>
+                  <span className="text-label text-gray-500 leading-snug">Can read the page and leave comments. Cannot edit or delete.</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-[10px] font-semibold text-brand-400 w-20 flex-shrink-0 mt-px">View & Manage</span>
-                  <span className="text-[10px] text-gray-500 leading-snug">Can read, edit, delete, and rearrange the page structure.</span>
+                  <span className="text-label font-semibold text-brand-400 w-20 flex-shrink-0 mt-px">View & Manage</span>
+                  <span className="text-label text-gray-500 leading-snug">Can read, edit, delete, and rearrange the page structure.</span>
                 </div>
               </div>
             )}
@@ -1977,7 +1977,7 @@ function SpaceRolePicker({ role, onChange, disabled }: {
     { value: 'admin',  label: 'Admin'     },
   ];
   return (
-    <div className={cn('flex rounded-lg overflow-hidden border border-white/10 text-[10px] font-semibold', disabled && 'opacity-40 pointer-events-none')}>
+    <div className={cn('flex rounded-lg overflow-hidden border border-white/10 text-label font-semibold', disabled && 'opacity-40 pointer-events-none')}>
       {opts.map(o => (
         <button key={o.value} onClick={() => onChange(o.value)}
           className={cn('px-2.5 py-1.5 transition-colors leading-none whitespace-nowrap',
@@ -2069,7 +2069,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
             </div>
             <div>
               <h3 className="text-sm font-bold text-white leading-tight">Space Access</h3>
-              <p className="text-[10px] text-gray-500 leading-tight mt-0.5 truncate max-w-[260px]">{space.iconEmoji} {space.name}</p>
+              <p className="text-label text-gray-500 leading-tight mt-0.5 truncate max-w-[260px]">{space.iconEmoji} {space.name}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-500 hover:text-white hover:bg-white/8 transition-colors">
@@ -2089,7 +2089,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
 
             {/* Visibility */}
             <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2.5">Visibility</p>
+              <p className="text-label font-bold text-gray-500 uppercase tracking-widest mb-2.5">Visibility</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { priv: false, icon: <Globe size={15} />, label: 'Public', desc: 'Everyone can view this space and its pages', color: 'border-emerald-500/50 bg-emerald-500/8' },
@@ -2106,7 +2106,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
                   >
                     <span className={isPrivate === opt.priv ? 'text-white' : 'text-gray-500'}>{opt.icon}</span>
                     <span className={cn('text-xs font-semibold', isPrivate === opt.priv ? 'text-white' : 'text-gray-300')}>{opt.label}</span>
-                    <span className="text-[10px] text-gray-500 leading-snug">{opt.desc}</span>
+                    <span className="text-label text-gray-500 leading-snug">{opt.desc}</span>
                   </button>
                 ))}
               </div>
@@ -2114,7 +2114,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
 
             {/* Members */}
             <div>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2.5">Members</p>
+              <p className="text-label font-bold text-gray-500 uppercase tracking-widest mb-2.5">Members</p>
               {loading ? (
                 <div className="flex items-center justify-center py-8 gap-2"><Spinner /><span className="text-xs text-gray-500">Loading users…</span></div>
               ) : (
@@ -2125,11 +2125,11 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-white truncate">{space.creator.name}</span>
-                          {space.creator.id === currentUser.id && <span className="text-[9px] text-gray-500">(you)</span>}
+                          {space.creator.id === currentUser.id && <span className="text-label text-gray-500">(you)</span>}
                         </div>
-                        <p className="text-[10px] text-gray-600 mt-0.5">Space owner</p>
+                        <p className="text-label text-gray-600 mt-0.5">Space owner</p>
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-violet-400 flex-shrink-0">Owner</span>
+                      <span className="text-label font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-violet-500/15 border border-violet-500/25 text-violet-400 flex-shrink-0">Owner</span>
                     </div>
                   )}
 
@@ -2145,7 +2145,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
                         <Avatar name={u.name} size="sm" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-white truncate">{u.name}</p>
-                          <p className="text-[10px] text-gray-600 truncate">{u.email}</p>
+                          <p className="text-label text-gray-600 truncate">{u.email}</p>
                         </div>
                         <SpaceRolePicker role={role} onChange={r => setRole(u.id, r)} disabled={!isAdmin} />
                       </div>
@@ -2157,14 +2157,14 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
 
             {/* Role legend */}
             <div className="rounded-xl bg-white/[0.025] border border-white/6 p-3 space-y-1.5">
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Role guide</p>
+              <p className="text-label font-bold text-gray-500 uppercase tracking-widest mb-1">Role guide</p>
               <div className="flex items-start gap-2">
-                <span className="text-[10px] font-semibold text-sky-400 w-14 flex-shrink-0 mt-px">Viewer</span>
-                <span className="text-[10px] text-gray-500 leading-snug">Can view all pages in this space. Cannot create or edit pages.</span>
+                <span className="text-label font-semibold text-sky-400 w-14 flex-shrink-0 mt-px">Viewer</span>
+                <span className="text-label text-gray-500 leading-snug">Can view all pages in this space. Cannot create or edit pages.</span>
               </div>
               <div className="flex items-start gap-2">
-                <span className="text-[10px] font-semibold text-brand-400 w-14 flex-shrink-0 mt-px">Admin</span>
-                <span className="text-[10px] text-gray-500 leading-snug">Can view, create, edit, and delete pages. Can manage space members.</span>
+                <span className="text-label font-semibold text-brand-400 w-14 flex-shrink-0 mt-px">Admin</span>
+                <span className="text-label text-gray-500 leading-snug">Can view, create, edit, and delete pages. Can manage space members.</span>
               </div>
             </div>
 
@@ -2366,11 +2366,11 @@ ${contentRef.current}
                 )}
                 title="Save (⌘S)"
               >
-                {saving ? <><Spinner /><span>Saving…</span></> : <><span>Save</span><kbd className="opacity-50 font-mono text-[10px]">⌘S</kbd></>}
+                {saving ? <><Spinner /><span>Saving…</span></> : <><span>Save</span><kbd className="opacity-50 font-mono text-label">⌘S</kbd></>}
               </button>
             )}
             {!canManage && (
-              <span className="text-[10px] text-gray-600 flex items-center gap-1 px-2">
+              <span className="text-label text-gray-600 flex items-center gap-1 px-2">
                 <Lock size={10} />View only
               </span>
             )}
@@ -2457,7 +2457,7 @@ ${contentRef.current}
               <div className="flex items-center gap-2">
                 <Avatar name={page.creator.name} size="sm" />
                 <div className="leading-snug">
-                  <span className="text-[10px] text-gray-600 uppercase tracking-wider block">Created by</span>
+                  <span className="text-label text-gray-600 uppercase tracking-wider block">Created by</span>
                   <span className="text-gray-300 font-medium">{page.creator.name}</span>
                 </div>
               </div>
@@ -2466,7 +2466,7 @@ ${contentRef.current}
 
               {/* Last updated */}
               <div className="leading-snug">
-                <span className="text-[10px] text-gray-600 uppercase tracking-wider block">Last updated</span>
+                <span className="text-label text-gray-600 uppercase tracking-wider block">Last updated</span>
                 <span
                   className="text-gray-300 font-medium"
                   title={format(new Date(pageState.updatedAt), 'EEEE, MMMM d, yyyy · h:mm a')}
@@ -2788,7 +2788,7 @@ function SpaceView({ space, onBack, currentUser }: {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-white truncate">{space.name}</p>
               {space._count !== undefined && (
-                <p className="text-[10px] text-gray-500 mt-0.5">{space._count.pages} page{space._count.pages !== 1 ? 's' : ''}</p>
+                <p className="text-label text-gray-500 mt-0.5">{space._count.pages} page{space._count.pages !== 1 ? 's' : ''}</p>
               )}
             </div>
             <AddItemButton onAdd={(isFolder) => addItem(undefined, isFolder)} />

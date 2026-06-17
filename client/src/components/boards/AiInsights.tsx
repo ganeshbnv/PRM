@@ -66,7 +66,7 @@ export function AiInsightsStrip({ project, team, iterationPath, onExpand }: Prop
       {/* Health badge */}
       <div className="flex-shrink-0 flex flex-col items-center w-11">
         <span className="text-xl font-bold leading-none" style={{ color }}>{d.healthScore}</span>
-        <span className="text-[9px] uppercase tracking-wider" style={{ color }}>{d.healthLabel}</span>
+        <span className="text-label uppercase tracking-wider" style={{ color }}>{d.healthLabel}</span>
       </div>
 
       <div className="w-px h-7 bg-surface-border flex-shrink-0" />
@@ -76,7 +76,7 @@ export function AiInsightsStrip({ project, team, iterationPath, onExpand }: Prop
         <>
           <div className="flex-shrink-0 flex flex-col items-center">
             <span className="text-sm font-bold text-white leading-none">{d.sprintDaysLeft}d</span>
-            <span className="text-[9px] text-gray-600 uppercase tracking-wide">left</span>
+            <span className="text-label text-gray-600 uppercase tracking-wide">left</span>
           </div>
           <div className="w-16 h-1.5 bg-surface rounded-full flex-shrink-0 overflow-hidden">
             <div className="h-full rounded-full bg-brand-500" style={{ width: `${d.sprintElapsedPct ?? 0}%` }} />
@@ -132,7 +132,7 @@ function Stat({ label, value, color }: { label: string; value: string | number; 
   return (
     <div className="flex flex-col items-center">
       <span className={`text-sm font-bold leading-none ${color ?? 'text-white'}`}>{value}</span>
-      <span className="text-[9px] text-gray-600 uppercase tracking-wide">{label}</span>
+      <span className="text-label text-gray-600 uppercase tracking-wide">{label}</span>
     </div>
   );
 }
@@ -196,7 +196,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold" style={{ color: healthColor }}>{d.healthScore}</span>
-              <span className="text-[10px] text-gray-500">/ 100</span>
+              <span className="text-label text-gray-500">/ 100</span>
             </div>
           </div>
           <span className="text-sm font-semibold" style={{ color: healthColor }}>{d.healthLabel}</span>
@@ -206,7 +206,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
         <div className="col-span-3 card flex flex-col gap-4 justify-center">
           {d.sprintName && (
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-600 mb-1">Sprint</p>
+              <p className="text-label uppercase tracking-widest text-gray-600 mb-1">Sprint</p>
               <p className="text-sm font-semibold text-white leading-tight">{d.sprintName}</p>
             </div>
           )}
@@ -219,7 +219,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
               <div className="w-full bg-surface rounded-full h-2">
                 <div className="h-2 rounded-full bg-brand-500" style={{ width: `${d.sprintElapsedPct ?? 0}%` }} />
               </div>
-              <div className="flex justify-between text-[10px] text-gray-600 mt-1">
+              <div className="flex justify-between text-label text-gray-600 mt-1">
                 <span>Day 1</span><span>Day {d.sprintDaysTotal}</span>
               </div>
             </div>
@@ -253,7 +253,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
             {d.staleCount > 0    && <InlineStat label="Stale"       value={d.staleCount}        color="text-yellow-400" />}
             {d.bugCount > 0      && <InlineStat label="Bugs"         value={d.bugCount}          color="text-orange-400" />}
             {d.unassignedCount > 0 && <InlineStat label="Unassigned" value={d.unassignedCount}   color="text-gray-400" />}
-            <span className="ml-auto text-[10px] text-gray-600">
+            <span className="ml-auto text-label text-gray-600">
               Generated {new Date(d.generatedAt).toLocaleTimeString()}
             </span>
           </div>
@@ -276,7 +276,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
                     <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: STATE_COLOR[state] ?? '#6b7280' }} />
                   </div>
                   <span className="text-sm font-semibold text-gray-300 w-7 text-right flex-shrink-0">{count}</span>
-                  <span className="text-[11px] text-gray-600 w-8 text-right flex-shrink-0">{pct}%</span>
+                  <span className="text-label text-gray-600 w-8 text-right flex-shrink-0">{pct}%</span>
                 </div>
               );
             })}
@@ -296,7 +296,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
                   const isHeavy = m.count === maxLoad && teamLoad.length > 1;
                   return (
                     <div key={m.name} className="flex items-center gap-3">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 ${isHeavy ? 'bg-red-600' : 'bg-brand-700'}`}>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-label font-bold text-white flex-shrink-0 ${isHeavy ? 'bg-red-600' : 'bg-brand-700'}`}>
                         {initials}
                       </div>
                       <span className="text-sm text-gray-400 w-20 truncate flex-shrink-0">
@@ -305,7 +305,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
                       <div className="flex-1 bg-surface rounded-full h-2">
                         <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: isHeavy ? '#ef4444' : '#4c6ef5' }} />
                       </div>
-                      <span className="text-[11px] text-gray-500 w-24 text-right flex-shrink-0 whitespace-nowrap">
+                      <span className="text-label text-gray-500 w-24 text-right flex-shrink-0 whitespace-nowrap">
                         {m.active} active · {m.resolved} done
                       </span>
                       <span className="text-sm font-bold text-gray-300 w-5 text-right flex-shrink-0">{m.count}</span>
@@ -341,7 +341,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
                       <span className="text-sm flex-shrink-0 mt-0.5">{s.icon}</span>
                       <div className="min-w-0">
                         <p className={`text-xs font-semibold ${s.text}`}>{alert.title}</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{alert.detail}</p>
+                        <p className="text-label text-gray-500 mt-0.5 leading-snug">{alert.detail}</p>
                       </div>
                     </div>
                   </div>
@@ -392,7 +392,7 @@ function QuickStat({ label, value, color }: { label: string; value: string | num
   return (
     <div className="flex flex-col">
       <span className={`text-sm font-bold leading-snug ${color ?? 'text-white'}`}>{value}</span>
-      <span className="text-[10px] text-gray-600">{label}</span>
+      <span className="text-label text-gray-600">{label}</span>
     </div>
   );
 }
@@ -401,7 +401,7 @@ function InlineStat({ label, value, color }: { label: string; value: string | nu
   return (
     <span className="flex items-center gap-1">
       <span className={`text-xs font-semibold ${color ?? 'text-gray-300'}`}>{value}</span>
-      <span className="text-[10px] text-gray-600">{label}</span>
+      <span className="text-label text-gray-600">{label}</span>
     </span>
   );
 }
@@ -469,7 +469,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="text-sm">🧠</span>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Sprint Intelligence</span>
+            <span className="text-label font-bold uppercase tracking-widest text-gray-500">Sprint Intelligence</span>
           </div>
 
           {d.sprintName && (
@@ -480,7 +480,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           )}
 
           {/* Health label — text badge only, no score */}
-          <span className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+          <span className="flex-shrink-0 text-label font-bold px-2 py-0.5 rounded-full"
             style={{ background: `${healthColor}18`, color: healthColor, border: `1px solid ${healthColor}35` }}>
             {d.healthLabel}
           </span>
@@ -489,17 +489,17 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
 
           {/* Alert pills */}
           {critAlerts.length > 0 && (
-            <span className="flex-shrink-0 text-[9px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">
+            <span className="flex-shrink-0 text-label font-bold bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full">
               🔴 {critAlerts.length} critical
             </span>
           )}
           {warnAlerts.length > 0 && (
-            <span className="flex-shrink-0 text-[9px] font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full">
+            <span className="flex-shrink-0 text-label font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-2 py-0.5 rounded-full">
               🟡 {warnAlerts.length} warnings
             </span>
           )}
           {critAlerts.length === 0 && warnAlerts.length === 0 && (
-            <span className="flex-shrink-0 text-[9px] text-emerald-500 font-medium">✅ No alerts</span>
+            <span className="flex-shrink-0 text-label text-emerald-500 font-medium">✅ No alerts</span>
           )}
 
           {/* Sprint timing inline */}
@@ -510,7 +510,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
                 <div className="h-1.5 rounded-full"
                   style={{ width: `${d.sprintElapsedPct ?? 0}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
               </div>
-              <span className="text-[10px] text-gray-600">{d.sprintElapsedPct}%</span>
+              <span className="text-label text-gray-600">{d.sprintElapsedPct}%</span>
             </div>
           )}
 
@@ -520,7 +520,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
 
         {/* AI Analysis — full width, multi-line */}
         <div className="surface-deep rounded-xl px-4 py-4 flex flex-col gap-3">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">AI Analysis</span>
+          <span className="text-label font-bold uppercase tracking-widest text-gray-600">AI Analysis</span>
           <AiAnalysisSections summary={d.summary} />
         </div>
       </div>
@@ -532,7 +532,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
         <div className="px-6 py-5 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm">⚙️</span>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Engineering Rate</span>
+            <span className="text-label font-bold uppercase tracking-widest text-gray-500">Engineering Rate</span>
           </div>
 
           {/* Hero: items done + throughput */}
@@ -542,14 +542,14 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
                 <span className="text-3xl font-black text-white leading-none">{doneCount}</span>
                 <span className="text-sm text-gray-600">/ {totalItems}</span>
               </div>
-              <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">items done</span>
+              <span className="text-label text-gray-600 uppercase tracking-wide mt-1">items done</span>
             </div>
             {throughputPerDay > 0 && (
               <>
                 <div className="w-px h-9 bg-surface-border flex-shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-xl font-black text-brand-400 leading-none">{throughputPerDay}</span>
-                  <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">items / day</span>
+                  <span className="text-label text-gray-600 uppercase tracking-wide mt-1">items / day</span>
                 </div>
               </>
             )}
@@ -559,8 +559,8 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           {neededPerDay !== null && d.sprintDaysLeft !== null && d.sprintDaysLeft > 0 && (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500">Pace to finish</span>
-                <span className={`text-[10px] font-bold ${onTrack ? 'text-emerald-400' : atRisk ? 'text-red-400' : 'text-yellow-400'}`}>
+                <span className="text-label text-gray-500">Pace to finish</span>
+                <span className={`text-label font-bold ${onTrack ? 'text-emerald-400' : atRisk ? 'text-red-400' : 'text-yellow-400'}`}>
                   {onTrack ? '✅ On track' : atRisk ? '🔴 At risk' : '⚠️ Needs push'}
                 </span>
               </div>
@@ -570,7 +570,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
                   background: onTrack ? '#10b981' : atRisk ? '#ef4444' : '#f59e0b',
                 }} />
               </div>
-              <div className="flex justify-between text-[10px] text-gray-600">
+              <div className="flex justify-between text-label text-gray-600">
                 <span>Actual: <span className="text-gray-300 font-medium">{throughputPerDay}/day</span></span>
                 <span>Need: <span className="text-gray-300 font-medium">{neededPerDay}/day</span> · {d.sprintDaysLeft}d left</span>
               </div>
@@ -588,21 +588,21 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           {/* Contributors sorted by items resolved */}
           {topEngineers.length > 0 && (
             <div className="pt-3 border-t border-surface-border flex flex-col gap-2">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">Contributors this sprint</span>
+              <span className="text-label font-semibold uppercase tracking-wide text-gray-600">Contributors this sprint</span>
               {topEngineers.map(eng => {
                 const initials = eng.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
                 const donePct = eng.count > 0 ? Math.round((eng.resolved / eng.count) * 100) : 0;
                 return (
                   <div key={eng.name} className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-brand-700/60 border border-brand-600/40 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-brand-700/60 border border-brand-600/40 flex items-center justify-center text-label font-bold text-white flex-shrink-0">
                       {initials}
                     </div>
                     <span className="text-xs text-gray-400 truncate flex-1">{eng.name.split(' ')[0]}</span>
                     <div className="w-12 bg-surface rounded-full h-1 flex-shrink-0">
                       <div className="h-1 rounded-full bg-emerald-500 transition-all" style={{ width: `${donePct}%` }} />
                     </div>
-                    <span className="text-[11px] font-semibold text-emerald-400 flex-shrink-0">{eng.resolved} ✓</span>
-                    <span className="text-[11px] text-gray-600 flex-shrink-0">{eng.active} wip</span>
+                    <span className="text-label font-semibold text-emerald-400 flex-shrink-0">{eng.resolved} ✓</span>
+                    <span className="text-label text-gray-600 flex-shrink-0">{eng.active} wip</span>
                   </div>
                 );
               })}
@@ -615,10 +615,10 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           <div className="flex items-center gap-2 justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm">🔬</span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Testing Pipeline</span>
+              <span className="text-label font-bold uppercase tracking-widest text-gray-500">Testing Pipeline</span>
             </div>
             {qaBottleneck && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 flex-shrink-0">
+              <span className="text-label font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 flex-shrink-0">
                 ⚠️ BOTTLENECK
               </span>
             )}
@@ -649,7 +649,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
             <PerspectiveStat label="Stale items" value={d.staleCount} color={d.staleCount > 0 ? 'text-yellow-400' : undefined} />
           </div>
           {qaBottleneck && (
-            <div className="rounded-lg px-3 py-2 bg-yellow-500/8 border border-yellow-500/20 text-[11px] text-yellow-400 leading-snug">
+            <div className="rounded-lg px-3 py-2 bg-yellow-500/8 border border-yellow-500/20 text-label text-yellow-400 leading-snug">
               ⚠️ QA pipeline congested — {readyForTest} items waiting, {inTesting} actively being tested.
             </div>
           )}
@@ -660,31 +660,31 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
           <div className="flex items-center gap-2 justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm">🐛</span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Bug Density</span>
+              <span className="text-label font-bold uppercase tracking-widest text-gray-500">Bug Density</span>
             </div>
             {bugDensityPct > 20 && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">HIGH</span>
+              <span className="text-label font-bold px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">HIGH</span>
             )}
             {bugDensityPct > 0 && bugDensityPct <= 10 && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">HEALTHY</span>
+              <span className="text-label font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">HEALTHY</span>
             )}
           </div>
           {/* Big numbers */}
           <div className="flex items-end gap-4">
             <div className="flex flex-col">
               <span className="text-3xl font-black text-white leading-none">{d.bugCount}</span>
-              <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">total bugs</span>
+              <span className="text-label text-gray-600 uppercase tracking-wide mt-1">total bugs</span>
             </div>
             <div className="flex flex-col mb-0.5">
               <span className={`text-xl font-black leading-none ${bugDensityPct > 20 ? 'text-red-400' : bugDensityPct > 10 ? 'text-yellow-400' : 'text-emerald-400'}`}>
                 {bugDensityPct}%
               </span>
-              <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">density</span>
+              <span className="text-label text-gray-600 uppercase tracking-wide mt-1">density</span>
             </div>
           </div>
           {/* Density bar */}
           <div>
-            <div className="flex justify-between text-[10px] text-gray-600 mb-1.5">
+            <div className="flex justify-between text-label text-gray-600 mb-1.5">
               <span>Bug density rate</span>
               <span>{bugDensityPct}% of {totalItems} items</span>
             </div>
@@ -694,7 +694,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
                 background: bugDensityPct > 20 ? '#ef4444' : bugDensityPct > 10 ? '#f59e0b' : '#10b981',
               }} />
             </div>
-            <div className="flex text-[9px] mt-1 gap-1 text-gray-700">
+            <div className="flex text-label mt-1 gap-1 text-gray-700">
               <span>0%</span>
               <span className="flex-1 text-center text-emerald-800">healthy ≤10%</span>
               <span className="text-yellow-800">⚠️ 20%</span>
@@ -716,8 +716,8 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
         {/* All alerts */}
         <div className="col-span-3 px-6 py-5 flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Active Alerts</span>
-            <span className="text-[10px] text-gray-600">{d.alerts.length} total</span>
+            <span className="text-label font-bold uppercase tracking-widest text-gray-500">Active Alerts</span>
+            <span className="text-label text-gray-600">{d.alerts.length} total</span>
           </div>
           {d.alerts.length === 0 ? (
             <div className="flex items-center gap-2 text-emerald-400 py-3">
@@ -733,7 +733,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
                     <span className="text-sm flex-shrink-0 mt-0.5">{s.icon}</span>
                     <div className="min-w-0">
                       <p className={`text-xs font-semibold ${s.text}`}>{alert.title}</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{alert.detail}</p>
+                      <p className="text-label text-gray-500 mt-0.5 leading-snug">{alert.detail}</p>
                     </div>
                   </div>
                 );
@@ -745,9 +745,9 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
         {/* Velocity trend */}
         <div className="col-span-2 px-6 py-5 flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Velocity Trend</span>
+            <span className="text-label font-bold uppercase tracking-widest text-gray-500">Velocity Trend</span>
             {d.avgVelocity !== null && (
-              <span className="text-[10px] text-brand-400 font-semibold">{d.avgVelocity} pts avg</span>
+              <span className="text-label text-brand-400 font-semibold">{d.avgVelocity} pts avg</span>
             )}
           </div>
           {velocityData.length > 1 ? (
@@ -762,7 +762,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
                     dot={{ fill: '#4c6ef5', r: 3 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
-              <div className="flex items-center justify-between text-[10px] text-gray-600">
+              <div className="flex items-center justify-between text-label text-gray-600">
                 <span>Predicted: <span className="text-brand-400 font-semibold">{d.predictedCompletion}%</span></span>
                 {velocityDelta !== null && (
                   <span className={velocityDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}>
@@ -786,7 +786,7 @@ function PerspectiveStat({ label, value, color }: { label: string; value: string
   return (
     <div className="flex flex-col gap-0.5">
       <span className={`text-sm font-bold leading-none ${color ?? 'text-white'}`}>{value}</span>
-      <span className="text-[10px] text-gray-600">{label}</span>
+      <span className="text-label text-gray-600">{label}</span>
     </div>
   );
 }
@@ -875,7 +875,7 @@ function AiAnalysisSections({ summary }: { summary: string }) {
           <div key={i} className="flex gap-3">
             <div className="flex-shrink-0 w-1 rounded-full mt-0.5 self-stretch" style={{ background: s.accent, opacity: 0.7 }} />
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: s.accent }}>{s.label}</span>
+              <span className="text-label font-bold uppercase tracking-widest" style={{ color: s.accent }}>{s.label}</span>
               <p className="text-sm text-gray-200 leading-[1.7]">{s.body}</p>
             </div>
           </div>

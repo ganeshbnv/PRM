@@ -111,9 +111,9 @@ function KanbanCard({ item, onClick }: { item: WorkItem; onClick: () => void }) 
       <div className="flex items-center justify-between mb-1.5 gap-1">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-sm flex-shrink-0">{TYPE_ICONS[type] ?? '📋'}</span>
-          <span className="text-[10px] font-mono text-gray-600">#{item.id}</span>
+          <span className="text-label font-mono text-gray-600">#{item.id}</span>
         </div>
-        {isStale && <span title="Stale 3+ days" className="text-[10px] text-yellow-500 flex-shrink-0">⚠</span>}
+        {isStale && <span title="Stale 3+ days" className="text-label text-yellow-500 flex-shrink-0">⚠</span>}
       </div>
 
       {/* Title */}
@@ -125,17 +125,17 @@ function KanbanCard({ item, onClick }: { item: WorkItem; onClick: () => void }) 
       <div className="flex items-center justify-between">
         {assignee ? (
           <div className="flex items-center gap-1.5">
-            <span className="w-5 h-5 rounded-full bg-brand-700 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
+            <span className="w-5 h-5 rounded-full bg-brand-700 flex items-center justify-center text-label font-bold text-white flex-shrink-0">
               {initials}
             </span>
-            <span className="text-[10px] text-gray-500 truncate max-w-[100px]">
+            <span className="text-label text-gray-500 truncate max-w-[100px]">
               {assignee.displayName.split(' ')[0]}
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-gray-600 italic">Unassigned</span>
+          <span className="text-label text-gray-600 italic">Unassigned</span>
         )}
-        <span className="text-[10px] text-gray-600">
+        <span className="text-label text-gray-600">
           {daysSinceUpdate === 0 ? 'today' : `${daysSinceUpdate}d ago`}
         </span>
       </div>

@@ -235,15 +235,15 @@ export function BoardsModule() {
                 <div className="flex items-center gap-2.5">
                   <h2 className="text-base font-bold text-white leading-none truncate">{selectedSprint.iteration.name}</h2>
                   {sprintTf === 'current' && (
-                    <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    <span className="flex-shrink-0 flex items-center gap-1 text-label font-bold px-2 py-0.5 rounded-full"
                       style={{ background: '#10b98118', color: '#10b981', border: '1px solid #10b98135' }}>
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE
                     </span>
                   )}
                   {sprintTf === 'future' && (
-                    <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full text-gray-500 border border-surface-border">UPCOMING</span>
+                    <span className="flex-shrink-0 text-label font-semibold px-2 py-0.5 rounded-full text-gray-500 border border-surface-border">UPCOMING</span>
                   )}
-                  {es && <span className="text-[10px] text-amber-500 flex-shrink-0">· sync error</span>}
+                  {es && <span className="text-label text-amber-500 flex-shrink-0">· sync error</span>}
                 </div>
                 <p className="text-xs text-gray-600 mt-0.5">
                   {sprintDateRange}
@@ -291,7 +291,7 @@ export function BoardsModule() {
         {selectedSprint && (
           <div className="px-6 pb-5 grid grid-cols-2 gap-6 border-t border-surface-border pt-4">
             <div>
-              <div className="flex justify-between text-[11px] mb-1.5">
+              <div className="flex justify-between text-label mb-1.5">
                 <span className="text-gray-600">Sprint time</span>
                 <span className="text-gray-400 font-semibold">{timeElapsedPct}% elapsed{daysLeft !== null && ` · ${daysLeft}d left`}</span>
               </div>
@@ -300,7 +300,7 @@ export function BoardsModule() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-[11px] mb-1.5">
+              <div className="flex justify-between text-label mb-1.5">
                 <span className="text-gray-600">Completion</span>
                 <span className="text-gray-400 font-semibold">{completionPct}% · {selectedSprint.completed}/{selectedSprint.total} items</span>
               </div>
@@ -329,12 +329,12 @@ export function BoardsModule() {
               }}>
               <div className="absolute top-0 left-0 right-0 h-[3px]"
                 style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.25 }} />
-              <span className="text-[10px] uppercase tracking-widest font-semibold mt-1.5"
+              <span className="text-label uppercase tracking-widest font-semibold mt-1.5"
                 style={{ color: sel ? tile.color : '#64748b' }}>{tile.label}</span>
               <span className="text-3xl font-black leading-none tabular-nums"
                 style={{ color: sel ? tile.color : '#1e293b' }}>{tile.count}</span>
               {pct !== null && (
-                <span className="text-[11px] font-medium" style={{ color: sel ? tile.color : '#94a3b8' }}>{pct}%</span>
+                <span className="text-label font-medium" style={{ color: sel ? tile.color : '#94a3b8' }}>{pct}%</span>
               )}
             </button>
           );
@@ -389,7 +389,7 @@ export function BoardsModule() {
               <div className="rounded-xl border border-surface-border bg-surface-card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <Tag>Where are items?</Tag>
-                  <span className="text-[10px] text-gray-600">click to drill in</span>
+                  <span className="text-label text-gray-600">click to drill in</span>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {stateData.map(([name, value]) => (
@@ -421,7 +421,7 @@ export function BoardsModule() {
                 <div className="flex items-center justify-between mb-4">
                   <Tag>Team pulse</Tag>
                   {memberLoad.length > 0 && (
-                    <span className="text-[10px] text-gray-600">{memberLoad.length} members · click for details</span>
+                    <span className="text-label text-gray-600">{memberLoad.length} members · click for details</span>
                   )}
                 </div>
 
@@ -441,7 +441,7 @@ export function BoardsModule() {
                       return (
                         <button key={m.displayName} onClick={() => openModal(m.displayName, m.items)}
                           className="group flex items-center gap-3 w-full text-left rounded-lg hover:bg-surface-elevated px-2 py-2 -mx-2 transition-all">
-                          <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold text-white"
+                          <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-label font-bold text-white"
                             style={{ background: isHeavy ? '#ef444422' : '#4c6ef518', border: `2px solid ${isHeavy ? '#ef4444' : '#4c6ef5'}` }}>
                             {initials}
                           </div>
@@ -456,8 +456,8 @@ export function BoardsModule() {
                               <div style={{ width: `${actPct * 100}%`, background: '#4c6ef5' }} className="h-full transition-all" />
                             </div>
                             <div className="flex justify-between mt-1">
-                              <span className="text-[10px] text-gray-600">{m.active} in progress</span>
-                              <span className="text-[10px] text-emerald-600">{m.resolved} done</span>
+                              <span className="text-label text-gray-600">{m.active} in progress</span>
+                              <span className="text-label text-emerald-600">{m.resolved} done</span>
                             </div>
                           </div>
                         </button>
@@ -478,7 +478,7 @@ export function BoardsModule() {
                   <Tag>Sprint history</Tag>
                   {filters.iterationPath && (
                     <button onClick={() => { setFilter('iterationPath', ''); setActiveTile(null); }}
-                      className="text-[11px] text-gray-600 hover:text-gray-300 transition-colors">clear ×</button>
+                      className="text-label text-gray-600 hover:text-gray-300 transition-colors">clear ×</button>
                   )}
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
@@ -554,7 +554,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
               style={{ width: `${w}%`, background: `${seg.color}18`, borderRight: idx < segments.length - 1 ? '1px solid var(--tile-border)' : undefined }}
               title={`${seg.label}: ${seg.items.length} items`}>
               <span className="text-sm font-black" style={{ color: seg.color }}>{seg.items.length}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wide hidden sm:block" style={{ color: `${seg.color}88` }}>
+              <span className="text-label font-semibold uppercase tracking-wide hidden sm:block" style={{ color: `${seg.color}88` }}>
                 {seg.label.replace(' ', ' ')}
               </span>
             </button>
@@ -568,7 +568,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
           const pct = Math.round((seg.items.length / total) * 100);
           return (
             <div key={seg.label} style={{ width: `${w}%` }} className="text-center">
-              <span className="text-[9px] text-gray-700">{pct}%</span>
+              <span className="text-label text-gray-700">{pct}%</span>
             </div>
           );
         })}
@@ -581,7 +581,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
 
 function Tag({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`text-[11px] font-bold uppercase tracking-widest text-gray-500 ${className ?? ''}`}>
+    <p className={`text-label font-bold uppercase tracking-widest text-gray-500 ${className ?? ''}`}>
       {children}
     </p>
   );

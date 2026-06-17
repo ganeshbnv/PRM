@@ -112,7 +112,7 @@ function ProfileTab({ user }: { user: AuthUser }) {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-600">{label}</span>
+      <span className="text-label font-semibold uppercase tracking-widest text-gray-600">{label}</span>
       <span className="text-sm text-gray-300 bg-white/4 rounded-lg px-3 py-2 border border-white/[0.06]">{value}</span>
     </div>
   );
@@ -210,7 +210,7 @@ function UserManagementTab({ currentUser }: { currentUser: AuthUser }) {
               )}>
               {/* Avatar */}
               <div className={cn(
-                'w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0',
+                'w-8 h-8 rounded-full flex items-center justify-center text-label font-bold text-white flex-shrink-0',
                 u.role === 'admin' ? 'bg-gradient-to-br from-brand-500 to-violet-600' : 'bg-white/10',
               )}>
                 {initials}
@@ -220,14 +220,14 @@ function UserManagementTab({ currentUser }: { currentUser: AuthUser }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-200 truncate">{u.name}</span>
-                  {isSelf && <span className="text-[9px] text-gray-600 bg-white/6 px-1.5 py-0.5 rounded-full">you</span>}
+                  {isSelf && <span className="text-label text-gray-600 bg-white/6 px-1.5 py-0.5 rounded-full">you</span>}
                   <RoleBadge role={u.role} />
                 </div>
                 <p className="text-xs text-gray-600 truncate">{u.email}</p>
               </div>
 
               {/* Joined date */}
-              <span className="text-[10px] text-gray-700 flex-shrink-0 hidden sm:block">
+              <span className="text-label text-gray-700 flex-shrink-0 hidden sm:block">
                 {format(new Date(u.createdAt), 'MMM d, yyyy')}
               </span>
 
@@ -329,7 +329,7 @@ function InviteForm({ onInvited, onClose }: {
         <form onSubmit={submit} className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-gray-600">Full name</label>
+              <label className="text-label font-semibold uppercase tracking-widest text-gray-600">Full name</label>
               <input
                 value={name} onChange={e => setName(e.target.value)} required
                 placeholder="Jane Smith"
@@ -337,7 +337,7 @@ function InviteForm({ onInvited, onClose }: {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-semibold uppercase tracking-widest text-gray-600">Email</label>
+              <label className="text-label font-semibold uppercase tracking-widest text-gray-600">Email</label>
               <input
                 type="email" value={email} onChange={e => setEmail(e.target.value)} required
                 placeholder="jane@globalhealthx.co"
@@ -399,13 +399,13 @@ function InviteForm({ onInvited, onClose }: {
 function RoleBadge({ role }: { role: 'user' | 'admin' }) {
   if (role === 'admin') {
     return (
-      <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-400 border border-brand-500/30 uppercase tracking-wide">
+      <span className="inline-flex items-center gap-1 text-label font-bold px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-400 border border-brand-500/30 uppercase tracking-wide">
         <ShieldCheck size={9} /> Super Admin
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/6 text-gray-500 border border-white/8 uppercase tracking-wide">
+    <span className="inline-flex items-center gap-1 text-label font-bold px-1.5 py-0.5 rounded-full bg-white/6 text-gray-500 border border-white/8 uppercase tracking-wide">
       Member
     </span>
   );

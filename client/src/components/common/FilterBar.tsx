@@ -12,7 +12,7 @@ const inputCls =
   'focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 transition-colors ' +
   'dark:bg-surface-elevated dark:border-surface-border dark:text-gray-200 dark:placeholder-gray-500';
 
-const labelCls = 'block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1';
+const labelCls = 'block text-label font-semibold text-gray-500 uppercase tracking-wider mb-1';
 
 export function FilterBar() {
   const { filters, setFilter, resetFilters } = useFilterStore();

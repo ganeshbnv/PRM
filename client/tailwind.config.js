@@ -22,6 +22,9 @@ export default {
           raised:  '#dde3ee',
         },
       },
+      fontSize: {
+        label: ['11px', { lineHeight: '1.45' }],
+      },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],

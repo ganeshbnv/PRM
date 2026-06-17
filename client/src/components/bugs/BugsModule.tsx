@@ -148,13 +148,13 @@ export function BugsModule() {
               <div className="flex items-center gap-2.5">
                 <span className="text-sm font-bold text-white truncate">{selectedSprint.iteration.name}</span>
                 {sprintTf === 'current' && (
-                  <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  <span className="flex-shrink-0 flex items-center gap-1 text-label font-bold px-2 py-0.5 rounded-full"
                     style={{ background: '#10b98118', color: '#10b981', border: '1px solid #10b98135' }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE
                   </span>
                 )}
                 {sprintTf === 'future' && (
-                  <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full text-gray-500 border border-surface-border">UPCOMING</span>
+                  <span className="flex-shrink-0 text-label font-semibold px-2 py-0.5 rounded-full text-gray-500 border border-surface-border">UPCOMING</span>
                 )}
               </div>
             ) : (
