@@ -2,6 +2,20 @@ import { useEffect, useState } from 'react';
 import { useFilterStore } from '../../store/filters';
 import { api } from '../../api/client';
 
+type Tab = 'boards' | 'bugs' | 'engineers' | 'repos' | 'wiki' | 'risks';
+
+interface Props { activeTab: Tab; }
+
+// Which filter controls are relevant per module
+const SHOW: Record<Tab, { team: boolean; type: boolean; person: boolean }> = {
+  boards:    { team: true,  type: true,  person: true  },
+  bugs:      { team: true,  type: false, person: true  },
+  engineers: { team: false, type: false, person: false },
+  repos:     { team: false, type: false, person: false },
+  risks:     { team: false, type: false, person: false },
+  wiki:      { team: false, type: false, person: false },
+};
+
 const selectCls =
   'bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 font-medium ' +
   'focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 transition-colors ' +
@@ -12,12 +26,15 @@ const inputCls =
   'focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 transition-colors ' +
   'dark:bg-surface-elevated dark:border-surface-border dark:text-gray-200 dark:placeholder-gray-500';
 
-const labelCls = 'block text-label font-semibold text-gray-500 uppercase tracking-wider mb-1';
+const labelCls = 'block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1';
 
-export function FilterBar() {
+export function FilterBar({ activeTab }: Props) {
   const { filters, setFilter, resetFilters } = useFilterStore();
   const [projects, setProjects] = useState<string[]>([]);
   const [teams, setTeams]       = useState<string[]>([]);
+
+  const show = SHOW[activeTab];
+  const hasExtras = show.team || show.type || show.person;
 
   useEffect(() => {
     api.getProjects()
@@ -39,7 +56,7 @@ export function FilterBar() {
   return (
     <div className="flex flex-wrap items-end gap-4 px-5 py-3 bg-surface-card border-b border-surface-border">
 
-      {/* Project */}
+      {/* Project — always visible */}
       <div>
         <label className={labelCls}>Project</label>
         <select
@@ -54,10 +71,11 @@ export function FilterBar() {
         </select>
       </div>
 
-      <div className="w-px h-9 bg-gray-200 self-end mb-0.5" />
+      {/* Divider — only when there are more filters */}
+      {hasExtras && <div className="w-px h-9 bg-gray-200 self-end mb-0.5" />}
 
       {/* Team */}
-      {teams.length > 0 && (
+      {show.team && teams.length > 0 && (
         <div>
           <label className={labelCls}>Team</label>
           <select
@@ -74,40 +92,44 @@ export function FilterBar() {
       )}
 
       {/* Type */}
-      <div>
-        <label className={labelCls}>Type</label>
-        <select
-          value={filters.workItemType}
-          onChange={(e) => setFilter('workItemType', e.target.value)}
-          className={`${selectCls} min-w-[130px]`}
-        >
-          <option value="">All Types</option>
-          <option value="Bug">Bug</option>
-          <option value="Task">Task</option>
-          <option value="User Story">User Story</option>
-          <option value="Feature">Feature</option>
-          <option value="Epic">Epic</option>
-        </select>
-      </div>
+      {show.type && (
+        <div>
+          <label className={labelCls}>Type</label>
+          <select
+            value={filters.workItemType}
+            onChange={(e) => setFilter('workItemType', e.target.value)}
+            className={`${selectCls} min-w-[130px]`}
+          >
+            <option value="">All Types</option>
+            <option value="Bug">Bug</option>
+            <option value="Task">Task</option>
+            <option value="User Story">User Story</option>
+            <option value="Feature">Feature</option>
+            <option value="Epic">Epic</option>
+          </select>
+        </div>
+      )}
 
       {/* Person */}
-      <div>
-        <label className={labelCls}>Person</label>
-        <input
-          type="text"
-          placeholder="Filter by name…"
-          value={filters.assignedTo}
-          onChange={(e) => setFilter('assignedTo', e.target.value)}
-          className={`${inputCls} w-44`}
-        />
-      </div>
+      {show.person && (
+        <div>
+          <label className={labelCls}>Person</label>
+          <input
+            type="text"
+            placeholder="Filter by name…"
+            value={filters.assignedTo}
+            onChange={(e) => setFilter('assignedTo', e.target.value)}
+            className={`${inputCls} w-44`}
+          />
+        </div>
+      )}
 
       {/* Reset */}
       <button
         onClick={resetFilters}
         className="self-end mb-0.5 ml-auto px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        Reset filters
+        Reset
       </button>
     </div>
   );

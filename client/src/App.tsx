@@ -769,7 +769,7 @@ function Dashboard({ user }: { user: AuthUser }) {
         {showTechStack && <TechStackModal onClose={() => setShowTechStack(false)} />}
 
         {/* Filter bar — hidden on Wiki (has its own navigation) */}
-        {tab !== 'wiki' && <FilterBar />}
+        {tab !== 'wiki' && <FilterBar activeTab={tab} />}
 
         {/* Content */}
         {!hasProject ? (
