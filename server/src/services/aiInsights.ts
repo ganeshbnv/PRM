@@ -1,8 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type { SprintStats } from './boards';
 import type { WorkItem } from '../models/ado';
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const OLLAMA_HOST  = process.env.OLLAMA_HOST  ?? 'http://localhost:11434';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'llama3.2';
 
 export interface AiInsight {
   healthScore: number;
@@ -277,16 +277,11 @@ export async function getAiInsights(
   const neededPerDay = (sprintDaysLeft && sprintDaysLeft > 0)
     ? +((items.length - resolved) / sprintDaysLeft).toFixed(1) : null;
 
-  let summary = 'Sprint data loaded.';
-
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      const prompt = `You are a sharp, opinionated engineering PM embedded in a live sprint dashboard. You have the numbers — your job is to interpret them, not repeat them. Spot patterns, flag risks, and give the PM one clear action per section.
+  const prompt = `You are a sharp, opinionated engineering PM embedded in a live sprint dashboard. Your job is to interpret the data and give genuine insight — not restate the numbers. Be direct and specific.
 
 PROJECT: ${project} | TEAM: ${team}
 SPRINT: ${sprintName ?? 'Current'} | ${sprintDaysLeft ?? '?'}d left of ${sprintDaysTotal ?? '?'}d (${sprintElapsedPct ?? '?'}% elapsed)
 HEALTH: ${healthScore}/100 — ${healthLabel}
-
 COMPLETION: ${resolved}/${items.length} done (${completionRate}%) | Throughput: ${throughputPerDay} items/day actual vs ${neededPerDay ?? '?'} needed
 WORK MIX: ${Object.entries(itemsByType).map(([t,c]) => `${t}:${c}`).join(', ')}
 STATES: ${Object.entries(stateCounts).map(([s,c]) => `${s}:${c}`).join(', ')}
@@ -295,28 +290,39 @@ RISKS: ${staleCount} stale items | ${unassignedCount} unassigned | Alerts: ${ale
 TEAM: ${topAssignees.map(a => `${a.name.split(' ')[0]}(${a.resolved}done/${a.active}wip)`).join(', ')}
 VELOCITY: avg ${avgVelocity ?? 'n/a'} pts | trend ${velocityTrend} | history: ${pastVelocities.join(',')||'none'}
 
-Rules:
-- Each section must contain a genuine insight or judgment, NOT a restatement of the numbers above.
-- Use exactly this format — section title in caps, em-dash, then your analysis on the same line:
+Write exactly 6 sections. Each must contain a genuine insight or judgment — not a restatement of numbers. Use this exact format (section title in caps, em-dash, analysis on the same line):
+SPRINT PROGRESS — <what the completion rate means given time elapsed; is the team ahead, behind, or on track and why>
+VELOCITY & PACE — <is throughput enough to finish; what the trend says about team momentum>
+QUALITY & TESTING — <interpret bug density and P1/P2 backlog; risk if left unchecked>
+TEAM WORKLOAD — <who is carrying the sprint; any concentration risk or idle capacity; name names>
+RISKS & BLOCKERS — <the single biggest threat to sprint success; be direct>
+RECOMMENDED ACTIONS — <three concrete prioritised actions the PM should take today>`;
 
-SPRINT PROGRESS — [What the completion rate actually means given time elapsed. Is the team ahead, behind, or on track? Why?]
-VELOCITY & PACE — [Is throughput sufficient to finish? What does the trend tell you about the team's momentum?]
-QUALITY & TESTING — [Interpret bug density and P1/P2 backlog — is quality improving or degrading? What's the risk if unchecked?]
-TEAM WORKLOAD — [Who is carrying the sprint? Any concentration risk or idle capacity? Name names.]
-RISKS & BLOCKERS — [What is the single biggest threat to sprint success? Be specific and direct.]
-RECOMMENDED ACTIONS — [Three concrete, prioritised actions the PM should take today. Be prescriptive.]`;
-
-      const msg = await client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
+  let summary = '';
+  try {
+    const res = await fetch(`${OLLAMA_HOST}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
         messages: [{ role: 'user', content: prompt }],
-      });
-      summary = (msg.content[0] as { type: string; text: string }).text;
-    } catch {
-      summary = `Sprint has ${items.length} items with ${resolved} resolved (${completionRate}% complete). ${openBugs.length} open bugs (${bugDensityPct}% density). ${p1Unresolved.length} P1 items unresolved. Throughput: ${throughputPerDay} items/day vs ${neededPerDay ?? '?'} needed.`;
-    }
-  } else {
-    summary = `Sprint has ${items.length} items with ${resolved} resolved (${completionRate}% complete). ${openBugs.length} open bugs (${bugDensityPct}% density). ${p1Unresolved.length} P1 items unresolved. Throughput: ${throughputPerDay} items/day. ${alerts.length > 0 ? `Alert: ${alerts[0].title}.` : 'No critical alerts.'}`;
+        stream: false,
+        options: { temperature: 0.4, num_predict: 1024 },
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) throw new Error(`Ollama ${res.status}`);
+    const json = await res.json() as { message?: { content?: string }; error?: string };
+    summary = json.message?.content?.trim() ?? '';
+    if (!summary) throw new Error('empty response');
+  } catch (err) {
+    console.warn('[AI] Ollama unavailable:', (err as Error).message);
+    summary = `SPRINT PROGRESS — ${completionRate}% done with ${sprintElapsedPct ?? '?'}% of sprint elapsed; ${completionRate >= (sprintElapsedPct ?? 0) ? 'on track' : 'behind pace'}.
+VELOCITY & PACE — Throughput ${throughputPerDay} items/day vs ${neededPerDay ?? '?'} needed; ${neededPerDay && throughputPerDay >= neededPerDay ? 'sufficient to finish' : 'needs to accelerate'}.
+QUALITY & TESTING — ${bugDensityPct}% bug density with ${p1Unresolved.length} P1 items unresolved${p1Unresolved.length > 0 ? '; P1s must be cleared before sprint close' : ''}.
+TEAM WORKLOAD — ${topAssignees[0] ? `${topAssignees[0].name.split(' ')[0]} leads with ${topAssignees[0].resolved} resolved` : 'No assignee data'}; ${unassignedCount > 0 ? `${unassignedCount} items unassigned` : 'all items assigned'}.
+RISKS & BLOCKERS — ${alerts[0]?.title ?? 'No critical alerts at this time'}.
+RECOMMENDED ACTIONS — 1) Clear P1 backlog. 2) Assign unowned items. 3) Review stale items with owners.`;
   }
 
   return {
