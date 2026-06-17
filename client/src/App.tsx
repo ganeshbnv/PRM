@@ -459,7 +459,15 @@ function Avatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' }) {
 }
 
 export default function App() {
-  const { token, user } = useAuthStore();
+  const { token, user, setAuth } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) return;
+    api.getMe()
+      .then((fresh) => setAuth(token, fresh))
+      .catch(() => {});
+  }, [token]);
+
   if (!token || !user) return <AuthPage />;
   return <Dashboard user={user} />;
 }
