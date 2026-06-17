@@ -21,7 +21,8 @@ export function EngineersModule() {
   if (loading) return <LoadingCard label="Loading engineer activity…" />;
   if (error) return <ErrorCard error={error} />;
 
-  const engineers = data ?? [];
+  // Only show people with at least one code commit — filters out PM/QA/product roles
+  const engineers = (data ?? []).filter(e => e.commits.length > 0);
   const sorted = [...engineers].sort((a, b) => b.commits.length - a.commits.length);
 
   const barData = sorted.slice(0, 15).map((e) => ({

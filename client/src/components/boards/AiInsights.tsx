@@ -440,14 +440,24 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
   const critAlerts    = d.alerts.filter(a => a.severity === 'critical');
   const warnAlerts    = d.alerts.filter(a => a.severity === 'warning');
 
-  // Engineering rate
+  // Engineering rate — all current-sprint, consistent units
+  const daysElapsed     = d.sprintDaysTotal !== null && d.sprintDaysLeft !== null
+    ? Math.max(1, d.sprintDaysTotal - d.sprintDaysLeft) : null;
+  const remainingItems  = totalItems - doneCount;
+  const throughputPerDay = daysElapsed !== null && doneCount > 0
+    ? +(doneCount / daysElapsed).toFixed(1) : 0;
+  const neededPerDay    = d.sprintDaysLeft !== null && d.sprintDaysLeft > 0
+    ? +(remainingItems / d.sprintDaysLeft).toFixed(1) : null;
+  const onTrack         = neededPerDay !== null && throughputPerDay >= neededPerDay;
+  const atRisk          = neededPerDay !== null && throughputPerDay > 0 && neededPerDay > throughputPerDay * 1.5;
+
+  // Velocity chart (bottom section, historical context only)
   const velocityData  = [...d.velocityPoints].reverse().map((pts, i) => ({ sprint: `S-${i + 1}`, pts }));
   const velocityDelta = d.velocityPoints.length >= 2
     ? d.velocityPoints[d.velocityPoints.length - 1] - d.velocityPoints[d.velocityPoints.length - 2]
     : null;
-  const topEngineers  = [...d.topAssignees].sort((a, b) => b.active - a.active).slice(0, 3);
-  const totalActive   = d.topAssignees.reduce((s, m) => s + m.active, 0);
-  const totalResolved = d.topAssignees.reduce((s, m) => s + m.resolved, 0);
+  // Sort contributors by items resolved (most productive first)
+  const topEngineers  = [...d.topAssignees].sort((a, b) => b.resolved - a.resolved || b.active - a.active).slice(0, 3);
 
   return (
     <div className="rounded-2xl border border-surface-border overflow-hidden"
@@ -522,38 +532,80 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
       <div className="grid grid-cols-3 divide-x divide-surface-border">
 
         {/* ① Engineering Rate */}
-        <div className="px-6 py-5 flex flex-col gap-3">
+        <div className="px-6 py-5 flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm">⚙️</span>
             <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Engineering Rate</span>
           </div>
-          <div className="grid grid-cols-2 gap-y-3 gap-x-4">
-            <PerspectiveStat label="Avg velocity" value={d.avgVelocity !== null ? `${d.avgVelocity} pts` : '—'} color="text-brand-400" />
-            <PerspectiveStat label="Completion" value={`${d.completionRate}%`} color="text-emerald-400" />
-            <PerspectiveStat label="Active items" value={totalActive} />
-            <PerspectiveStat label="Items resolved" value={totalResolved} color="text-emerald-400" />
-            {velocityDelta !== null && (
-              <PerspectiveStat
-                label="Velocity Δ"
-                value={`${velocityDelta >= 0 ? '+' : ''}${velocityDelta} pts`}
-                color={velocityDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}
-              />
+
+          {/* Hero: items done + throughput */}
+          <div className="flex items-end gap-4">
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-white leading-none">{doneCount}</span>
+                <span className="text-sm text-gray-600">/ {totalItems}</span>
+              </div>
+              <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">items done</span>
+            </div>
+            {throughputPerDay > 0 && (
+              <>
+                <div className="w-px h-9 bg-surface-border flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-black text-brand-400 leading-none">{throughputPerDay}</span>
+                  <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">items / day</span>
+                </div>
+              </>
             )}
-            <PerspectiveStat label="Predicted done" value={`${d.predictedCompletion}%`} color="text-brand-400" />
           </div>
+
+          {/* Pace bar: actual vs needed */}
+          {neededPerDay !== null && d.sprintDaysLeft !== null && d.sprintDaysLeft > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-500">Pace to finish</span>
+                <span className={`text-[10px] font-bold ${onTrack ? 'text-emerald-400' : atRisk ? 'text-red-400' : 'text-yellow-400'}`}>
+                  {onTrack ? '✅ On track' : atRisk ? '🔴 At risk' : '⚠️ Needs push'}
+                </span>
+              </div>
+              <div className="relative h-2 bg-surface rounded-full overflow-hidden">
+                <div className="h-2 rounded-full transition-all" style={{
+                  width: `${Math.min(neededPerDay > 0 ? (throughputPerDay / neededPerDay) * 100 : 100, 100)}%`,
+                  background: onTrack ? '#10b981' : atRisk ? '#ef4444' : '#f59e0b',
+                }} />
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-600">
+                <span>Actual: <span className="text-gray-300 font-medium">{throughputPerDay}/day</span></span>
+                <span>Need: <span className="text-gray-300 font-medium">{neededPerDay}/day</span> · {d.sprintDaysLeft}d left</span>
+              </div>
+            </div>
+          )}
+
+          {/* Predicted done + historical avg as footnote */}
+          <div className="flex items-center gap-5">
+            <PerspectiveStat label="Predicted done" value={`${d.predictedCompletion}%`} color="text-brand-400" />
+            {d.avgVelocity !== null && (
+              <PerspectiveStat label="Hist. avg velocity" value={`${d.avgVelocity} pts`} color="text-gray-600" />
+            )}
+          </div>
+
+          {/* Contributors sorted by items resolved */}
           {topEngineers.length > 0 && (
             <div className="pt-3 border-t border-surface-border flex flex-col gap-2">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">Top contributors</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">Contributors this sprint</span>
               {topEngineers.map(eng => {
                 const initials = eng.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+                const donePct = eng.count > 0 ? Math.round((eng.resolved / eng.count) * 100) : 0;
                 return (
                   <div key={eng.name} className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-brand-700/60 border border-brand-600/40 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
                       {initials}
                     </div>
                     <span className="text-xs text-gray-400 truncate flex-1">{eng.name.split(' ')[0]}</span>
+                    <div className="w-12 bg-surface rounded-full h-1 flex-shrink-0">
+                      <div className="h-1 rounded-full bg-emerald-500 transition-all" style={{ width: `${donePct}%` }} />
+                    </div>
                     <span className="text-[11px] font-semibold text-emerald-400 flex-shrink-0">{eng.resolved} ✓</span>
-                    <span className="text-[11px] text-brand-400 flex-shrink-0 ml-1">{eng.active} act</span>
+                    <span className="text-[11px] text-gray-600 flex-shrink-0">{eng.active} wip</span>
                   </div>
                 );
               })}
