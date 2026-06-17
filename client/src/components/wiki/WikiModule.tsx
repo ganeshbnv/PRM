@@ -921,7 +921,7 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
               <Avatar name={space.creator.name} size="sm" />
               <div className="min-w-0">
                 <span className="text-label text-gray-600">Last updated by </span>
-                <span className="text-label text-gray-400 font-medium truncate">{space.creator.name}</span>
+                <span className="text-label text-gray-400 font-bold truncate">{space.creator.name}</span>
               </div>
             </div>
           )}
