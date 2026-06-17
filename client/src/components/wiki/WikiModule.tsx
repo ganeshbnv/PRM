@@ -2684,7 +2684,7 @@ function SpaceView({ space, onBack, currentUser }: {
   const [pageLoading, setPageLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [fullWidth, setFullWidth] = useState<boolean>(() => {
-    try { return localStorage.getItem('wiki-full-width') === 'true'; } catch { return false; }
+    try { const v = localStorage.getItem('wiki-full-width'); return v === null ? true : v === 'true'; } catch { return true; }
   });
   const dragIdRef = useRef<string | null>(null);
   const [dropIndicator, setDropIndicator] = useState<DragIndicator>({ overId: null, position: 'before' });
