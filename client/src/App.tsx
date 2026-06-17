@@ -531,7 +531,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             <>
               <div className="flex-1 min-w-0">
                 <p className="text-gray-900 font-bold text-sm leading-none tracking-tight">PRM</p>
-                <p className="text-gray-600 text-label leading-none mt-[5px]">Project Intelligence</p>
+                <p className="text-gray-600 text-label leading-none mt-[5px] whitespace-nowrap">Project Intelligence</p>
               </div>
               {/* Collapse trigger */}
               <button
