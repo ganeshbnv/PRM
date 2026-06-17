@@ -130,7 +130,7 @@ export function AiInsightsStrip({ project, team, iterationPath, onExpand }: Prop
 
 function Stat({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center gap-0.5">
       <span className={`text-sm font-bold leading-none ${color ?? 'text-white'}`}>{value}</span>
       <span className="text-label text-gray-600 uppercase tracking-wide">{label}</span>
     </div>
@@ -305,7 +305,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
                       <div className="flex-1 bg-surface rounded-full h-2">
                         <div className="h-2 rounded-full" style={{ width: `${pct}%`, background: isHeavy ? '#ef4444' : '#4c6ef5' }} />
                       </div>
-                      <span className="text-label text-gray-500 w-24 text-right flex-shrink-0 whitespace-nowrap">
+                      <span className="text-label text-gray-500 w-28 text-right flex-shrink-0 whitespace-nowrap">
                         {m.active} active · {m.resolved} done
                       </span>
                       <span className="text-sm font-bold text-gray-300 w-5 text-right flex-shrink-0">{m.count}</span>
@@ -390,7 +390,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
 
 function QuickStat({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-0.5">
       <span className={`text-sm font-bold leading-snug ${color ?? 'text-white'}`}>{value}</span>
       <span className="text-label text-gray-600">{label}</span>
     </div>
@@ -399,9 +399,9 @@ function QuickStat({ label, value, color }: { label: string; value: string | num
 
 function InlineStat({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
-    <span className="flex items-center gap-1">
+    <span className="flex items-center gap-1.5">
       <span className={`text-xs font-semibold ${color ?? 'text-gray-300'}`}>{value}</span>
-      <span className="text-label text-gray-600">{label}</span>
+      <span className="text-label text-gray-500">{label}</span>
     </span>
   );
 }

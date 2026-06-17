@@ -291,7 +291,7 @@ export function BoardsModule() {
         {selectedSprint && (
           <div className="px-6 pb-5 grid grid-cols-2 gap-6 border-t border-surface-border pt-4">
             <div>
-              <div className="flex justify-between text-label mb-1.5">
+              <div className="flex justify-between gap-4 text-label mb-1.5">
                 <span className="text-gray-600">Sprint time</span>
                 <span className="text-gray-400 font-semibold">{timeElapsedPct}% elapsed{daysLeft !== null && ` · ${daysLeft}d left`}</span>
               </div>
@@ -300,7 +300,7 @@ export function BoardsModule() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between text-label mb-1.5">
+              <div className="flex justify-between gap-4 text-label mb-1.5">
                 <span className="text-gray-600">Completion</span>
                 <span className="text-gray-400 font-semibold">{completionPct}% · {selectedSprint.completed}/{selectedSprint.total} items</span>
               </div>
@@ -455,9 +455,9 @@ export function BoardsModule() {
                               <div style={{ width: `${resPct * 100}%`, background: '#10b981' }} className="h-full transition-all" />
                               <div style={{ width: `${actPct * 100}%`, background: '#4c6ef5' }} className="h-full transition-all" />
                             </div>
-                            <div className="flex justify-between mt-1">
-                              <span className="text-label text-gray-600">{m.active} in progress</span>
-                              <span className="text-label text-emerald-600">{m.resolved} done</span>
+                            <div className="flex justify-between gap-3 mt-1">
+                              <span className="text-label text-gray-600 truncate">{m.active} in progress</span>
+                              <span className="text-label text-emerald-600 flex-shrink-0">{m.resolved} done</span>
                             </div>
                           </div>
                         </button>
