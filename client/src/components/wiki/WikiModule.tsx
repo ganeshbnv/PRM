@@ -1136,7 +1136,7 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 text-xs">
-          <p className="px-3 pt-1.5 pb-1 text-label text-gray-500 uppercase tracking-wider">Add to this space</p>
+          <p className="px-3 pt-1.5 pb-1 text-label text-gray-500">Add to this space</p>
           <button
             onClick={e => { e.stopPropagation(); onAdd(true); setOpen(false); }}
             className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-100 transition-colors">
