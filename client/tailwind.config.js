@@ -1,11 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         brand: {
-          50: '#f0f4ff',
+          50:  '#eef2ff',
           100: '#dbe4ff',
           400: '#748ffc',
           500: '#4c6ef5',

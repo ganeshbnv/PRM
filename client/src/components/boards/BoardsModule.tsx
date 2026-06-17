@@ -322,8 +322,8 @@ export function BoardsModule() {
               onClick={() => setActiveTile(tile.key === '__total__' ? null : (activeTile === tile.key ? null : tile.key))}
               className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all"
               style={{
-                border:     `2px solid ${sel ? tile.color : '#e2e8f0'}`,
-                background: sel ? `${tile.color}12` : '#ffffff',
+                border:     `2px solid ${sel ? tile.color : 'var(--tile-border)'}`,
+                background: sel ? `${tile.color}12` : 'var(--tile-bg)',
                 boxShadow:  sel ? `0 0 16px ${tile.color}28, 0 2px 8px rgba(0,0,0,0.08)` : '0 1px 3px rgba(0,0,0,0.06)',
                 transform:  sel ? 'translateY(-2px)' : undefined,
               }}>
@@ -491,10 +491,10 @@ export function BoardsModule() {
                       }
                     }}
                     style={{ cursor: 'pointer' }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
                     <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} />
                     <YAxis tick={{ fill: '#64748b', fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, color: '#1e293b' }}
+                    <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, fontSize: 12, color: 'var(--tooltip-text)' }}
                       labelFormatter={label => {
                         const s = (sprints ?? []).find((sp: SprintStats) => sp.iteration.name === label);
                         return `${label}${s?.iteration.attributes.timeFrame === 'current' ? ' · Active' : ''}`;
@@ -506,8 +506,8 @@ export function BoardsModule() {
                     <Bar dataKey="In Progress" stackId="a" fill={C.total}>
                       {iterData.map(e => <Cell key={e.path} fill={C.total} opacity={filters.iterationPath && e.path !== filters.iterationPath ? 0.18 : 1} />)}
                     </Bar>
-                    <Bar dataKey="Not Started" stackId="a" fill="#e2e8f0" radius={[3, 3, 0, 0]}>
-                      {iterData.map(e => <Cell key={e.path} fill="#e2e8f0" opacity={filters.iterationPath && e.path !== filters.iterationPath ? 0.5 : 1} />)}
+                    <Bar dataKey="Not Started" stackId="a" fill="var(--tile-border)" radius={[3, 3, 0, 0]}>
+                      {iterData.map(e => <Cell key={e.path} fill="var(--tile-border)" opacity={filters.iterationPath && e.path !== filters.iterationPath ? 0.5 : 1} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -551,7 +551,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
             <button key={seg.label}
               onClick={() => onSegmentClick(seg.label, seg.items)}
               className="flex items-center justify-center gap-2 transition-all hover:brightness-125 group relative"
-              style={{ width: `${w}%`, background: `${seg.color}18`, borderRight: idx < segments.length - 1 ? '1px solid #e2e8f0' : undefined }}
+              style={{ width: `${w}%`, background: `${seg.color}18`, borderRight: idx < segments.length - 1 ? '1px solid var(--tile-border)' : undefined }}
               title={`${seg.label}: ${seg.items.length} items`}>
               <span className="text-sm font-black" style={{ color: seg.color }}>{seg.items.length}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wide hidden sm:block" style={{ color: `${seg.color}88` }}>
@@ -650,10 +650,10 @@ function SprintBurndown({ sprint }: { sprint: SprintStats }) {
       {burnData.length > 0 && (
         <ResponsiveContainer width="100%" height={165}>
           <LineChart data={burnData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
             <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 10 }} interval="preserveStartEnd" />
             <YAxis tick={{ fill: '#64748b', fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 11, color: '#1e293b' }} />
+            <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, fontSize: 11, color: 'var(--tooltip-text)' }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             <Line type="monotone" dataKey="Ideal" stroke="#94a3b8" strokeDasharray="4 3" dot={false} strokeWidth={1.5} />
             <Line type="monotone" dataKey="Actual" stroke={C.total} strokeWidth={2.5} dot={false} />

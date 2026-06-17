@@ -2,25 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS Variables ──────────────────────────────────────────────────────────
+   :root = light defaults   html.dark = dark overrides
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --surface:            #f1f5f9;
+  --surface-card:       #ffffff;
+  --surface-elevated:   #e8edf5;
+  --surface-border:     #cbd5e1;
+  --chart-grid:         #e2e8f0;
+  --tooltip-bg:         #ffffff;
+  --tooltip-border:     #e2e8f0;
+  --tooltip-text:       #1e293b;
+  --tile-bg:            #ffffff;
+  --tile-border:        #e2e8f0;
+  --tile-text:          #1e293b;
+  --tile-muted:         #64748b;
+}
+
+html.dark {
+  --surface:            #0f0f14;
+  --surface-card:       #17171e;
+  --surface-elevated:   #1c1c26;
+  --surface-border:     #2d2f45;
+  --chart-grid:         #1e2130;
+  --tooltip-bg:         #1a1d27;
+  --tooltip-border:     #2d3148;
+  --tooltip-text:       #e2e8f0;
+  --tile-bg:            #111320;
+  --tile-border:        #1c1f2e;
+  --tile-text:          #e2e8f0;
+  --tile-muted:         #9ca3af;
+}
+
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 
 @layer base {
-  html {
-    color-scheme: light;
-  }
+  html      { color-scheme: light; }
+  html.dark { color-scheme: dark;  }
   body {
-    background-color: #f1f5f9;
+    background-color: var(--surface);
     color: #1e293b;
     -webkit-font-smoothing: antialiased;
   }
+  html.dark body { color: #e2e8f0; }
   ::-webkit-scrollbar        { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track  { background: #f1f5f9; }
-  ::-webkit-scrollbar-thumb  { background: #cbd5e1; border-radius: 9999px; }
+  ::-webkit-scrollbar-track  { background: var(--surface); }
+  ::-webkit-scrollbar-thumb  { background: var(--surface-border); border-radius: 9999px; }
 }
 
 @layer components {
-  .card { @apply bg-white border border-gray-200 rounded-xl p-4 shadow-sm; }
-  .btn  { @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors; }
+  .card        { background-color: var(--surface-card); border: 1px solid var(--surface-border); @apply rounded-xl p-4 shadow-sm; }
+  .btn         { @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors; }
   .btn-primary { @apply btn bg-brand-600 hover:bg-brand-700 text-white; }
   .btn-ghost   { @apply btn text-gray-600 hover:text-gray-900 hover:bg-gray-100; }
   .badge       { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold; }
@@ -30,157 +64,181 @@
   .badge-low      { @apply badge bg-blue-100   text-blue-700   border border-blue-200; }
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   All overrides below run after Tailwind utilities (higher cascade priority)
-   ────────────────────────────────────────────────────────────────────────── */
+/* ── Surface guarantees (CSS-variable backed) ─────────────────────────────── */
 
-/* ── Gray text: invert light-on-dark → dark-on-light ─────────────────────── */
+.bg-surface            { background-color: var(--surface);          }
+.bg-surface-card       { background-color: var(--surface-card);     }
+.bg-surface-elevated   { background-color: var(--surface-elevated); }
+.border-surface-border { border-color:     var(--surface-border);   }
 
-.text-white    { color: #0f172a; }
-.text-gray-50  { color: #0f172a; }
-.text-gray-100 { color: #1e293b; }
-.text-gray-200 { color: #334155; }
-.text-gray-300 { color: #475569; }
-.text-gray-400 { color: #64748b; }
-.text-gray-500 { color: #64748b; }
-.text-gray-600 { color: #64748b; }
-.text-gray-700 { color: #94a3b8; }
+/* ── Dark mode: fix explicitly-set light classes (added during light-mode work) */
 
-/* ── Accent colors: *-400 and lighter → *-700 for WCAG-safe contrast ─────── */
+html.dark .bg-white           { background-color: var(--surface-card);     }
+html.dark .bg-gray-50         { background-color: var(--surface-elevated); }
+html.dark .bg-gray-100        { background-color: #1e1e28; }
+html.dark .bg-gray-200        { background-color: #242434; }
+html.dark .border-gray-200    { border-color: var(--surface-border); }
+html.dark .border-gray-100    { border-color: #232538; }
+html.dark .text-gray-900      { color: #f1f5f9; }
+html.dark .text-gray-800      { color: #e2e8f0; }
 
-.text-brand-300, .text-brand-400              { color: #2f4ac2; }
-.text-brand-500                               { color: #3b5bdb; }
-.text-red-300, .text-red-400, .text-red-500   { color: #b91c1c; }
-.text-orange-200, .text-orange-300, .text-orange-400 { color: #c2410c; }
-.text-emerald-400, .text-emerald-500          { color: #047857; }
-.text-emerald-600                             { color: #065f46; }
-.text-amber-400, .text-amber-500              { color: #92400e; }
-.text-yellow-400, .text-yellow-500            { color: #92400e; }
-.text-blue-400                                { color: #1d4ed8; }
-.text-violet-400                              { color: #5b21b6; }
-.text-sky-400                                 { color: #0369a1; }
-.text-rose-400                                { color: #9f1239; }
-.text-green-300                               { color: #15803d; }
-.text-purple-400                              { color: #6b21a8; }
-.text-cyan-400                                { color: #0e7490; }
-.text-teal-400                                { color: #0f766e; }
-.text-pink-400                                { color: #9d174d; }
-.text-indigo-400                              { color: #3730a3; }
+html.dark .bg-brand-50        { background-color: rgba(76,110,245,0.12); }
+html.dark .bg-red-50          { background-color: rgba(239,68,68,0.1);  }
+html.dark .bg-orange-50       { background-color: rgba(249,115,22,0.1); }
+html.dark .bg-emerald-50      { background-color: rgba(16,185,129,0.1); }
+html.dark .bg-blue-50         { background-color: rgba(59,130,246,0.1); }
+html.dark .bg-amber-50        { background-color: rgba(245,158,11,0.1); }
+html.dark .border-red-200     { border-color: rgba(239,68,68,0.3);  }
+html.dark .border-orange-200  { border-color: rgba(249,115,22,0.3); }
+html.dark .border-emerald-200 { border-color: rgba(16,185,129,0.3); }
+html.dark .border-blue-200    { border-color: rgba(59,130,246,0.3); }
+html.dark .border-amber-200   { border-color: rgba(245,158,11,0.3); }
+html.dark .text-red-700       { color: #f87171; }
+html.dark .text-orange-700    { color: #fb923c; }
+html.dark .text-emerald-700   { color: #34d399; }
+html.dark .text-blue-700      { color: #60a5fa; }
+html.dark .text-amber-700     { color: #fbbf24; }
 
-/* ── hover:text-white → dark text ────────────────────────────────────────── */
+html.dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.06); }
+html.dark .hover\:text-gray-900:hover { color: #f1f5f9; }
+html.dark .hover\:text-gray-800:hover { color: #e2e8f0; }
+html.dark .hover\:text-gray-700:hover { color: #cbd5e1; }
 
-.hover\:text-white:hover     { color: #0f172a; }
-.hover\:text-gray-200:hover  { color: #334155; }
-.hover\:text-gray-300:hover  { color: #475569; }
+/* Dark mode surface gradient utilities */
+html.dark .bg-module-gradient {
+  background: linear-gradient(160deg, #0f0f14 0%, #17171e 55%, #0f0f14 100%);
+}
+html.dark .bg-intel-panel {
+  background: linear-gradient(160deg, #0f0f14 0%, #1c1c26 60%, #0f0f14 100%);
+}
+html.dark .bg-stack-bar { background-color: #1c1c26; }
+html.dark .surface-deep { background-color: #17171e; border: 1px solid #2d2f45; }
 
-/* ── bg-white/* overlays → subtle black tints ────────────────────────────── */
+/* ── Light-mode text remapping ────────────────────────────────────────────── */
+/* Classes designed for dark backgrounds — remap for light mode only          */
 
-.bg-white\/3           { background-color: rgb(0 0 0 / 0.02); }
-.bg-white\/4           { background-color: rgb(0 0 0 / 0.03); }
-.bg-white\/5           { background-color: rgb(0 0 0 / 0.04); }
-.bg-white\/6           { background-color: rgb(0 0 0 / 0.05); }
-.bg-white\/8           { background-color: rgb(0 0 0 / 0.06); }
-.bg-white\/10          { background-color: rgb(0 0 0 / 0.08); }
-.bg-white\/\[0\.025\]  { background-color: rgb(0 0 0 / 0.02); }
-.bg-white\/\[0\.03\]   { background-color: rgb(0 0 0 / 0.02); }
-.bg-white\/\[0\.035\]  { background-color: rgb(0 0 0 / 0.03); }
-.bg-white\/\[0\.04\]   { background-color: rgb(0 0 0 / 0.03); }
-.bg-white\/\[0\.06\]   { background-color: rgb(0 0 0 / 0.05); }
-.bg-white\/\[0\.07\]   { background-color: rgb(0 0 0 / 0.06); }
-.bg-white\/\[0\.08\]   { background-color: rgb(0 0 0 / 0.07); }
-.hover\:bg-white\/4:hover  { background-color: rgb(0 0 0 / 0.03); }
-.hover\:bg-white\/5:hover  { background-color: rgb(0 0 0 / 0.04); }
-.hover\:bg-white\/8:hover  { background-color: rgb(0 0 0 / 0.06); }
-.hover\:bg-white\/10:hover { background-color: rgb(0 0 0 / 0.08); }
+html:not(.dark) .text-white    { color: #0f172a; }
+html:not(.dark) .text-gray-50  { color: #0f172a; }
+html:not(.dark) .text-gray-100 { color: #1e293b; }
+html:not(.dark) .text-gray-200 { color: #334155; }
+html:not(.dark) .text-gray-300 { color: #475569; }
+html:not(.dark) .text-gray-400 { color: #64748b; }
+html:not(.dark) .text-gray-500 { color: #64748b; }
+html:not(.dark) .text-gray-600 { color: #64748b; }
+html:not(.dark) .text-gray-700 { color: #94a3b8; }
 
-/* ── border-white/* → subtle dark borders ─────────────────────────────────── */
+/* Exceptions: text-white on coloured backgrounds must stay white */
+html:not(.dark) .bg-brand-600.text-white,
+html:not(.dark) .bg-brand-500.text-white,
+html:not(.dark) .bg-brand-700.text-white,
+html:not(.dark) .bg-red-600.text-white,
+html:not(.dark) .bg-red-500.text-white,
+html:not(.dark) .bg-sky-600.text-white,
+html:not(.dark) .bg-emerald-600.text-white,
+html:not(.dark) .from-brand-500.text-white,
+html:not(.dark) .bg-gradient-to-br.text-white { color: #ffffff; }
 
-.border-white\/5          { border-color: rgb(0 0 0 / 0.06); }
-.border-white\/6          { border-color: rgb(0 0 0 / 0.07); }
-.border-white\/8          { border-color: rgb(0 0 0 / 0.09); }
-.border-white\/10         { border-color: rgb(0 0 0 / 0.11); }
-.border-white\/12         { border-color: rgb(0 0 0 / 0.13); }
-.border-white\/\[0\.06\]  { border-color: rgb(0 0 0 / 0.07); }
-.border-white\/\[0\.08\]  { border-color: rgb(0 0 0 / 0.09); }
+/* Accent colours */
+html:not(.dark) .text-brand-300, html:not(.dark) .text-brand-400 { color: #2f4ac2; }
+html:not(.dark) .text-brand-500                                   { color: #3b5bdb; }
+html:not(.dark) .text-red-300, html:not(.dark) .text-red-400, html:not(.dark) .text-red-500 { color: #b91c1c; }
+html:not(.dark) .text-orange-200, html:not(.dark) .text-orange-300, html:not(.dark) .text-orange-400 { color: #c2410c; }
+html:not(.dark) .text-emerald-400, html:not(.dark) .text-emerald-500 { color: #047857; }
+html:not(.dark) .text-emerald-600                                     { color: #065f46; }
+html:not(.dark) .text-amber-400, html:not(.dark) .text-amber-500      { color: #92400e; }
+html:not(.dark) .text-yellow-400, html:not(.dark) .text-yellow-500    { color: #92400e; }
+html:not(.dark) .text-blue-400   { color: #1d4ed8; }
+html:not(.dark) .text-violet-400 { color: #5b21b6; }
+html:not(.dark) .text-sky-400    { color: #0369a1; }
+html:not(.dark) .text-rose-400   { color: #9f1239; }
+html:not(.dark) .text-green-300  { color: #15803d; }
+html:not(.dark) .text-purple-400 { color: #6b21a8; }
+html:not(.dark) .text-cyan-400   { color: #0e7490; }
+html:not(.dark) .text-teal-400   { color: #0f766e; }
+html:not(.dark) .text-pink-400   { color: #9d174d; }
+html:not(.dark) .text-indigo-400 { color: #3730a3; }
 
-/* ── Dark bg classes → light equivalents ──────────────────────────────────── */
+/* Hover overrides (light mode) */
+html:not(.dark) .hover\:text-white:hover     { color: #0f172a; }
+html:not(.dark) .hover\:text-gray-200:hover  { color: #334155; }
+html:not(.dark) .hover\:text-gray-300:hover  { color: #475569; }
+html:not(.dark) .hover\:text-gray-700:hover  { color: #1e293b; }
 
-.bg-gray-800              { background-color: #f1f5f9; }
-.bg-gray-800\/40          { background-color: rgb(241 245 249 / 0.8); }
-.hover\:bg-gray-800:hover { background-color: #e2e8f0; }
+/* bg-white/* overlays → subtle dark tints (light mode) */
+html:not(.dark) .bg-white\/3           { background-color: rgb(0 0 0 / 0.02); }
+html:not(.dark) .bg-white\/4           { background-color: rgb(0 0 0 / 0.03); }
+html:not(.dark) .bg-white\/5           { background-color: rgb(0 0 0 / 0.04); }
+html:not(.dark) .bg-white\/6           { background-color: rgb(0 0 0 / 0.05); }
+html:not(.dark) .bg-white\/8           { background-color: rgb(0 0 0 / 0.06); }
+html:not(.dark) .bg-white\/10          { background-color: rgb(0 0 0 / 0.08); }
+html:not(.dark) .bg-white\/\[0\.025\]  { background-color: rgb(0 0 0 / 0.02); }
+html:not(.dark) .bg-white\/\[0\.03\]   { background-color: rgb(0 0 0 / 0.02); }
+html:not(.dark) .bg-white\/\[0\.035\]  { background-color: rgb(0 0 0 / 0.03); }
+html:not(.dark) .bg-white\/\[0\.04\]   { background-color: rgb(0 0 0 / 0.03); }
+html:not(.dark) .bg-white\/\[0\.06\]   { background-color: rgb(0 0 0 / 0.05); }
+html:not(.dark) .bg-white\/\[0\.07\]   { background-color: rgb(0 0 0 / 0.06); }
+html:not(.dark) .bg-white\/\[0\.08\]   { background-color: rgb(0 0 0 / 0.07); }
+html:not(.dark) .hover\:bg-white\/4:hover  { background-color: rgb(0 0 0 / 0.03); }
+html:not(.dark) .hover\:bg-white\/5:hover  { background-color: rgb(0 0 0 / 0.04); }
+html:not(.dark) .hover\:bg-white\/8:hover  { background-color: rgb(0 0 0 / 0.06); }
+html:not(.dark) .hover\:bg-white\/10:hover { background-color: rgb(0 0 0 / 0.08); }
 
-.bg-gray-900              { background-color: #f8fafc; }
-.bg-gray-700\/60          { background-color: #e2e8f0; }
-.hover\:bg-gray-700:hover { background-color: #e2e8f0; }
-.hover\:bg-gray-700\/60:hover { background-color: #e2e8f0; }
-.border-gray-700          { border-color: #cbd5e1; }
-.border-gray-700\/50      { border-color: rgb(203 213 225 / 0.5); }
-.border-gray-700\/60      { border-color: rgb(203 213 225 / 0.6); }
-.hover\:text-gray-700:hover { color: #1e293b; }
+/* border-white/* → subtle dark borders (light mode) */
+html:not(.dark) .border-white\/5          { border-color: rgb(0 0 0 / 0.06); }
+html:not(.dark) .border-white\/6          { border-color: rgb(0 0 0 / 0.07); }
+html:not(.dark) .border-white\/8          { border-color: rgb(0 0 0 / 0.09); }
+html:not(.dark) .border-white\/10         { border-color: rgb(0 0 0 / 0.11); }
+html:not(.dark) .border-white\/12         { border-color: rgb(0 0 0 / 0.13); }
+html:not(.dark) .border-white\/\[0\.06\]  { border-color: rgb(0 0 0 / 0.07); }
+html:not(.dark) .border-white\/\[0\.08\]  { border-color: rgb(0 0 0 / 0.09); }
 
-/* ── Dark tint backgrounds → light semantic equivalents ───────────────────── */
+/* Dark bg classes → light equivalents (light mode only) */
+html:not(.dark) .bg-gray-800               { background-color: #f1f5f9; }
+html:not(.dark) .bg-gray-800\/40           { background-color: rgb(241 245 249 / 0.8); }
+html:not(.dark) .hover\:bg-gray-800:hover  { background-color: #e2e8f0; }
+html:not(.dark) .bg-gray-900               { background-color: #f8fafc; }
+html:not(.dark) .bg-gray-700\/60           { background-color: #e2e8f0; }
+html:not(.dark) .hover\:bg-gray-700:hover  { background-color: #e2e8f0; }
+html:not(.dark) .hover\:bg-gray-700\/60:hover { background-color: #e2e8f0; }
+html:not(.dark) .border-gray-700           { border-color: #cbd5e1; }
+html:not(.dark) .border-gray-700\/50       { border-color: rgb(203 213 225 / 0.5); }
+html:not(.dark) .border-gray-700\/60       { border-color: rgb(203 213 225 / 0.6); }
 
-.bg-red-900\/20    { background-color: #fee2e2; }
-.bg-red-900\/30    { background-color: #fee2e2; }
-.bg-red-900\/50    { background-color: #fecaca; }
-.border-red-700\/50 { border-color: #fca5a5; }
-.text-red-300      { color: #b91c1c; }   /* re-assert in case above didn't apply */
+/* Dark tint backgrounds (light mode) */
+html:not(.dark) .bg-red-900\/10    { background-color: #fef2f2; }
+html:not(.dark) .bg-red-900\/20    { background-color: #fee2e2; }
+html:not(.dark) .bg-red-900\/30    { background-color: #fee2e2; }
+html:not(.dark) .bg-red-900\/50    { background-color: #fecaca; }
+html:not(.dark) .border-red-700\/50 { border-color: #fca5a5; }
+html:not(.dark) .border-red-700\/60 { border-color: #fca5a5; }
+html:not(.dark) .bg-orange-900\/10  { background-color: #fff7ed; }
+html:not(.dark) .bg-orange-900\/50  { background-color: #fed7aa; }
+html:not(.dark) .border-orange-700\/50 { border-color: #fdba74; }
+html:not(.dark) .bg-green-900\/50   { background-color: #bbf7d0; }
+html:not(.dark) .bg-brand-900\/40   { background-color: #dbeafe; }
+html:not(.dark) .bg-black\/30       { background-color: #f1f5f9; }
+html:not(.dark) .bg-emerald-950\/25 { background-color: #d1fae5; }
+html:not(.dark) .bg-emerald-950\/50 { background-color: #a7f3d0; }
+html:not(.dark) .bg-emerald-950\/60 { background-color: #6ee7b7; }
+html:not(.dark) .border-emerald-800\/40 { border-color: #6ee7b7; }
+html:not(.dark) .border-emerald-900\/30 { border-color: #6ee7b7; }
+html:not(.dark) .border-emerald-900\/40 { border-color: #34d399; }
+html:not(.dark) .bg-blue-950\/20    { background-color: #dbeafe; }
+html:not(.dark) .bg-blue-950\/60    { background-color: #bfdbfe; }
+html:not(.dark) .border-blue-900\/25  { border-color: #93c5fd; }
+html:not(.dark) .border-blue-900\/40  { border-color: #60a5fa; }
+html:not(.dark) .bg-amber-900\/20   { background-color: #fffbeb; }
+html:not(.dark) .bg-amber-900\/30   { background-color: #fef3c7; }
+html:not(.dark) .hover\:bg-amber-900\/20:hover { background-color: #fef3c7; }
+html:not(.dark) .border-amber-900\/40  { border-color: #fbbf24; }
 
-.bg-orange-900\/10  { background-color: #fff7ed; }
-.bg-orange-900\/50  { background-color: #fed7aa; }
-.border-orange-700\/50 { border-color: #fdba74; }
+/* ── Light mode surface utilities ──────────────────────────────────────────── */
 
-.bg-green-900\/50   { background-color: #bbf7d0; }
-.text-green-300     { color: #15803d; }
-
-.bg-brand-900\/40   { background-color: #dbeafe; }
-.bg-black\/30       { background-color: #f1f5f9; }
-
-/* ── Emerald 950 dark tints → light green ─────────────────────────────────── */
-
-.bg-emerald-950\/25  { background-color: #d1fae5; }
-.bg-emerald-950\/50  { background-color: #a7f3d0; }
-.bg-emerald-950\/60  { background-color: #6ee7b7; }
-.border-emerald-800\/40 { border-color: #6ee7b7; }
-.border-emerald-900\/30 { border-color: #6ee7b7; }
-.border-emerald-900\/40 { border-color: #34d399; }
-
-/* ── Blue 950 dark tints → light blue ────────────────────────────────────── */
-
-.bg-blue-950\/20    { background-color: #dbeafe; }
-.bg-blue-950\/60    { background-color: #bfdbfe; }
-.border-blue-900\/25  { border-color: #93c5fd; }
-.border-blue-900\/40  { border-color: #60a5fa; }
-
-/* ── Amber 900 dark tints → light amber ──────────────────────────────────── */
-
-.bg-amber-900\/20   { background-color: #fffbeb; }
-.bg-amber-900\/30   { background-color: #fef3c7; }
-.hover\:bg-amber-900\/20:hover { background-color: #fef3c7; }
-.border-amber-900\/40  { border-color: #fbbf24; }
-
-/* ── Red/orange 900 additional light tints ────────────────────────────────── */
-
-.bg-red-900\/10     { background-color: #fef2f2; }
-.border-red-700\/60 { border-color: #fca5a5; }
-.bg-orange-900\/10  { background-color: #fff7ed; }
-
-/* ── Surface color guarantees (belt + suspenders alongside Tailwind config) ─ */
-
-.bg-surface          { background-color: #f1f5f9; }
-.bg-surface-card     { background-color: #ffffff; }
-.bg-surface-elevated { background-color: #e8edf5; }
-.bg-surface-raised   { background-color: #dde3ee; }
-.border-surface-border { border-color: #cbd5e1; }
-.text-surface-border { color: #cbd5e1; }
-
-/* ── Surface utilities ───────────────────────────────────────────────────── */
-
-.bg-module-gradient {
+html:not(.dark) .bg-module-gradient {
   background: linear-gradient(160deg, #f1f5f9 0%, #ffffff 55%, #f1f5f9 100%);
 }
-.bg-intel-panel {
+html:not(.dark) .bg-intel-panel {
   background: linear-gradient(160deg, #f1f5f9 0%, #eef2f7 60%, #f1f5f9 100%);
 }
-.bg-stack-bar { background-color: #e2e8f0; }
-.surface-deep { background-color: #f8fafc; border: 1px solid #cbd5e1; }
+html:not(.dark) .bg-stack-bar { background-color: #e2e8f0; }
+html:not(.dark) .surface-deep { background-color: #f8fafc; border: 1px solid #cbd5e1; }

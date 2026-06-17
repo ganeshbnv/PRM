@@ -1,20 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Theme = 'dark' | 'light';
+type Theme = 'light' | 'dark';
 
 interface ThemeState {
   theme: Theme;
   setTheme: (t: Theme) => void;
+  toggle: () => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set) => ({
-      theme: 'dark',
-      setTheme: (theme) => {
-        document.documentElement.setAttribute('data-theme', theme);
-        set({ theme });
+    (set, get) => ({
+      theme: 'light',
+      setTheme: (t) => {
+        set({ theme: t });
+        document.documentElement.classList.toggle('dark', t === 'dark');
+      },
+      toggle: () => {
+        const next = get().theme === 'light' ? 'dark' : 'light';
+        get().setTheme(next);
       },
     }),
     { name: 'prm-theme' }
@@ -22,11 +27,11 @@ export const useThemeStore = create<ThemeState>()(
 );
 
 export function applyStoredTheme() {
-  const stored = localStorage.getItem('prm-theme');
-  if (stored) {
-    try {
-      const { state } = JSON.parse(stored) as { state?: { theme?: Theme } };
-      if (state?.theme) document.documentElement.setAttribute('data-theme', state.theme);
-    } catch { /* ignore */ }
-  }
+  try {
+    const raw = localStorage.getItem('prm-theme');
+    if (raw) {
+      const { state } = JSON.parse(raw);
+      document.documentElement.classList.toggle('dark', state?.theme === 'dark');
+    }
+  } catch {}
 }

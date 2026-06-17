@@ -3,6 +3,7 @@ import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
   RefreshCw, LogOut, PanelLeftClose, PanelLeft,
   Settings, Bell, Search, Layers, X, ChevronDown, LayoutDashboard,
+  Sun, Moon,
 } from 'lucide-react';
 import { FilterBar } from './components/common/FilterBar';
 import { BoardsModule } from './components/boards/BoardsModule';
@@ -17,6 +18,7 @@ import { api } from './api/client';
 import { useFilterStore } from './store/filters';
 import { useAuthStore } from './store/auth';
 import type { AuthUser } from './store/auth';
+import { useThemeStore } from './store/theme';
 import { cn } from './utils/cn';
 
 type Tab = 'boards' | 'bugs' | 'engineers' | 'repos' | 'wiki' | 'risks';
@@ -474,6 +476,7 @@ export default function App() {
 
 function Dashboard({ user }: { user: AuthUser }) {
   const { clearAuth } = useAuthStore();
+  const { theme, toggle } = useThemeStore();
   const [tab, setTab] = useState<Tab>('boards');
   const [collapsed, setCollapsed] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
@@ -698,6 +701,15 @@ function Dashboard({ user }: { user: AuthUser }) {
           {/* Notification bell */}
           <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
             <Bell size={14} />
+          </button>
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggle}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
           </button>
 
           {/* Settings */}
