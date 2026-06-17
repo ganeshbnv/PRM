@@ -213,8 +213,7 @@ export function BoardsModule() {
     <div className="flex flex-col gap-5">
 
       {/* ── Sprint Command Bar ──────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-surface-border overflow-hidden"
-        style={{ background: 'linear-gradient(160deg,#0d0f18 0%,#161827 55%,#0d0f18 100%)' }}>
+      <div className="bg-module-gradient rounded-2xl border border-surface-border overflow-hidden">
 
         <div className="flex items-center gap-3 px-6 pt-5 pb-4">
           {/* Prev / Next sprint */}
@@ -545,7 +544,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex h-11 rounded-xl overflow-hidden border border-surface-border" style={{ background: '#0d0f18' }}>
+      <div className="bg-stack-bar flex h-11 rounded-xl overflow-hidden border border-surface-border">
         {segments.map((seg, idx) => {
           const w = Math.max((seg.items.length / total) * 100, 5);
           return (

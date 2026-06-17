@@ -365,7 +365,7 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
 
         {/* Grid */}
         <div className="overflow-auto" style={{ maxHeight: '320px' }}>
-          <table className="border-collapse text-[11px] w-full bg-[#0c0c10]" style={{ tableLayout: 'fixed' }}>
+          <table className="border-collapse text-[11px] w-full bg-surface" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr>
                 <th className="w-7 min-w-[28px] bg-[#111117] border border-white/8 text-[9px] text-gray-700 select-none sticky top-0 z-20" />

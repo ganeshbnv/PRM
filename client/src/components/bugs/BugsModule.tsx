@@ -125,8 +125,7 @@ export function BugsModule() {
     <div className="flex flex-col gap-5">
 
       {/* ── Sprint picker ─────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-surface-border overflow-hidden"
-        style={{ background: 'linear-gradient(160deg,#0d0f18 0%,#161827 55%,#0d0f18 100%)' }}>
+      <div className="bg-module-gradient rounded-2xl border border-surface-border overflow-hidden">
         <div className="flex items-center gap-3 px-6 py-4">
 
           {/* Prev / Next */}

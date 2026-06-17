@@ -679,7 +679,7 @@ function Dashboard({ user }: { user: AuthUser }) {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Top bar */}
-        <header className="flex-shrink-0 flex items-center gap-4 px-5 py-3 border-b border-white/5 bg-[#111114]">
+        <header className="flex-shrink-0 flex items-center gap-4 px-5 py-3 border-b border-white/5 bg-surface-card">
           <div className="flex items-center gap-2.5 min-w-0">
             <Icon size={16} className={cn('flex-shrink-0', activeItem.color)} />
             <h1 className="text-white font-semibold text-sm">{activeItem.label}</h1>

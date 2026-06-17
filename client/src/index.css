@@ -48,10 +48,35 @@ html[data-theme="light"] {
   .badge-low      { @apply badge bg-blue-900/60   text-blue-300   border border-blue-700/50; }
 }
 
-/* ── Surface-deep utility (AI analysis card, etc.) ───────────────────────── */
+/* ── Surface utilities ───────────────────────────────────────────────────── */
 .surface-deep {
   background-color: rgb(var(--color-surface-deep));
   border: 1px solid rgb(var(--color-surface-border));
+}
+
+/* Module hero gradient — replaces hardcoded dark linear-gradients */
+.bg-module-gradient {
+  background: linear-gradient(
+    160deg,
+    rgb(var(--color-surface)) 0%,
+    rgb(var(--color-surface-card)) 55%,
+    rgb(var(--color-surface)) 100%
+  );
+}
+
+/* Intelligence panel background */
+.bg-intel-panel {
+  background: linear-gradient(
+    160deg,
+    rgb(var(--color-surface)) 0%,
+    rgb(var(--color-surface-elevated)) 60%,
+    rgb(var(--color-surface)) 100%
+  );
+}
+
+/* Kanban / stacked bar background */
+.bg-stack-bar {
+  background-color: rgb(var(--color-surface-elevated));
 }
 
 /* ── Light theme overrides ────────────────────────────────────────────────── */

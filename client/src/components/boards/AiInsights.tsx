@@ -460,8 +460,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
   const topEngineers  = [...d.topAssignees].sort((a, b) => b.resolved - a.resolved || b.active - a.active).slice(0, 3);
 
   return (
-    <div className="rounded-2xl border border-surface-border overflow-hidden"
-      style={{ background: 'linear-gradient(160deg,#0a0c16 0%,#0d1020 60%,#0a0c16 100%)' }}>
+    <div className="bg-intel-panel rounded-2xl border border-surface-border overflow-hidden">
 
       {/* ── Header: meta row + full AI analysis ─────────────────────────────── */}
       <div className="px-6 pt-5 pb-5 border-b border-surface-border flex flex-col gap-3">
@@ -794,8 +793,7 @@ function PerspectiveStat({ label, value, color }: { label: string; value: string
 
 function IntelligenceSkeleton() {
   return (
-    <div className="rounded-2xl border border-surface-border overflow-hidden animate-pulse"
-      style={{ background: 'linear-gradient(160deg,#0a0c16 0%,#0d1020 60%,#0a0c16 100%)' }}>
+    <div className="bg-intel-panel rounded-2xl border border-surface-border overflow-hidden animate-pulse">
       <div className="flex items-center gap-5 px-6 py-5 border-b border-surface-border">
         <div className="w-[68px] h-[68px] rounded-full bg-surface-elevated flex-shrink-0" />
         <div className="w-28 flex flex-col gap-2 flex-shrink-0">
