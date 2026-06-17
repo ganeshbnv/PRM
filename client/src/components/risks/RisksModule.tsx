@@ -60,7 +60,7 @@ export function RisksModule() {
   return (
     <div className="flex flex-col gap-6">
       {/* Summary stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {SEV_ORDER.map((s) => {
           const count = risks.filter((r) => r.severity === s).length;
           const colorMap: Record<RiskSeverity, string> = {
@@ -105,7 +105,7 @@ export function RisksModule() {
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-300 mb-3">Risks by Category</h3>
           <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={byCategory} layout="vertical" margin={{ left: 60 }}>
+            <BarChart data={byCategory} layout="vertical" margin={{ left: 48, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" horizontal={false} />
               <XAxis type="number" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
               <YAxis type="category" dataKey="name" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} width={60} />

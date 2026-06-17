@@ -41,7 +41,7 @@ export function EngineersModule() {
   return (
     <div className="flex flex-col gap-6">
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Engineers', value: engineers.length },
           { label: 'Total Commits', value: engineers.reduce((s, e) => s + e.commits.length, 0) },
@@ -103,7 +103,7 @@ export function EngineersModule() {
 function EngineerDetail({ engineer: e }: { engineer: EngineerActivity }) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
           { label: 'Commits', value: e.commits.length },
           { label: 'PRs Opened', value: e.prsOpened.length },

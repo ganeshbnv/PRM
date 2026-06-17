@@ -289,7 +289,7 @@ export function BoardsModule() {
 
         {/* Dual progress bars */}
         {selectedSprint && (
-          <div className="px-6 pb-5 grid grid-cols-2 gap-6 border-t border-surface-border pt-4">
+          <div className="px-6 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-surface-border pt-4">
             <div>
               <div className="flex justify-between gap-4 text-label mb-1.5">
                 <span className="text-gray-600">Sprint time</span>
@@ -313,7 +313,7 @@ export function BoardsModule() {
       </div>
 
       {/* ── KPI Tiles ───────────────────────────────────────────────────────── */}
-      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${tiles.length}, 1fr)` }}>
+      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(130px, 1fr))` }}>
         {tiles.map(tile => {
           const sel  = tile.key === '__total__' ? !activeTile : activeTile === tile.key;
           const pct  = tile.key !== '__total__' && total > 0 ? Math.round((tile.count / total) * 100) : null;
@@ -382,10 +382,10 @@ export function BoardsModule() {
           )}
 
           {/* ── 3-column main panel ──────────────────────────────────────────── */}
-          <div className="grid grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
             {/* LEFT: State breakdown + Work types */}
-            <div className="col-span-6 flex flex-col gap-4">
+            <div className="lg:col-span-6 flex flex-col gap-4">
               <div className="rounded-xl border border-surface-border bg-surface-card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <Tag>Where are items?</Tag>
@@ -416,7 +416,7 @@ export function BoardsModule() {
             </div>
 
             {/* MIDDLE: Team pulse */}
-            <div className="col-span-6">
+            <div className="lg:col-span-6">
               <div className="rounded-xl border border-surface-border bg-surface-card p-5 h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <Tag>Team pulse</Tag>
@@ -471,7 +471,7 @@ export function BoardsModule() {
           </div>
 
           {/* ── Sprint history + Burndown ─────────────────────────────────────── */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {iterData.length > 0 && (
               <div className="rounded-xl border border-surface-border bg-surface-card p-5">
                 <div className="flex items-center justify-between mb-4">

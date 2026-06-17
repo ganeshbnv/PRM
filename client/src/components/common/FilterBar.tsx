@@ -134,7 +134,7 @@ export function FilterBar({ activeTab }: Props) {
   ];
 
   return (
-    <div className="flex flex-wrap items-end gap-4 px-5 py-3 bg-surface-card border-b border-surface-border">
+    <div className="flex items-end gap-4 px-3 sm:px-5 py-3 bg-surface-card border-b border-surface-border overflow-x-auto scrollbar-none">
 
       {/* Project */}
       <Dropdown

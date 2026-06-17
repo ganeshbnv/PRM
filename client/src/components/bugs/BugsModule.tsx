@@ -176,7 +176,7 @@ export function BugsModule() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Open Bugs" value={open.length} color="text-red-400" onClick={() => openModal('Open Bugs', open)} />
         <StatCard label="Closed Bugs" value={closed.length} color="text-emerald-400" onClick={() => openModal('Closed Bugs', closed)} />
         <StatCard label="Unassigned" value={unassigned.length} color="text-orange-400" onClick={() => openModal('Unassigned Open Bugs', unassigned)} />
@@ -231,7 +231,7 @@ export function BugsModule() {
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-300 mb-3">Open Bugs by Assignee (top 10)</h3>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={assigneeData} layout="vertical" margin={{ left: 100 }}>
+            <BarChart data={assigneeData} layout="vertical" margin={{ left: 70, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 11 }} />
               <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} width={100} />

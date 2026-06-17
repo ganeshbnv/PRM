@@ -60,7 +60,7 @@ export function ReposModule() {
   return (
     <div className="flex flex-col gap-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card"><span className="text-xs text-gray-400 uppercase">Repositories</span><span className="text-3xl font-bold">{repos?.length ?? 0}</span></div>
         <div className="card cursor-pointer hover:bg-surface-elevated" onClick={() => { setModalPRTitle('Active PRs'); setModalPRs(activePRs); }}>
           <span className="text-xs text-gray-400 uppercase">Active PRs</span><span className="text-3xl font-bold text-blue-400">{activePRs.length}</span>
@@ -92,7 +92,7 @@ export function ReposModule() {
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-300 mb-3">Commits by Repo</h3>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={repoBar} layout="vertical" margin={{ left: 120 }}>
+            <BarChart data={repoBar} layout="vertical" margin={{ left: 80, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" horizontal={false} />
               <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 11 }} />
               <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} width={120} />

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
-  PanelLeftClose, PanelLeft,
+  PanelLeftClose, PanelLeft, Menu,
   Settings, Layers, X, ChevronDown, LayoutDashboard,
   Sun, Moon,
 } from 'lucide-react';
@@ -483,6 +483,7 @@ function Dashboard({ user }: { user: AuthUser }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [conn, setConn] = useState<{ ok: boolean; label: string } | null>(null);
 
   const { filters } = useFilterStore();
@@ -513,10 +514,23 @@ function Dashboard({ user }: { user: AuthUser }) {
   return (
     <div className="h-screen flex overflow-hidden bg-surface">
 
+      {/* ── Mobile overlay ── */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setMobileNavOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar ── */}
       <aside className={cn(
-        'relative flex flex-col flex-shrink-0 border-r border-gray-200 bg-white transition-all duration-200',
-        collapsed ? 'w-[60px]' : 'w-[220px]',
+        'flex flex-col flex-shrink-0 border-r border-gray-200 bg-white transition-all duration-200',
+        // Mobile: fixed drawer sliding in from left
+        'fixed inset-y-0 left-0 z-40 w-[260px]',
+        mobileNavOpen ? 'translate-x-0' : '-translate-x-full',
+        // Desktop: relative, no translate, width driven by collapsed state
+        'md:relative md:inset-auto md:translate-x-0 md:z-auto',
+        collapsed ? 'md:w-[60px]' : 'md:w-[220px]',
       )}>
 
         {/* ── Logo + collapse ── */}
@@ -557,7 +571,7 @@ function Dashboard({ user }: { user: AuthUser }) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setTab(item.id)}
+                  onClick={() => { setTab(item.id); setMobileNavOpen(false); }}
                   title={collapsed ? `${item.label} — ${item.description}` : undefined}
                   className={cn(
                     'w-full flex items-center rounded-lg transition-all duration-150 group relative select-none',
@@ -625,10 +639,18 @@ function Dashboard({ user }: { user: AuthUser }) {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Top bar */}
-        <header className="flex-shrink-0 flex items-center gap-4 px-5 py-3 border-b border-gray-200 bg-white">
+        <header className="flex-shrink-0 flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 border-b border-gray-200 bg-white">
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <Menu size={18} />
+          </button>
+
           <div className="flex items-center gap-2.5 min-w-0">
             <Icon size={16} className={cn('flex-shrink-0', activeItem.color)} />
-            <h1 className="text-gray-900 font-semibold text-sm">{activeItem.label}</h1>
+            <h1 className="text-gray-900 font-semibold text-sm truncate">{activeItem.label}</h1>
             <span className="text-gray-400 text-xs hidden sm:block">/ {activeItem.description}</span>
           </div>
 
@@ -715,7 +737,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             </div>
           </div>
         ) : (
-          <main className={cn('flex-1 overflow-hidden', !nopad && 'overflow-y-auto p-6')}>
+          <main className={cn('flex-1 overflow-hidden', !nopad && 'overflow-y-auto p-3 sm:p-6')}>
             {tab === 'boards'    && <BoardsModule />}
             {tab === 'bugs'      && <BugsModule />}
             {tab === 'engineers' && <EngineersModule />}
