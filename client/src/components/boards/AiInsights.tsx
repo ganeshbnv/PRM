@@ -1,5 +1,6 @@
 import { useApi } from '../../hooks/useApi';
 import { api } from '../../api/client';
+import { useState, useEffect } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 interface AiInsight {
@@ -791,39 +792,142 @@ function PerspectiveStat({ label, value, color }: { label: string; value: string
   );
 }
 
+const THINKING_STEPS = [
+  'Reading sprint data…',
+  'Analysing velocity trend…',
+  'Checking P1 backlog…',
+  'Evaluating team workload…',
+  'Identifying blockers…',
+  'Generating recommendations…',
+  'Finalising analysis…',
+];
+
 function IntelligenceSkeleton() {
+  const [step, setStep] = useState(0);
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const stepTimer = setInterval(() => setStep(s => (s + 1) % THINKING_STEPS.length), 2200);
+    const dotTimer  = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 420);
+    return () => { clearInterval(stepTimer); clearInterval(dotTimer); };
+  }, []);
+
+  // Node positions for the neural-network illustration
+  const nodes = [
+    { cx: 60,  cy: 60,  r: 14, delay: '0s'    },
+    { cx: 160, cy: 30,  r: 9,  delay: '0.3s'  },
+    { cx: 160, cy: 90,  r: 11, delay: '0.6s'  },
+    { cx: 260, cy: 50,  r: 10, delay: '0.9s'  },
+    { cx: 260, cy: 110, r: 8,  delay: '1.2s'  },
+    { cx: 360, cy: 70,  r: 13, delay: '0.5s'  },
+  ];
+  const edges = [
+    [0,1],[0,2],[1,3],[2,3],[2,4],[3,5],[4,5],
+  ];
+
   return (
-    <div className="bg-intel-panel rounded-2xl border border-surface-border overflow-hidden animate-pulse">
-      <div className="flex items-center gap-5 px-6 py-5 border-b border-surface-border">
-        <div className="w-[68px] h-[68px] rounded-full bg-surface-elevated flex-shrink-0" />
-        <div className="w-28 flex flex-col gap-2 flex-shrink-0">
-          <div className="h-2 bg-surface-elevated rounded w-full" />
-          <div className="h-3 bg-surface-elevated rounded w-3/4" />
-          <div className="h-2 bg-surface-elevated rounded w-1/2" />
+    <div className="bg-intel-panel rounded-2xl border border-surface-border overflow-hidden">
+
+      {/* ── Brain animation header ── */}
+      <div className="px-6 py-6 border-b border-surface-border flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-lg animate-bounce">🧠</span>
+          <span className="text-sm font-semibold text-gray-300">Jarvis is thinking</span>
+          <span className="text-sm text-brand-400 font-mono w-6">{dots}</span>
+          <span className="ml-auto text-label text-gray-600">{THINKING_STEPS[step]}</span>
         </div>
-        <div className="w-px h-12 bg-surface-border flex-shrink-0" />
-        <div className="flex-1 space-y-2">
-          <div className="h-2 bg-surface-elevated rounded w-full" />
-          <div className="h-2 bg-surface-elevated rounded w-5/6" />
-          <div className="h-2 bg-surface-elevated rounded w-3/4" />
+
+        {/* Neural network SVG */}
+        <div className="relative w-full overflow-hidden rounded-xl bg-surface" style={{ height: 140 }}>
+          <svg width="100%" height="140" viewBox="0 0 420 140" preserveAspectRatio="xMidYMid meet">
+            {/* Edges */}
+            {edges.map(([a, b], i) => (
+              <line key={i}
+                x1={nodes[a].cx} y1={nodes[a].cy}
+                x2={nodes[b].cx} y2={nodes[b].cy}
+                stroke="#4c6ef5" strokeWidth="1.5" strokeOpacity="0.25"
+              />
+            ))}
+            {/* Animated pulses along edges */}
+            {edges.map(([a, b], i) => (
+              <circle key={`p${i}`} r="3" fill="#818cf8" opacity="0.8">
+                <animateMotion
+                  dur={`${1.4 + i * 0.25}s`}
+                  repeatCount="indefinite"
+                  path={`M${nodes[a].cx},${nodes[a].cy} L${nodes[b].cx},${nodes[b].cy}`}
+                />
+              </circle>
+            ))}
+            {/* Nodes */}
+            {nodes.map((n, i) => (
+              <g key={i}>
+                <circle cx={n.cx} cy={n.cy} r={n.r + 6} fill="#4c6ef5" opacity="0.12">
+                  <animate attributeName="opacity" values="0.08;0.2;0.08" dur="2s"
+                    begin={n.delay} repeatCount="indefinite" />
+                </circle>
+                <circle cx={n.cx} cy={n.cy} r={n.r} fill="#4c6ef5" opacity="0.7">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="2s"
+                    begin={n.delay} repeatCount="indefinite" />
+                  <animate attributeName="r" values={`${n.r};${n.r + 2};${n.r}`} dur="2s"
+                    begin={n.delay} repeatCount="indefinite" />
+                </circle>
+              </g>
+            ))}
+          </svg>
+
+          {/* Scanning line overlay */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+            <div className="absolute inset-y-0 w-16 bg-gradient-to-r from-transparent via-brand-500/10 to-transparent"
+              style={{ animation: 'scanline 2.4s ease-in-out infinite' }} />
+          </div>
+        </div>
+
+        {/* Step progress pills */}
+        <div className="flex gap-1.5 flex-wrap">
+          {THINKING_STEPS.map((label, i) => (
+            <span key={i} className={`text-label px-2 py-0.5 rounded-full border transition-all duration-500 ${
+              i < step  ? 'bg-brand-500/20 border-brand-500/40 text-brand-300'
+            : i === step ? 'bg-brand-500/30 border-brand-500/60 text-brand-200 ring-1 ring-brand-500/40'
+            :              'bg-surface border-surface-border text-gray-700'
+            }`}>{label}</span>
+          ))}
         </div>
       </div>
-      <div className="grid grid-cols-3 divide-x divide-surface-border">
-        {[1, 2, 3].map(n => (
-          <div key={n} className="px-6 py-5 space-y-3">
-            <div className="h-2 bg-surface-elevated rounded w-1/3" />
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-3 bg-surface-elevated rounded" />)}
+
+      {/* ── Ghost content rows ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-surface-border">
+        {['⚙️ Engineering Rate', '🔬 Testing Pipeline', '🐛 Bug Density'].map((title, n) => (
+          <div key={n} className="px-6 py-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{title.slice(0,2)}</span>
+              <div className="h-2 bg-surface-elevated rounded w-28 animate-pulse" />
+            </div>
+            {[80, 60, 70, 45].map((w, i) => (
+              <div key={i} className="h-2.5 bg-surface-elevated rounded animate-pulse"
+                style={{ width: `${w}%`, animationDelay: `${i * 120}ms` }} />
+            ))}
           </div>
         ))}
       </div>
+
       <div className="grid grid-cols-5 divide-x divide-surface-border border-t border-surface-border">
-        <div className="col-span-3 px-6 py-5 space-y-2">
-          {[1, 2, 3].map(n => <div key={n} className="h-10 bg-surface-elevated rounded-lg" />)}
+        <div className="col-span-3 px-6 py-5 flex flex-col gap-2">
+          {[100, 85, 70].map((w, i) => (
+            <div key={i} className="h-9 bg-surface-elevated rounded-lg animate-pulse"
+              style={{ width: `${w}%`, animationDelay: `${i * 150}ms` }} />
+          ))}
         </div>
         <div className="col-span-2 px-6 py-5">
-          <div className="h-28 bg-surface-elevated rounded-lg" />
+          <div className="h-28 bg-surface-elevated rounded-lg animate-pulse" />
         </div>
       </div>
+
+      <style>{`
+        @keyframes scanline {
+          0%   { left: -4rem; }
+          100% { left: 100%; }
+        }
+      `}</style>
     </div>
   );
 }
