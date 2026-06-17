@@ -7,17 +7,18 @@ export default {
         brand: {
           50: '#f0f4ff',
           100: '#dbe4ff',
+          400: '#748ffc',
           500: '#4c6ef5',
           600: '#3b5bdb',
           700: '#2f4ac2',
           900: '#1a2d8a',
         },
         surface: {
-          DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
-          card:    'rgb(var(--color-surface-card) / <alpha-value>)',
-          elevated:'rgb(var(--color-surface-elevated) / <alpha-value>)',
-          border:  'rgb(var(--color-surface-border) / <alpha-value>)',
-          raised:  'rgb(var(--color-surface-raised) / <alpha-value>)',
+          DEFAULT: '#f3f4f6',
+          card:    '#ffffff',
+          elevated:'#ecedf2',
+          border:  '#d1d5db',
+          raised:  '#e2e4eb',
         },
       },
       fontFamily: {

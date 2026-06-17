@@ -1450,7 +1450,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
     : false;
 
   return (
-    <div className="w-[340px] border-l border-white/8 flex flex-col bg-[#0e0e12] flex-shrink-0 overflow-hidden">
+    <div className="w-[340px] border-l border-white/8 flex flex-col bg-surface-card flex-shrink-0 overflow-hidden">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/6 flex-shrink-0 bg-gradient-to-r from-[#13131a] to-[#0e0e12]">
@@ -1576,7 +1576,7 @@ function VersionHistoryPanel({ pageId, currentContent, currentTitle, onRestore, 
         ) : selected ? (
           <>
             {/* Selected version detail header */}
-            <div className="flex-shrink-0 px-4 py-3.5 border-b border-white/6 bg-[#0b0b0f] space-y-3">
+            <div className="flex-shrink-0 px-4 py-3.5 border-b border-white/6 bg-surface-elevated space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   {/* Version label + status badges */}
@@ -1820,7 +1820,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
       <div
-        className="relative bg-[#0e0e12] border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-full max-w-lg flex flex-col overflow-hidden"
+        className="relative bg-surface-card border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-full max-w-lg flex flex-col overflow-hidden"
         style={{ maxHeight: '88vh' }}
         onClick={e => e.stopPropagation()}
       >
@@ -1947,7 +1947,7 @@ function PageAccessModal({ open, onClose, page, currentUser, onSaved }: {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 flex justify-end gap-2 px-5 py-4 border-t border-white/6 bg-[#0b0b0f]">
+        <div className="flex-shrink-0 flex justify-end gap-2 px-5 py-4 border-t border-white/6 bg-surface-elevated">
           <button onClick={onClose} className="text-xs text-gray-400 hover:text-white px-4 py-2 rounded-lg hover:bg-white/8 transition-colors">
             Cancel
           </button>
@@ -2057,7 +2057,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
       <div
-        className="relative bg-[#0e0e12] border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-full max-w-lg flex flex-col overflow-hidden"
+        className="relative bg-surface-card border border-white/10 rounded-2xl shadow-2xl shadow-black/60 w-full max-w-lg flex flex-col overflow-hidden"
         style={{ maxHeight: '88vh' }}
         onClick={e => e.stopPropagation()}
       >
@@ -2172,7 +2172,7 @@ function SpaceAccessModal({ open, onClose, space, currentUser, onSaved }: {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 flex justify-end gap-2 px-5 py-4 border-t border-white/6 bg-[#0b0b0f]">
+        <div className="flex-shrink-0 flex justify-end gap-2 px-5 py-4 border-t border-white/6 bg-surface-elevated">
           <button onClick={onClose} className="text-xs text-gray-400 hover:text-white px-4 py-2 rounded-lg hover:bg-white/8 transition-colors">Cancel</button>
           {isAdmin && (
             <button onClick={save} disabled={saving}

@@ -278,7 +278,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
       />
 
       {/* Modal */}
-      <div className="relative w-full h-full bg-[#0e0e12] border border-white/10 rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-pop-up">
+      <div className="relative w-full h-full bg-surface-card border border-white/10 rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-pop-up">
 
         {/* ── Top header bar ── */}
         <div className="flex-shrink-0 flex items-center gap-4 px-6 py-4 border-b border-white/6 bg-gradient-to-r from-[#13131a] to-[#0e0e12]">
@@ -316,7 +316,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
         <div className="flex flex-1 overflow-hidden">
 
           {/* Left: category nav */}
-          <nav className="flex-shrink-0 w-60 border-r border-white/6 flex flex-col bg-[#0b0b0f] py-3 overflow-y-auto">
+          <nav className="flex-shrink-0 w-60 border-r border-white/6 flex flex-col bg-surface-elevated py-3 overflow-y-auto">
             <p className="px-4 mb-2 text-[9px] text-gray-600 uppercase tracking-widest font-semibold">Layers</p>
             {TECH_STACK.map((c, i) => (
               <button
@@ -500,11 +500,11 @@ function Dashboard({ user }: { user: AuthUser }) {
   const nopad = tab === 'wiki';
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#0d0d10]">
+    <div className="h-screen flex overflow-hidden bg-surface">
 
       {/* ── Sidebar ── */}
       <aside className={cn(
-        'relative flex flex-col flex-shrink-0 border-r border-white/[0.06] bg-[#0f0f12] transition-all duration-200',
+        'relative flex flex-col flex-shrink-0 border-r border-white/[0.06] bg-surface-card transition-all duration-200',
         collapsed ? 'w-[60px]' : 'w-[220px]',
       )}>
 
@@ -520,7 +520,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             </div>
             {/* Live dot */}
             {conn?.ok && (
-              <span className="absolute -bottom-[3px] -right-[3px] w-[9px] h-[9px] rounded-full bg-emerald-500 border-[1.5px] border-[#0f0f12]" />
+              <span className="absolute -bottom-[3px] -right-[3px] w-[9px] h-[9px] rounded-full bg-emerald-500 border-[1.5px] border-surface-card" />
             )}
           </div>
 
@@ -716,7 +716,7 @@ function Dashboard({ user }: { user: AuthUser }) {
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
               onClick={(e) => { if (e.target === e.currentTarget) setShowLogoutConfirm(false); }}
             >
-              <div className="bg-[#0f0f12] border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl flex flex-col gap-4">
+              <div className="bg-surface-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
                   <p className="text-white font-semibold text-sm">Sign out?</p>
                   <p className="text-gray-500 text-xs leading-relaxed">You'll need to sign back in to access PRM.</p>
