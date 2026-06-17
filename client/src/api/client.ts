@@ -78,4 +78,24 @@ export const api = {
   // Risks
   getRisks: (project: string, thresholds: Record<string, number> = {}) =>
     client.get<Risk[]>('/risks', { params: { project, ...thresholds } }).then((r) => r.data),
+
+  // Auth
+  getMe: () => client.get<{ id: string; email: string; name: string; role: 'user' | 'admin'; createdAt: string }>('/auth/me').then((r) => r.data),
+
+  // User management (admin only)
+  getUsers: () => client.get<ManagedUser[]>('/users').then((r) => r.data),
+  inviteUser: (email: string, name: string) =>
+    client.post<{ user: ManagedUser; tempPassword: string }>('/users/invite', { email, name }).then((r) => r.data),
+  updateUserRole: (id: string, role: 'user' | 'admin') =>
+    client.patch<ManagedUser>(`/users/${id}/role`, { role }).then((r) => r.data),
+  deleteUser: (id: string) =>
+    client.delete<{ ok: boolean }>(`/users/${id}`).then((r) => r.data),
 };
+
+export interface ManagedUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'user' | 'admin';
+  createdAt: string;
+}

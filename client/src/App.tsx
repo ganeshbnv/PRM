@@ -12,9 +12,11 @@ import { ReposModule } from './components/repos/ReposModule';
 import { WikiModule } from './components/wiki/WikiModule';
 import { RisksModule } from './components/risks/RisksModule';
 import { AuthPage } from './components/auth/AuthPage';
+import { SettingsModal } from './components/settings/SettingsModal';
 import { api } from './api/client';
 import { useFilterStore } from './store/filters';
 import { useAuthStore } from './store/auth';
+import type { AuthUser } from './store/auth';
 import { cn } from './utils/cn';
 
 type Tab = 'boards' | 'bugs' | 'engineers' | 'repos' | 'wiki' | 'risks';
@@ -462,11 +464,12 @@ export default function App() {
   return <Dashboard user={user} />;
 }
 
-function Dashboard({ user }: { user: { name: string } }) {
+function Dashboard({ user }: { user: AuthUser }) {
   const { clearAuth } = useAuthStore();
   const [tab, setTab] = useState<Tab>('boards');
   const [collapsed, setCollapsed] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [conn, setConn] = useState<{ ok: boolean; label: string } | null>(null);
   const [flushing, setFlushing] = useState(false);
   const { filters } = useFilterStore();
@@ -689,9 +692,15 @@ function Dashboard({ user }: { user: { name: string } }) {
           </button>
 
           {/* Settings */}
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors">
             <Settings size={14} />
           </button>
+
+          {showSettings && (
+            <SettingsModal currentUser={user} onClose={() => setShowSettings(false)} />
+          )}
 
           {/* Tech Stack icon */}
           <button

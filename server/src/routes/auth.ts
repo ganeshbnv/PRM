@@ -12,8 +12,8 @@ function issueToken(userId: string): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 }
 
-function safeUser(u: { id: string; email: string; name: string; createdAt: string }) {
-  return { id: u.id, email: u.email, name: u.name, createdAt: u.createdAt };
+function safeUser(u: userStore.StoredUser) {
+  return { id: u.id, email: u.email, name: u.name, role: u.role ?? 'user', createdAt: u.createdAt };
 }
 
 // POST /api/auth/register
@@ -42,7 +42,7 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const user = userStore.create({ email: email.toLowerCase(), name: name.trim(), passwordHash });
+  const user = userStore.create({ email: email.toLowerCase(), name: name.trim(), passwordHash, role: 'user' });
   const token = issueToken(user.id);
 
   res.status(201).json({ token, user: safeUser(user) });
