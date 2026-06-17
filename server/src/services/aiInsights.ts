@@ -243,36 +243,97 @@ export async function getAiInsights(
   const p1Count = items.filter((i) => i.fields['Microsoft.VSTS.Common.Priority'] === 1).length;
   const p1Resolved = items.filter((i) => i.fields['Microsoft.VSTS.Common.Priority'] === 1 && resolvedStates.includes(i.fields['System.State'])).length;
 
+  // Additional metrics for the richer prompt
+  const itemsByType: Record<string, number> = {};
+  for (const i of items) {
+    const t = i.fields['System.WorkItemType'] ?? 'Unknown';
+    itemsByType[t] = (itemsByType[t] ?? 0) + 1;
+  }
+
+  const p1Unresolved = items.filter(
+    (i) => i.fields['Microsoft.VSTS.Common.Priority'] === 1 && !resolvedStates.includes(i.fields['System.State'])
+  );
+  const p2Unresolved = items.filter(
+    (i) => i.fields['Microsoft.VSTS.Common.Priority'] === 2 && !resolvedStates.includes(i.fields['System.State'])
+  );
+
+  const staleItems = items.filter((i) => {
+    const active = ['Active','In Progress','Committed'].includes(i.fields['System.State']);
+    return active && (Date.now() - new Date(i.fields['System.ChangedDate']).getTime()) > 3 * 86400000;
+  });
+
+  const openBugs = items.filter(
+    (i) => i.fields['System.WorkItemType'] === 'Bug' && !resolvedStates.includes(i.fields['System.State'])
+  );
+  const bugDensityPct = items.length > 0 ? Math.round((openBugs.length / items.length) * 100) : 0;
+
+  const velocityTrend = pastVelocities.length >= 2
+    ? (pastVelocities[pastVelocities.length - 1] > pastVelocities[pastVelocities.length - 2] ? 'improving' : 'declining')
+    : 'unknown';
+
+  const daysElapsed = (sprintDaysTotal !== null && sprintDaysLeft !== null)
+    ? Math.max(1, sprintDaysTotal - sprintDaysLeft) : null;
+  const throughputPerDay = (daysElapsed && resolved > 0) ? +(resolved / daysElapsed).toFixed(1) : 0;
+  const neededPerDay = (sprintDaysLeft && sprintDaysLeft > 0)
+    ? +((items.length - resolved) / sprintDaysLeft).toFixed(1) : null;
+
   let summary = 'Sprint data loaded.';
 
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      const prompt = `You are a project management AI assistant. Summarize sprint data for a PM dashboard. Be direct and specific — use the actual numbers.
+      const prompt = `You are a senior engineering PM assistant embedded in a sprint intelligence dashboard. Produce a comprehensive, section-by-section analysis of the sprint. Be direct, data-driven, and surface non-obvious patterns. Use every number provided.
 
-Project: ${project} | Team: ${team}
-Sprint: ${sprintName ?? 'All sprints'} | Days left: ${sprintDaysLeft ?? 'unknown'} of ${sprintDaysTotal ?? '?'} (${sprintElapsedPct ?? '?'}% elapsed)
-Total items: ${items.length} | Completion: ${completionRate}% | Bugs: ${bugCount} | Stale: ${staleCount} | Unassigned open: ${unassignedCount}
-State breakdown: ${Object.entries(stateCounts).map(([s,c]) => `${s}:${c}`).join(', ')}
-Team load: ${topAssignees.map((a) => `${a.name} (${a.count} items, ${a.active} active)`).join(', ')}
-Health: ${healthScore}/100 (${healthLabel})
-Alerts: ${alerts.map((a) => a.title).join('; ') || 'none'}
+PROJECT: ${project} | TEAM: ${team}
+SPRINT: ${sprintName ?? 'Current'} | ${sprintDaysLeft ?? '?'} days left of ${sprintDaysTotal ?? '?'} (${sprintElapsedPct ?? '?'}% elapsed)
 
-Reply with exactly 3 sentences:
-1. Overall sprint health with specific numbers (completion %, days left).
-2. Top risk or blocker right now with specifics.
-3. One concrete recommendation the PM should act on today.`;
+COMPLETION:
+  Total: ${items.length} items | Done: ${resolved} (${completionRate}%) | Open: ${items.length - resolved}
+  Throughput: ${throughputPerDay} items/day actual vs ${neededPerDay ?? '?'} needed/day to finish
+
+WORK BREAKDOWN:
+  By type: ${Object.entries(itemsByType).map(([t,c]) => `${t}: ${c}`).join(', ')}
+  By state: ${Object.entries(stateCounts).map(([s,c]) => `${s}: ${c}`).join(', ')}
+
+QUALITY:
+  Open bugs: ${openBugs.length} | Bug density: ${bugDensityPct}% of all items
+  P1 unresolved: ${p1Unresolved.length} (${p1Unresolved.map(i => i.fields['System.Title']).slice(0,3).join('; ')})
+  P2 unresolved: ${p2Unresolved.length}
+
+RISKS:
+  Stale (3+ days no update): ${staleCount} items${staleItems.length > 0 ? ` — ${staleItems.map(i => i.fields['System.Title']).slice(0,3).join('; ')}` : ''}
+  Unassigned open: ${unassignedCount}
+  Active alerts: ${alerts.map(a => a.title).join('; ') || 'none'}
+
+TEAM:
+${topAssignees.map(a => `  ${a.name}: ${a.count} total, ${a.active} active, ${a.resolved} resolved`).join('\n')}
+
+VELOCITY:
+  Avg past velocity: ${avgVelocity ?? 'n/a'} pts/sprint | Trend: ${velocityTrend}
+  Past sprints: ${pastVelocities.join(', ') || 'no data'}
+
+HEALTH: ${healthScore}/100 — ${healthLabel}
+
+Write exactly 6 labeled sections. Each section should be 2–3 sentences with specific numbers and actionable insight. Use this exact format (section label in caps, em-dash separator):
+SPRINT PROGRESS — ...
+VELOCITY & PACE — ...
+QUALITY & TESTING — ...
+TEAM WORKLOAD — ...
+RISKS & BLOCKERS — ...
+RECOMMENDED ACTIONS — ...
+
+Be specific. Name individuals when relevant. Highlight what needs immediate PM attention.`;
 
       const msg = await client.messages.create({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 200,
+        max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
       });
       summary = (msg.content[0] as { type: string; text: string }).text;
     } catch {
-      summary = `Sprint has ${items.length} items with ${resolved} resolved (${Math.round(resolved / Math.max(items.length, 1) * 100)}% complete). Health score: ${healthScore}/100.`;
+      summary = `Sprint has ${items.length} items with ${resolved} resolved (${completionRate}% complete). ${openBugs.length} open bugs (${bugDensityPct}% density). ${p1Unresolved.length} P1 items unresolved. Throughput: ${throughputPerDay} items/day vs ${neededPerDay ?? '?'} needed.`;
     }
   } else {
-    summary = `Sprint has ${items.length} items with ${resolved} resolved (${Math.round(resolved / Math.max(items.length, 1) * 100)}% complete). Health score: ${healthScore}/100. ${alerts.length > 0 ? `Active alerts: ${alerts[0].title}.` : 'No critical alerts.'}`;
+    summary = `Sprint has ${items.length} items with ${resolved} resolved (${completionRate}% complete). ${openBugs.length} open bugs (${bugDensityPct}% density). ${p1Unresolved.length} P1 items unresolved. Throughput: ${throughputPerDay} items/day. ${alerts.length > 0 ? `Alert: ${alerts[0].title}.` : 'No critical alerts.'}`;
   }
 
   return {

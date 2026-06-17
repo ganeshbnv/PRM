@@ -520,10 +520,10 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
         </div>
 
         {/* AI Analysis — full width, multi-line */}
-        <div className="rounded-xl px-4 py-3.5 flex flex-col gap-2"
+        <div className="rounded-xl px-4 py-4 flex flex-col gap-3"
           style={{ background: '#07080f', border: '1px solid #1c1f2e' }}>
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">AI Analysis</span>
-          <p className="text-sm text-gray-200 leading-[1.75] whitespace-pre-line">{d.summary}</p>
+          <AiAnalysisSections summary={d.summary} />
         </div>
       </div>
 
@@ -829,4 +829,66 @@ function IntelligenceSkeleton() {
       </div>
     </div>
   );
+}
+
+// ── AI Analysis section parser ────────────────────────────────────────────────
+
+const SECTION_COLORS: Record<string, { label: string; accent: string }> = {
+  'SPRINT PROGRESS':    { label: 'Sprint Progress',    accent: '#60a5fa' },
+  'VELOCITY & PACE':    { label: 'Velocity & Pace',    accent: '#a78bfa' },
+  'QUALITY & TESTING':  { label: 'Quality & Testing',  accent: '#fb923c' },
+  'TEAM WORKLOAD':      { label: 'Team Workload',       accent: '#34d399' },
+  'RISKS & BLOCKERS':   { label: 'Risks & Blockers',   accent: '#f87171' },
+  'RECOMMENDED ACTIONS':{ label: 'Recommended Actions',accent: '#fbbf24' },
+};
+
+function AiAnalysisSections({ summary }: { summary: string }) {
+  const lines = summary.split('\n').map(l => l.trim()).filter(Boolean);
+
+  const sections: { key: string; label: string; accent: string; body: string }[] = [];
+  let currentKey = '';
+  let currentBody: string[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/^([A-Z][A-Z &]+)\s*[—–-]\s*(.*)/);
+    if (match) {
+      if (currentKey) sections.push({ ...resolveSection(currentKey), body: currentBody.join(' ') });
+      currentKey = match[1].trim();
+      currentBody = match[2] ? [match[2]] : [];
+    } else if (currentKey) {
+      currentBody.push(line);
+    } else {
+      // No section parsed yet — treat as plain text
+      sections.push({ key: 'plain', label: '', accent: '', body: line });
+    }
+  }
+  if (currentKey) sections.push({ ...resolveSection(currentKey), body: currentBody.join(' ') });
+
+  // Fall back to plain rendering if no sections were parsed
+  if (sections.length === 0 || sections.every(s => s.key === 'plain')) {
+    return <p className="text-sm text-gray-200 leading-[1.75] whitespace-pre-line">{summary}</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {sections.map((s, i) =>
+        s.key === 'plain' ? (
+          <p key={i} className="text-sm text-gray-300 leading-relaxed">{s.body}</p>
+        ) : (
+          <div key={i} className="flex gap-3">
+            <div className="flex-shrink-0 w-1 rounded-full mt-0.5 self-stretch" style={{ background: s.accent, opacity: 0.7 }} />
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: s.accent }}>{s.label}</span>
+              <p className="text-sm text-gray-200 leading-[1.7]">{s.body}</p>
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+function resolveSection(key: string): { key: string; label: string; accent: string } {
+  const found = SECTION_COLORS[key];
+  return found ? { key, ...found } : { key, label: key.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()), accent: '#94a3b8' };
 }
