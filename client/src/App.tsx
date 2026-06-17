@@ -115,7 +115,7 @@ const TECH_STACK = [
         dot: 'bg-lime-400',
         tagline: 'The runtime that powers our servers',
         plain: 'Node.js is the engine that runs our server software, similar to how a car engine powers the vehicle. When you create a Wiki page or load your sprint board, Node.js receives that request, figures out what you need, and sends back the right information — all in milliseconds.',
-        detail: 'An event-driven, non-blocking JavaScript runtime built on V8, ideal for I/O-heavy services. Runs the PRM server (port 3001) and Wiki server (port 3002).',
+        detail: 'An event-driven, non-blocking JavaScript runtime built on V8, ideal for I/O-heavy services. Runs the Healix Engage server (port 3001) and Wiki server (port 3002).',
       },
       {
         name: 'Express',
@@ -201,7 +201,7 @@ const TECH_STACK = [
         dot: 'bg-blue-500',
         tagline: 'Where your real project data comes from',
         plain: 'Azure DevOps is Microsoft\'s project management platform used by GlobalHealthX. This app connects to it via a secure API (like a digital handshake) to pull in live sprints, work items, bugs, pull requests, and team data — so everything you see is always up to date from the source of truth.',
-        detail: 'Microsoft\'s DevOps platform. The PRM server authenticates with a Personal Access Token (PAT), calling the ADO REST API to fetch organisations, projects, sprints, work items, repositories, and team members.',
+        detail: 'Microsoft\'s DevOps platform. The Healix Engage server authenticates with a Personal Access Token (PAT), calling the ADO REST API to fetch organisations, projects, sprints, work items, repositories, and team members.',
       },
       {
         name: 'Microsoft Graph API',
@@ -235,7 +235,7 @@ const TECH_STACK = [
         dot: 'bg-purple-500',
         tagline: 'The messenger between browser and server',
         plain: 'Every time the app needs to load data or save something, it sends a request to the server. Axios is the reliable messenger that handles those requests, automatically retries if the network hiccups, and attaches your login token so the server knows it\'s really you.',
-        detail: 'A promise-based HTTP client used in the PRM client and Wiki module to communicate with backend APIs, with interceptors for auth token injection and refresh.',
+        detail: 'A promise-based HTTP client used in the Healix Engage client and Wiki module to communicate with backend APIs, with interceptors for auth token injection and refresh.',
       },
       {
         name: 'Socket.IO',
@@ -515,7 +515,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           {/* Wordmark */}
           <div className="relative flex-shrink-0">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-md shadow-brand-500/20">
-              <span className="text-white font-black text-label tracking-tighter select-none">P</span>
+              <span className="text-white font-black text-label tracking-tighter select-none">H</span>
             </div>
             {/* Live dot */}
             {conn?.ok && (
@@ -525,8 +525,8 @@ function Dashboard({ user }: { user: AuthUser }) {
 
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-gray-900 font-bold text-sm leading-none tracking-tight">PRM</p>
-              <p className="text-gray-600 text-label leading-none mt-[5px] whitespace-nowrap">Project Intelligence</p>
+              <p className="text-gray-900 font-bold text-sm leading-none tracking-tight whitespace-nowrap">Healix Engage</p>
+              <p className="text-gray-500 text-[10px] leading-none mt-[5px] whitespace-nowrap">Jarvis Intelligence</p>
             </div>
           )}
         </div>
@@ -671,7 +671,7 @@ function Dashboard({ user }: { user: AuthUser }) {
               <div className="bg-surface-card border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
                   <p className="text-white font-semibold text-sm">Sign out?</p>
-                  <p className="text-gray-500 text-xs leading-relaxed">You'll need to sign back in to access PRM.</p>
+                  <p className="text-gray-500 text-xs leading-relaxed">You'll need to sign back in to access Healix Engage.</p>
                 </div>
                 <div className="flex justify-end gap-2">
                   <button

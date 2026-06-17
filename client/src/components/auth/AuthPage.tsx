@@ -44,9 +44,9 @@ export function AuthPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
       <div className="mb-10 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 mb-4">
-          <span className="text-3xl font-bold text-brand-400">P</span>
+          <span className="text-3xl font-bold text-brand-400">H</span>
         </div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Jarvis for PRM</h1>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Healix Engage</h1>
       </div>
 
       <div className="w-full max-w-sm bg-surface-card border border-surface-border rounded-2xl p-8 shadow-xl">
