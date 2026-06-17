@@ -550,13 +550,15 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
           return (
             <button key={seg.label}
               onClick={() => onSegmentClick(seg.label, seg.items)}
-              className="flex items-center justify-center gap-2 transition-all hover:brightness-125 group relative"
+              className="flex items-center justify-center gap-1.5 overflow-hidden transition-all hover:brightness-125 group relative"
               style={{ width: `${w}%`, background: `${seg.color}18`, borderRight: idx < segments.length - 1 ? '1px solid var(--tile-border)' : undefined }}
               title={`${seg.label}: ${seg.items.length} items`}>
-              <span className="text-sm font-black" style={{ color: seg.color }}>{seg.items.length}</span>
-              <span className="text-label font-semibold uppercase tracking-wide hidden sm:block" style={{ color: `${seg.color}88` }}>
-                {seg.label.replace(' ', ' ')}
-              </span>
+              <span className="text-sm font-black flex-shrink-0" style={{ color: seg.color }}>{seg.items.length}</span>
+              {w >= 14 && (
+                <span className="text-label font-semibold uppercase tracking-wide truncate hidden sm:block" style={{ color: `${seg.color}cc` }}>
+                  {seg.label}
+                </span>
+              )}
             </button>
           );
         })}
