@@ -369,7 +369,7 @@ function InviteForm({ onInvited, onClose }: {
           </div>
           <p className="text-xs text-gray-500">Share these one-time credentials with the new member. They can log in immediately.</p>
 
-          <div className="rounded-lg bg-black/30 border border-white/10 p-3 font-mono text-xs text-gray-300 flex flex-col gap-1">
+          <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 font-mono text-xs text-gray-700 flex flex-col gap-1">
             <span>Email:    <span className="text-white">{created.user.email}</span></span>
             <span>Password: <span className="text-white">{created.tempPassword}</span></span>
           </div>

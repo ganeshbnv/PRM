@@ -14,11 +14,11 @@ export default {
           900: '#1a2d8a',
         },
         surface: {
-          DEFAULT: '#f3f4f6',
+          DEFAULT: '#f1f5f9',
           card:    '#ffffff',
-          elevated:'#ecedf2',
-          border:  '#d1d5db',
-          raised:  '#e2e4eb',
+          elevated:'#e8edf5',
+          border:  '#cbd5e1',
+          raised:  '#dde3ee',
         },
       },
       fontFamily: {

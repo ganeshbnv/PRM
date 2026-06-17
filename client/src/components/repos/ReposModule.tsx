@@ -105,7 +105,7 @@ export function ReposModule() {
 
       {/* No-reviewer PRs warning */}
       {noReviewerPRs.length > 0 && (
-        <div className="card border-orange-700/50 bg-orange-900/10">
+        <div className="card border-orange-200 bg-orange-50">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-orange-400 font-semibold text-sm">⚠ PRs without reviewers ({noReviewerPRs.length})</span>
             <button className="btn-ghost text-xs ml-auto" onClick={() => { setModalPRTitle('PRs without reviewers'); setModalPRs(noReviewerPRs); }}>View all</button>

@@ -223,12 +223,12 @@ function DiffView({ oldHtml, newHtml }: { oldHtml: string; newHtml: string }) {
         <p className="text-xs text-gray-300 leading-7">
           {tokens.map((t, idx) => {
             if (t.type === 'equal') return <span key={idx}>{t.text} </span>;
-            if (t.type === 'added') return <span key={idx} className="bg-green-900/50 text-green-300 rounded px-0.5 mx-0.5">{t.text} </span>;
-            if (t.type === 'removed') return <span key={idx} className="bg-red-900/50 text-red-300 line-through rounded px-0.5 mx-0.5">{t.text} </span>;
+            if (t.type === 'added') return <span key={idx} className="bg-green-100 text-green-700 rounded px-0.5 mx-0.5">{t.text} </span>;
+            if (t.type === 'removed') return <span key={idx} className="bg-red-100 text-red-700 line-through rounded px-0.5 mx-0.5">{t.text} </span>;
             if (t.type === 'replaced') return (
               <span key={idx}>
-                <span className="bg-orange-900/50 text-orange-300 line-through rounded px-0.5 mx-0.5">{t.oldText} </span>
-                <span className="bg-orange-900/50 text-orange-200 font-medium rounded px-0.5 mx-0.5">{t.newText} </span>
+                <span className="bg-orange-100 text-orange-700 line-through rounded px-0.5 mx-0.5">{t.oldText} </span>
+                <span className="bg-orange-100 text-orange-700 font-medium rounded px-0.5 mx-0.5">{t.newText} </span>
               </span>
             );
             return null;
@@ -308,7 +308,7 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
     <NodeViewWrapper>
       <div className="my-3 rounded-xl border border-white/10 overflow-hidden" contentEditable={false}>
         {/* Toolbar */}
-        <div className="flex items-center gap-1 px-2 py-1.5 bg-[#111117] border-b border-white/8 flex-wrap">
+        <div className="flex items-center gap-1 px-2 py-1.5 bg-gray-50 border-b border-gray-200 flex-wrap">
           <button onMouseDown={e => { e.preventDefault(); patchSel({ b: !selCell?.b }); }}
             title="Bold"
             className={cn('h-6 w-6 flex items-center justify-center rounded text-xs transition-colors',
@@ -368,18 +368,18 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
           <table className="border-collapse text-[11px] w-full bg-surface" style={{ tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                <th className="w-7 min-w-[28px] bg-[#111117] border border-white/8 text-[9px] text-gray-700 select-none sticky top-0 z-20" />
+                <th className="w-7 min-w-[28px] bg-gray-50 border border-gray-200 text-[9px] text-gray-500 select-none sticky top-0 z-20" />
                 {Array.from({ length: cols }, (_, ci) => (
                   <th key={ci}
-                    className={cn('bg-[#111117] border border-white/8 text-[10px] font-semibold px-1 py-0.5 min-w-[90px] select-none sticky top-0 z-20 group',
-                      sc === ci ? 'text-brand-300 bg-brand-900/40' : 'text-gray-500')}>
+                    className={cn('bg-gray-50 border border-gray-200 text-[10px] font-semibold px-1 py-0.5 min-w-[90px] select-none sticky top-0 z-20 group',
+                      sc === ci ? 'text-brand-600 bg-brand-100' : 'text-gray-500')}>
                     <div className="flex items-center justify-center gap-1">
                       <span>{colLetter(ci)}</span>
                       <span className="hidden group-hover:flex gap-px">
                         <button onMouseDown={e => { e.preventDefault(); sortByCol(ci, true); }} title="Sort A→Z"
-                          className="text-[9px] text-gray-600 hover:text-white leading-none">↑</button>
+                          className="text-[9px] text-gray-400 hover:text-gray-900 leading-none">↑</button>
                         <button onMouseDown={e => { e.preventDefault(); sortByCol(ci, false); }} title="Sort Z→A"
-                          className="text-[9px] text-gray-600 hover:text-white leading-none">↓</button>
+                          className="text-[9px] text-gray-400 hover:text-gray-900 leading-none">↓</button>
                       </span>
                     </div>
                   </th>
@@ -390,8 +390,8 @@ function SpreadsheetView({ node, updateAttributes }: NodeViewProps) {
               {data.map((row, ri) => (
                 <tr key={ri}>
                   <td className={cn(
-                    'bg-[#111117] border border-white/8 text-center text-[9px] w-7 select-none',
-                    sr === ri ? 'text-brand-300 bg-brand-900/40' : 'text-gray-700',
+                    'bg-gray-50 border border-gray-200 text-center text-[9px] w-7 select-none',
+                    sr === ri ? 'text-brand-600 bg-brand-100' : 'text-gray-600',
                   )}>
                     {ri + 1}
                   </td>
@@ -510,14 +510,14 @@ function ColorPicker({ label, colors, onPick, current, isHighlight }: {
         <span className="w-4 h-1 rounded-sm" style={{ background: current ?? (isHighlight ? '#fef08a' : '#ffffff') }} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl z-50 grid grid-cols-6 gap-1">
+        <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 grid grid-cols-6 gap-1">
           {colors.map(c => (
             <button key={c} onMouseDown={e => { e.preventDefault(); onPick(c); setOpen(false); }}
-              className="w-5 h-5 rounded border border-gray-600 hover:scale-110 transition-transform"
+              className="w-5 h-5 rounded border border-gray-300 hover:scale-110 transition-transform"
               style={{ background: c }} title={c} />
           ))}
           <button onMouseDown={e => { e.preventDefault(); onPick(''); setOpen(false); }}
-            className="col-span-6 mt-1 text-xs text-gray-400 hover:text-white py-0.5 rounded hover:bg-gray-800 transition-colors">
+            className="col-span-6 mt-1 text-xs text-gray-400 hover:text-white py-0.5 rounded hover:bg-gray-100 transition-colors">
             Clear
           </button>
         </div>
@@ -552,16 +552,16 @@ function BlockStyleSelect({ editor }: { editor: Editor }) {
   return (
     <div className="relative flex-shrink-0" ref={ref}>
       <button onMouseDown={e => { e.preventDefault(); setOpen(v => !v); }}
-        className="h-7 px-2 flex items-center gap-1.5 rounded text-xs text-gray-300 hover:text-white hover:bg-gray-700/60 transition-all min-w-[110px] justify-between">
+        className="h-7 px-2 flex items-center gap-1.5 rounded text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all min-w-[110px] justify-between">
         <span className="truncate">{current}</span>
         <ChevronDown size={10} className={cn('transition-transform flex-shrink-0', open && 'rotate-180')} />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl z-50 py-1 min-w-[160px]">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 min-w-[160px]">
           {styles.map(s => (
             <button key={s.label} onMouseDown={e => { e.preventDefault(); s.action(); setOpen(false); }}
               className={cn('w-full text-left px-3 py-1.5 text-xs transition-colors',
-                s.active() ? 'bg-brand-600/20 text-brand-300' : 'text-gray-300 hover:bg-gray-800 hover:text-white')}>
+                s.active() ? 'bg-brand-100 text-brand-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900')}>
               {s.label}
             </button>
           ))}
@@ -574,7 +574,7 @@ function BlockStyleSelect({ editor }: { editor: Editor }) {
 function TableToolbar({ editor }: { editor: Editor }) {
   if (!editor.isActive('table')) return null;
   return (
-    <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-gray-700/50 bg-gray-800/40 flex-shrink-0 flex-wrap">
+    <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-gray-200 bg-gray-50 flex-shrink-0 flex-wrap">
       <span className="text-xs text-gray-500 mr-1.5">Table:</span>
       <TBtn onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row above">↑ Row</TBtn>
       <TBtn onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below">↓ Row</TBtn>
@@ -597,7 +597,7 @@ function RichEditorToolbar({ editor }: { editor: Editor }) {
   const currentHighlight = editor.getAttributes('highlight').color as string | undefined;
 
   return (
-    <div className="flex-shrink-0 border-b border-gray-700/60 bg-gray-900/80 backdrop-blur-sm">
+    <div className="flex-shrink-0 border-b border-gray-200 bg-gray-50">
       {/* Main toolbar row */}
       <div className="flex items-center gap-0.5 px-3 py-1.5 flex-wrap min-h-[40px]">
 
@@ -798,26 +798,26 @@ function RichEditor({
       </div>
 
       {/* Footer: word count */}
-      <div className="flex-shrink-0 px-6 py-1.5 border-t border-gray-800 bg-gray-900/60 flex items-center gap-4">
-        <span className="text-xs text-gray-600">{words} words · {chars} characters</span>
-        <span className="text-xs text-gray-700 ml-auto">Type <kbd className="px-1 py-0.5 rounded bg-gray-800 text-gray-500 font-mono text-[10px]">/</kbd> for commands</span>
+      <div className="flex-shrink-0 px-6 py-1.5 border-t border-gray-200 bg-gray-50 flex items-center gap-4">
+        <span className="text-xs text-gray-500">{words} words · {chars} characters</span>
+        <span className="text-xs text-gray-500 ml-auto">Type <kbd className="px-1 py-0.5 rounded bg-gray-100 text-gray-600 font-mono text-[10px]">/</kbd> for commands</span>
       </div>
 
       {/* Slash command menu */}
       {slashMenu && filteredCmds.length > 0 && (
-        <div className="fixed z-50 w-72 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden"
+        <div className="fixed z-50 w-72 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
           style={{ left: slashMenu.x, top: slashMenu.y + 4 }}>
-          <div className="px-3 py-2 border-b border-gray-700">
-            <p className="text-xs text-gray-500">Commands {slashMenu.query && <span className="text-brand-400">· "{slashMenu.query}"</span>}</p>
+          <div className="px-3 py-2 border-b border-gray-200">
+            <p className="text-xs text-gray-500">Commands {slashMenu.query && <span className="text-brand-600">· "{slashMenu.query}"</span>}</p>
           </div>
           <ul className="max-h-72 overflow-y-auto py-1">
             {filteredCmds.map((cmd, i) => (
               <li key={cmd.id}>
                 <button onMouseDown={e => { e.preventDefault(); executeSlash(cmd); }}
                   className={cn('w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                    i === slashIdx ? 'bg-brand-600/20 text-brand-300' : 'text-gray-300 hover:bg-gray-800 hover:text-white')}>
+                    i === slashIdx ? 'bg-brand-100 text-brand-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900')}>
                   <span className={cn('w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0',
-                    i === slashIdx ? 'bg-brand-600/30 text-brand-300' : 'bg-gray-800 text-gray-400')}>
+                    i === slashIdx ? 'bg-brand-100 text-brand-600' : 'bg-gray-100 text-gray-500')}>
                     {cmd.icon}
                   </span>
                   <div>
@@ -972,7 +972,7 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
       {menuOpen && menuPos && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-[9999] w-48 bg-[#1c1c22] border border-white/10 rounded-xl shadow-2xl shadow-black/60 py-1.5 text-xs"
+          className="fixed z-[9999] w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 text-xs"
           style={{ left: menuPos.x, top: menuPos.y }}
           onClick={e => e.stopPropagation()}
         >
@@ -1135,11 +1135,11 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
         <Plus size={size === 'sm' ? 12 : 10} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl z-50 py-1 text-xs">
+        <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 text-xs">
           <p className="px-3 pt-1.5 pb-1 text-[10px] text-gray-500 uppercase tracking-wider">Add to this space</p>
           <button
             onClick={e => { e.stopPropagation(); onAdd(true); setOpen(false); }}
-            className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-800 transition-colors">
+            className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-100 transition-colors">
             <span className="w-6 h-6 flex items-center justify-center rounded bg-amber-900/30 flex-shrink-0">
               <Folder size={13} className="text-amber-400" />
             </span>
@@ -1150,7 +1150,7 @@ function AddItemButton({ onAdd, size = 'sm' }: { onAdd: (isFolder: boolean) => v
           </button>
           <button
             onClick={e => { e.stopPropagation(); onAdd(false); setOpen(false); }}
-            className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-800 transition-colors">
+            className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 text-gray-200 hover:bg-gray-100 transition-colors">
             <span className="w-6 h-6 flex items-center justify-center rounded bg-brand-900/40 flex-shrink-0">
               <FileText size={13} className="text-brand-400" />
             </span>
@@ -1257,7 +1257,7 @@ function PageTreeItem({ node, depth, activeId, onSelect, onAdd, drag, onRenamed,
   const menu = menuOpen && menuPos && createPortal(
     <div
       ref={menuRef}
-      className="fixed z-[9999] w-52 bg-[#1c1c22] border border-white/10 rounded-xl shadow-2xl shadow-black/60 py-1.5 text-xs"
+      className="fixed z-[9999] w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 text-xs"
       style={{ left: menuPos.x, top: menuPos.y }}
       onClick={e => e.stopPropagation()}
     >
@@ -2385,13 +2385,13 @@ ${contentRef.current}
                 <FileDown size={12} />Export<ChevronDown size={10} className={cn('transition-transform', showExport && 'rotate-180')} />
               </button>
               {showExport && (
-                <div className="absolute right-0 top-full mt-1 w-36 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl z-30 py-1 text-xs">
+                <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1 text-xs">
                   <button onClick={exportPDF}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-gray-200 hover:bg-gray-800 transition-colors">
+                    className="w-full flex items-center gap-2 px-3 py-2 text-gray-200 hover:bg-gray-100 transition-colors">
                     <FileDown size={12} />PDF
                   </button>
                   <button onClick={exportWord}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-gray-200 hover:bg-gray-800 transition-colors">
+                    className="w-full flex items-center gap-2 px-3 py-2 text-gray-200 hover:bg-gray-100 transition-colors">
                     <FileDown size={12} />Word (.doc)
                   </button>
                 </div>
