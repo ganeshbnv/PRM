@@ -405,3 +405,377 @@ function InlineStat({ label, value, color }: { label: string; value: string | nu
     </span>
   );
 }
+
+// ── Sprint Intelligence Dashboard (always-visible, no-click required) ──────────
+
+export function SprintIntelligenceDashboard({ project, team, iterationPath }: Props) {
+  const { data, loading, refresh } = useApi(
+    () => api.getAiInsights(project, team, iterationPath || undefined),
+    [project, team, iterationPath],
+  );
+
+  if (loading) return <IntelligenceSkeleton />;
+  if (!data) return null;
+  const d = data as AiInsight;
+  const healthColor = HEALTH_COLOR[d.healthLabel];
+
+  // ── Derived metrics ──────────────────────────────────────────────────────────
+  const totalItems    = Object.values(d.stateCounts).reduce((s, v) => s + v, 0);
+
+  // Testing pipeline
+  const readyForTest  = d.stateCounts['Ready for Testing'] ?? 0;
+  const inTesting     = d.stateCounts['In Testing']        ?? 0;
+  const underReview   = (d.stateCounts['Under Review'] ?? 0) + (d.stateCounts['Review'] ?? 0);
+  const totalInPipe   = readyForTest + inTesting + underReview;
+  const pipePct       = totalItems > 0 ? Math.round((totalInPipe / totalItems) * 100) : 0;
+  const DONE_STATES   = ['Done', 'Closed', 'Resolved', 'Completed', 'Verified', 'Discarded'];
+  const doneCount     = DONE_STATES.reduce((s, st) => s + (d.stateCounts[st] ?? 0), 0);
+  const completionPct = totalItems > 0 ? Math.round((doneCount / totalItems) * 100) : d.completionRate;
+  const qaBottleneck  = readyForTest >= 5 || (totalInPipe > 0 && totalInPipe / Math.max(totalItems, 1) > 0.3);
+
+  // Bug density
+  const bugDensityPct = totalItems > 0 ? +((d.bugCount / totalItems) * 100).toFixed(1) : 0;
+  const storyCount    = Math.max(totalItems - d.bugCount, 1);
+  const bugPerStory   = +(d.bugCount / storyCount).toFixed(2);
+  const critAlerts    = d.alerts.filter(a => a.severity === 'critical');
+  const warnAlerts    = d.alerts.filter(a => a.severity === 'warning');
+
+  // Engineering rate
+  const velocityData  = [...d.velocityPoints].reverse().map((pts, i) => ({ sprint: `S-${i + 1}`, pts }));
+  const velocityDelta = d.velocityPoints.length >= 2
+    ? d.velocityPoints[d.velocityPoints.length - 1] - d.velocityPoints[d.velocityPoints.length - 2]
+    : null;
+  const topEngineers  = [...d.topAssignees].sort((a, b) => b.active - a.active).slice(0, 3);
+  const totalActive   = d.topAssignees.reduce((s, m) => s + m.active, 0);
+  const totalResolved = d.topAssignees.reduce((s, m) => s + m.resolved, 0);
+
+  return (
+    <div className="rounded-2xl border border-surface-border overflow-hidden"
+      style={{ background: 'linear-gradient(160deg,#0a0c16 0%,#0d1020 60%,#0a0c16 100%)' }}>
+
+      {/* ── Header: Health + AI Summary + Sprint timing ───────────────────────── */}
+      <div className="flex items-center gap-5 px-6 pt-5 pb-4 border-b border-surface-border">
+        {/* Radial health score */}
+        <div className="flex-shrink-0 relative w-[68px] h-[68px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%"
+              startAngle={90} endAngle={-270}
+              data={[{ value: d.healthScore, fill: healthColor }]}>
+              <RadialBar dataKey="value" cornerRadius={6} background={{ fill: '#1e2130' }} />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-xl font-black leading-none" style={{ color: healthColor }}>{d.healthScore}</span>
+            <span className="text-[8px] text-gray-600">/100</span>
+          </div>
+        </div>
+
+        {/* Label + sprint name + alert pills */}
+        <div className="flex-shrink-0 flex flex-col gap-1 min-w-[110px]">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">🧠</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Intelligence</span>
+          </div>
+          <span className="text-sm font-bold leading-snug" style={{ color: healthColor }}>{d.healthLabel}</span>
+          {d.sprintName && <span className="text-[10px] text-gray-600 truncate max-w-[110px]">{d.sprintName}</span>}
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {critAlerts.length > 0 && (
+              <span className="text-[9px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                🔴 {critAlerts.length} critical
+              </span>
+            )}
+            {warnAlerts.length > 0 && (
+              <span className="text-[9px] font-bold bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                🟡 {warnAlerts.length} warn
+              </span>
+            )}
+            {critAlerts.length === 0 && warnAlerts.length === 0 && (
+              <span className="text-[9px] text-emerald-500">✅ Clear</span>
+            )}
+          </div>
+        </div>
+
+        <div className="w-px h-12 bg-surface-border flex-shrink-0" />
+
+        {/* AI Summary text */}
+        <p className="flex-1 text-sm text-gray-300 leading-relaxed min-w-0">{d.summary}</p>
+
+        {/* Sprint timing */}
+        {d.sprintDaysLeft !== null && d.sprintDaysTotal !== null && (
+          <div className="flex-shrink-0 flex flex-col items-end gap-1.5 w-28">
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-white leading-none">{d.sprintDaysLeft}</span>
+              <span className="text-xs text-gray-600">days left</span>
+            </div>
+            <div className="w-full bg-surface rounded-full h-1.5">
+              <div className="h-1.5 rounded-full"
+                style={{ width: `${d.sprintElapsedPct ?? 0}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
+            </div>
+            <span className="text-[10px] text-gray-600">{d.sprintElapsedPct}% elapsed</span>
+          </div>
+        )}
+
+        <button onClick={refresh} className="flex-shrink-0 text-gray-600 hover:text-gray-300 text-sm transition-colors self-start mt-0.5">↺</button>
+      </div>
+
+      {/* ── 3 perspectives ──────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-3 divide-x divide-surface-border">
+
+        {/* ① Engineering Rate */}
+        <div className="px-6 py-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">⚙️</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Engineering Rate</span>
+          </div>
+          <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+            <PerspectiveStat label="Avg velocity" value={d.avgVelocity !== null ? `${d.avgVelocity} pts` : '—'} color="text-brand-400" />
+            <PerspectiveStat label="Completion" value={`${d.completionRate}%`} color="text-emerald-400" />
+            <PerspectiveStat label="Active items" value={totalActive} />
+            <PerspectiveStat label="Items resolved" value={totalResolved} color="text-emerald-400" />
+            {velocityDelta !== null && (
+              <PerspectiveStat
+                label="Velocity Δ"
+                value={`${velocityDelta >= 0 ? '+' : ''}${velocityDelta} pts`}
+                color={velocityDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}
+              />
+            )}
+            <PerspectiveStat label="Predicted done" value={`${d.predictedCompletion}%`} color="text-brand-400" />
+          </div>
+          {topEngineers.length > 0 && (
+            <div className="pt-3 border-t border-surface-border flex flex-col gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-600">Top contributors</span>
+              {topEngineers.map(eng => {
+                const initials = eng.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+                return (
+                  <div key={eng.name} className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-brand-700/60 border border-brand-600/40 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">
+                      {initials}
+                    </div>
+                    <span className="text-xs text-gray-400 truncate flex-1">{eng.name.split(' ')[0]}</span>
+                    <span className="text-[11px] font-semibold text-emerald-400 flex-shrink-0">{eng.resolved} ✓</span>
+                    <span className="text-[11px] text-brand-400 flex-shrink-0 ml-1">{eng.active} act</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ② Testing Pipeline */}
+        <div className="px-6 py-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🔬</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Testing Pipeline</span>
+            </div>
+            {qaBottleneck && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/30 flex-shrink-0">
+                ⚠️ BOTTLENECK
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {([
+              { label: 'Ready for Test', count: readyForTest, color: '#f59e0b' },
+              { label: 'In Testing',     count: inTesting,    color: '#10b981' },
+              { label: 'Under Review',   count: underReview,  color: '#f97316' },
+            ] as const).map(row => (
+              <div key={row.label} className="flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: row.color }} />
+                <span className="text-xs text-gray-400 flex-1">{row.label}</span>
+                <div className="w-20 bg-surface rounded-full h-1.5 flex-shrink-0">
+                  <div className="h-1.5 rounded-full transition-all" style={{
+                    width: totalItems > 0 ? `${Math.max(Math.round((row.count / totalItems) * 100), row.count > 0 ? 3 : 0)}%` : '0%',
+                    background: row.color,
+                  }} />
+                </div>
+                <span className="text-sm font-bold text-gray-300 w-5 text-right flex-shrink-0">{row.count}</span>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-surface-border">
+            <PerspectiveStat label="Total in QA pipe" value={totalInPipe} color={totalInPipe > 0 ? 'text-yellow-400' : undefined} />
+            <PerspectiveStat label="Pipeline %" value={`${pipePct}%`} color="text-gray-400" />
+            <PerspectiveStat label="Items done" value={`${completionPct}%`} color="text-emerald-400" />
+            <PerspectiveStat label="Stale items" value={d.staleCount} color={d.staleCount > 0 ? 'text-yellow-400' : undefined} />
+          </div>
+          {qaBottleneck && (
+            <div className="rounded-lg px-3 py-2 bg-yellow-500/8 border border-yellow-500/20 text-[11px] text-yellow-400 leading-snug">
+              ⚠️ QA pipeline congested — {readyForTest} items waiting, {inTesting} actively being tested.
+            </div>
+          )}
+        </div>
+
+        {/* ③ Bug Density */}
+        <div className="px-6 py-5 flex flex-col gap-3">
+          <div className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🐛</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Bug Density</span>
+            </div>
+            {bugDensityPct > 20 && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">HIGH</span>
+            )}
+            {bugDensityPct > 0 && bugDensityPct <= 10 && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">HEALTHY</span>
+            )}
+          </div>
+          {/* Big numbers */}
+          <div className="flex items-end gap-4">
+            <div className="flex flex-col">
+              <span className="text-3xl font-black text-white leading-none">{d.bugCount}</span>
+              <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">total bugs</span>
+            </div>
+            <div className="flex flex-col mb-0.5">
+              <span className={`text-xl font-black leading-none ${bugDensityPct > 20 ? 'text-red-400' : bugDensityPct > 10 ? 'text-yellow-400' : 'text-emerald-400'}`}>
+                {bugDensityPct}%
+              </span>
+              <span className="text-[10px] text-gray-600 uppercase tracking-wide mt-1">density</span>
+            </div>
+          </div>
+          {/* Density bar */}
+          <div>
+            <div className="flex justify-between text-[10px] text-gray-600 mb-1.5">
+              <span>Bug density rate</span>
+              <span>{bugDensityPct}% of {totalItems} items</span>
+            </div>
+            <div className="w-full bg-surface rounded-full h-2 overflow-hidden">
+              <div className="h-2 rounded-full transition-all" style={{
+                width: `${Math.min(bugDensityPct * 2.5, 100)}%`,
+                background: bugDensityPct > 20 ? '#ef4444' : bugDensityPct > 10 ? '#f59e0b' : '#10b981',
+              }} />
+            </div>
+            <div className="flex text-[9px] mt-1 gap-1 text-gray-700">
+              <span>0%</span>
+              <span className="flex-1 text-center text-emerald-800">healthy ≤10%</span>
+              <span className="text-yellow-800">⚠️ 20%</span>
+              <span className="text-red-800">🔴 40%</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-surface-border">
+            <PerspectiveStat label="Bugs per story" value={bugPerStory} color={+bugPerStory > 0.3 ? 'text-red-400' : 'text-emerald-400'} />
+            <PerspectiveStat label="Unassigned" value={d.unassignedCount} color={d.unassignedCount > 0 ? 'text-gray-400' : undefined} />
+            <PerspectiveStat label="Critical alerts" value={critAlerts.length} color={critAlerts.length > 0 ? 'text-red-400' : undefined} />
+            <PerspectiveStat label="Warnings" value={warnAlerts.length} color={warnAlerts.length > 0 ? 'text-yellow-400' : undefined} />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Bottom: Alerts + Velocity ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-5 divide-x divide-surface-border border-t border-surface-border">
+
+        {/* All alerts */}
+        <div className="col-span-3 px-6 py-5 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Active Alerts</span>
+            <span className="text-[10px] text-gray-600">{d.alerts.length} total</span>
+          </div>
+          {d.alerts.length === 0 ? (
+            <div className="flex items-center gap-2 text-emerald-400 py-3">
+              <span>✅</span>
+              <span className="text-xs">All clear — no active alerts for this sprint</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {d.alerts.map((alert, i) => {
+                const s = SEVERITY_STYLE[alert.severity];
+                return (
+                  <div key={i} className={`flex items-start gap-2 rounded-lg px-3 py-2 border ${s.border}`}>
+                    <span className="text-sm flex-shrink-0 mt-0.5">{s.icon}</span>
+                    <div className="min-w-0">
+                      <p className={`text-xs font-semibold ${s.text}`}>{alert.title}</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{alert.detail}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Velocity trend */}
+        <div className="col-span-2 px-6 py-5 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Velocity Trend</span>
+            {d.avgVelocity !== null && (
+              <span className="text-[10px] text-brand-400 font-semibold">{d.avgVelocity} pts avg</span>
+            )}
+          </div>
+          {velocityData.length > 1 ? (
+            <>
+              <ResponsiveContainer width="100%" height={110}>
+                <LineChart data={velocityData} margin={{ top: 4, right: 4, bottom: 0, left: -22 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2130" />
+                  <XAxis dataKey="sprint" tick={{ fill: '#6b7280', fontSize: 9 }} />
+                  <YAxis tick={{ fill: '#6b7280', fontSize: 9 }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8, fontSize: 11 }} />
+                  <Line type="monotone" dataKey="pts" stroke="#4c6ef5" strokeWidth={2.5}
+                    dot={{ fill: '#4c6ef5', r: 3 }} activeDot={{ r: 5 }} />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="flex items-center justify-between text-[10px] text-gray-600">
+                <span>Predicted: <span className="text-brand-400 font-semibold">{d.predictedCompletion}%</span></span>
+                {velocityDelta !== null && (
+                  <span className={velocityDelta >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    {velocityDelta >= 0 ? '↑' : '↓'} {Math.abs(velocityDelta)} pts vs prev sprint
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <p className="text-xs text-gray-600 text-center">Not enough sprint history for trend</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PerspectiveStat({ label, value, color }: { label: string; value: string | number; color?: string }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={`text-sm font-bold leading-none ${color ?? 'text-white'}`}>{value}</span>
+      <span className="text-[10px] text-gray-600">{label}</span>
+    </div>
+  );
+}
+
+function IntelligenceSkeleton() {
+  return (
+    <div className="rounded-2xl border border-surface-border overflow-hidden animate-pulse"
+      style={{ background: 'linear-gradient(160deg,#0a0c16 0%,#0d1020 60%,#0a0c16 100%)' }}>
+      <div className="flex items-center gap-5 px-6 py-5 border-b border-surface-border">
+        <div className="w-[68px] h-[68px] rounded-full bg-surface-elevated flex-shrink-0" />
+        <div className="w-28 flex flex-col gap-2 flex-shrink-0">
+          <div className="h-2 bg-surface-elevated rounded w-full" />
+          <div className="h-3 bg-surface-elevated rounded w-3/4" />
+          <div className="h-2 bg-surface-elevated rounded w-1/2" />
+        </div>
+        <div className="w-px h-12 bg-surface-border flex-shrink-0" />
+        <div className="flex-1 space-y-2">
+          <div className="h-2 bg-surface-elevated rounded w-full" />
+          <div className="h-2 bg-surface-elevated rounded w-5/6" />
+          <div className="h-2 bg-surface-elevated rounded w-3/4" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-surface-border">
+        {[1, 2, 3].map(n => (
+          <div key={n} className="px-6 py-5 space-y-3">
+            <div className="h-2 bg-surface-elevated rounded w-1/3" />
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-3 bg-surface-elevated rounded" />)}
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-5 divide-x divide-surface-border border-t border-surface-border">
+        <div className="col-span-3 px-6 py-5 space-y-2">
+          {[1, 2, 3].map(n => <div key={n} className="h-10 bg-surface-elevated rounded-lg" />)}
+        </div>
+        <div className="col-span-2 px-6 py-5">
+          <div className="h-28 bg-surface-elevated rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}

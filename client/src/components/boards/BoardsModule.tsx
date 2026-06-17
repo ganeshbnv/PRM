@@ -12,7 +12,7 @@ import type { WorkItem, SprintStats } from '../../types';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 import { KanbanBoard } from './KanbanBoard';
-import { AiInsights } from './AiInsights';
+import { AiInsights, SprintIntelligenceDashboard } from './AiInsights';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
@@ -54,9 +54,6 @@ const TILE_STATE_MAP: Record<string, string[]> = {
   done:       ['Done', 'Closed', 'Completed', 'Discarded', 'Cannot Reproduce'],
 };
 
-const HEALTH_COLOR: Record<string, string> = {
-  'On Track': C.healthy, 'At Risk': C.risk, 'Critical': C.critical,
-};
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
@@ -365,6 +362,13 @@ export function BoardsModule() {
       {view === 'dashboard' && (
         <div className="flex flex-col gap-4">
 
+          {/* Sprint Intelligence: always-visible, loads automatically */}
+          <SprintIntelligenceDashboard
+            project={filters.project}
+            team={filters.team}
+            iterationPath={filters.iterationPath}
+          />
+
           {/* Filter indicator when a tile is active */}
           {activeTileData && activeTileData.key !== '__total__' && (
             <div className="flex items-center gap-2 text-xs px-4 py-2 rounded-xl border"
@@ -381,7 +385,7 @@ export function BoardsModule() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* LEFT: State breakdown + Work types */}
-            <div className="col-span-5 flex flex-col gap-4">
+            <div className="col-span-6 flex flex-col gap-4">
               <div className="rounded-xl border border-surface-border bg-surface-card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <Tag>Where are items?</Tag>
@@ -412,7 +416,7 @@ export function BoardsModule() {
             </div>
 
             {/* MIDDLE: Team pulse */}
-            <div className="col-span-4">
+            <div className="col-span-6">
               <div className="rounded-xl border border-surface-border bg-surface-card p-5 h-full flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <Tag>Team pulse</Tag>
@@ -464,15 +468,6 @@ export function BoardsModule() {
               </div>
             </div>
 
-            {/* RIGHT: Sprint signals (AI) */}
-            <div className="col-span-3">
-              <SprintSignals
-                project={filters.project}
-                team={filters.team}
-                iterationPath={filters.iterationPath}
-                onViewFull={() => setView('ai')}
-              />
-            </div>
           </div>
 
           {/* ── Sprint history + Burndown ─────────────────────────────────────── */}
@@ -582,105 +577,6 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
   );
 }
 
-// ── Sprint Signals (compact AI panel) ─────────────────────────────────────────
-
-interface AiSignalData {
-  healthScore: number;
-  healthLabel: string;
-  alerts: { severity: string; title: string; detail: string }[];
-  summary: string;
-  completionRate: number;
-  staleCount: number;
-  unassignedCount: number;
-  bugCount: number;
-  sprintDaysLeft: number | null;
-  avgVelocity: number | null;
-}
-
-function SprintSignals({ project, team, iterationPath, onViewFull }: {
-  project: string; team: string; iterationPath: string; onViewFull: () => void;
-}) {
-  const { data, loading } = useApi(
-    () => api.getAiInsights(project, team, iterationPath || undefined),
-    [project, team, iterationPath],
-  );
-
-  if (loading) return (
-    <div className="rounded-xl border border-surface-border bg-surface-card p-5 h-full flex flex-col gap-3 animate-pulse">
-      <div className="h-3 w-24 bg-surface-elevated rounded" />
-      <div className="h-16 bg-surface-elevated rounded-lg" />
-      {[1, 2].map(n => <div key={n} className="h-10 bg-surface-elevated rounded-lg" />)}
-    </div>
-  );
-
-  if (!data) return (
-    <div className="rounded-xl border border-surface-border bg-surface-card p-5 h-full flex items-center justify-center">
-      <p className="text-xs text-gray-600">AI insights unavailable</p>
-    </div>
-  );
-
-  const d = data as AiSignalData;
-  const healthColor  = HEALTH_COLOR[d.healthLabel] ?? '#6b7280';
-  const SEV_COLOR: Record<string, string> = { critical: C.critical, warning: C.risk, info: C.total };
-  const SEV_ICON:  Record<string, string> = { critical: '🔴', warning: '🟡', info: '🔵' };
-
-  return (
-    <div className="rounded-xl border border-surface-border bg-surface-card p-5 flex flex-col gap-3.5 h-full">
-      {/* Header: label + health badge */}
-      <div className="flex items-center justify-between">
-        <Tag>Sprint signals</Tag>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0"
-          style={{ background: `${healthColor}14`, border: `1px solid ${healthColor}35` }}>
-          <span className="text-sm font-black tabular-nums" style={{ color: healthColor }}>{d.healthScore}</span>
-          <span className="text-[10px] font-semibold" style={{ color: healthColor }}>{d.healthLabel}</span>
-        </div>
-      </div>
-
-      {/* AI summary card */}
-      <div className="rounded-lg p-3 flex flex-col gap-1.5" style={{ background: '#09091280', border: '1px solid #1c1f2e' }}>
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs">🤖</span>
-          <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">AI Analysis</span>
-        </div>
-        <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-5">{d.summary}</p>
-      </div>
-
-      {/* Alerts */}
-      <div className="flex flex-col gap-1.5">
-        {d.alerts.length === 0 ? (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-500 py-1">
-            <span>✅</span><span>No active alerts</span>
-          </div>
-        ) : (
-          d.alerts.slice(0, 3).map((alert, i) => (
-            <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2"
-              style={{ background: `${SEV_COLOR[alert.severity]}0c`, border: `1px solid ${SEV_COLOR[alert.severity]}25` }}>
-              <span className="text-xs flex-shrink-0 mt-0.5">{SEV_ICON[alert.severity]}</span>
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold leading-tight" style={{ color: SEV_COLOR[alert.severity] }}>{alert.title}</p>
-                <p className="text-[10px] text-gray-600 mt-0.5 leading-snug line-clamp-2">{alert.detail}</p>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Quick stats row */}
-      <div className="grid grid-cols-3 gap-1 pt-2 border-t border-surface-border">
-        <QuickNum label="Complete"   value={`${d.completionRate}%`} color={C.resolved} />
-        <QuickNum label="Stale"      value={d.staleCount}           color={d.staleCount      > 0 ? C.risk     : undefined} />
-        <QuickNum label="Unassigned" value={d.unassignedCount}      color={d.unassignedCount > 0 ? '#9ca3af'  : undefined} />
-      </div>
-
-      <button onClick={onViewFull}
-        className="mt-auto text-xs font-medium py-2 rounded-lg transition-all"
-        style={{ color: C.total, border: `1px solid ${C.total}28`, background: `${C.total}0a` }}>
-        Full AI Report →
-      </button>
-    </div>
-  );
-}
-
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
 function Tag({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -691,14 +587,6 @@ function Tag({ children, className }: { children: React.ReactNode; className?: s
   );
 }
 
-function QuickNum({ label, value, color }: { label: string; value: string | number; color?: string }) {
-  return (
-    <div className="flex flex-col items-center text-center gap-0.5">
-      <span className="text-sm font-bold tabular-nums" style={{ color: color ?? '#9ca3af' }}>{value}</span>
-      <span className="text-[9px] text-gray-600 uppercase tracking-wide">{label}</span>
-    </div>
-  );
-}
 
 function DataBar({ label, value, max, color, onClick }: {
   label: string; value: number; max: number; color: string; onClick: () => void;
