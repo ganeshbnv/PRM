@@ -88,10 +88,10 @@ export function RisksModule() {
           <h3 className="text-sm font-semibold text-gray-300 mb-3">Risks by Severity</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={bySev}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
-              <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+              <XAxis dataKey="name" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
+              <YAxis tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
+              <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }} />
               <Bar dataKey="count" radius={[4, 4, 0, 0]}
                 fill="#ef4444"
                 onClick={(d) => setFilter(d.name as RiskSeverity)}
@@ -106,10 +106,10 @@ export function RisksModule() {
           <h3 className="text-sm font-semibold text-gray-300 mb-3">Risks by Category</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={byCategory} layout="vertical" margin={{ left: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" horizontal={false} />
-              <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} width={60} />
-              <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" horizontal={false} />
+              <XAxis type="number" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} width={60} />
+              <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }} />
               <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]}
                 onClick={(d) => setCategoryFilter(categoryFilter === d.name ? 'all' : d.name)}
                 style={{ cursor: 'pointer' }}
