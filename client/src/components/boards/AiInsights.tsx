@@ -191,7 +191,7 @@ export function AiInsights({ project, team, iterationPath }: Props) {
               <RadialBarChart cx="50%" cy="50%" innerRadius="65%" outerRadius="90%"
                 startAngle={90} endAngle={-270}
                 data={[{ value: d.healthScore, fill: healthColor }]}>
-                <RadialBar dataKey="value" cornerRadius={6} background={{ fill: '#1e2130' }} />
+                <RadialBar dataKey="value" cornerRadius={6} background={{ fill: '#e2e8f0' }} />
               </RadialBarChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -366,10 +366,10 @@ export function AiInsights({ project, team, iterationPath }: Props) {
             <>
               <ResponsiveContainer width="100%" height={160}>
                 <LineChart data={velocityData} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
-                  <XAxis dataKey="sprint" tick={{ fill: '#9ca3af', fontSize: 10 }} />
-                  <YAxis tick={{ fill: '#9ca3af', fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="sprint" tick={{ fill: '#64748b', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#64748b', fontSize: 10 }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, color: '#1e293b' }} />
                   <Line type="monotone" dataKey="Points" stroke="#4c6ef5" strokeWidth={2.5}
                     dot={{ fill: '#4c6ef5', r: 4 }} activeDot={{ r: 6 }} />
                 </LineChart>
@@ -754,10 +754,10 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
             <>
               <ResponsiveContainer width="100%" height={110}>
                 <LineChart data={velocityData} margin={{ top: 4, right: 4, bottom: 0, left: -22 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2130" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="sprint" tick={{ fill: '#6b7280', fontSize: 9 }} />
                   <YAxis tick={{ fill: '#6b7280', fontSize: 9 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8, fontSize: 11 }} />
+                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 11, color: '#1e293b' }} />
                   <Line type="monotone" dataKey="pts" stroke="#4c6ef5" strokeWidth={2.5}
                     dot={{ fill: '#4c6ef5', r: 3 }} activeDot={{ r: 5 }} />
                 </LineChart>

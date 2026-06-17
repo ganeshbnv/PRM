@@ -322,19 +322,19 @@ export function BoardsModule() {
               onClick={() => setActiveTile(tile.key === '__total__' ? null : (activeTile === tile.key ? null : tile.key))}
               className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all"
               style={{
-                border:     `2px solid ${sel ? tile.color : '#1c1f2e'}`,
-                background: sel ? `${tile.color}1a` : '#111320',
-                boxShadow:  sel ? `0 0 24px ${tile.color}22, 0 4px 16px rgba(0,0,0,0.4)` : '0 2px 8px rgba(0,0,0,0.3)',
+                border:     `2px solid ${sel ? tile.color : '#e2e8f0'}`,
+                background: sel ? `${tile.color}12` : '#ffffff',
+                boxShadow:  sel ? `0 0 16px ${tile.color}28, 0 2px 8px rgba(0,0,0,0.08)` : '0 1px 3px rgba(0,0,0,0.06)',
                 transform:  sel ? 'translateY(-2px)' : undefined,
               }}>
               <div className="absolute top-0 left-0 right-0 h-[3px]"
-                style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.4 }} />
+                style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.25 }} />
               <span className="text-[10px] uppercase tracking-widest font-semibold mt-1.5"
-                style={{ color: sel ? `${tile.color}cc` : '#374151' }}>{tile.label}</span>
+                style={{ color: sel ? tile.color : '#64748b' }}>{tile.label}</span>
               <span className="text-3xl font-black leading-none tabular-nums"
-                style={{ color: sel ? tile.color : '#d1d5db' }}>{tile.count}</span>
+                style={{ color: sel ? tile.color : '#1e293b' }}>{tile.count}</span>
               {pct !== null && (
-                <span className="text-[11px] font-medium" style={{ color: `${tile.color}66` }}>{pct}%</span>
+                <span className="text-[11px] font-medium" style={{ color: sel ? tile.color : '#94a3b8' }}>{pct}%</span>
               )}
             </button>
           );
@@ -447,8 +447,8 @@ export function BoardsModule() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-sm text-gray-300 group-hover:text-white transition-colors truncate">{m.displayName.split(' ')[0]}</span>
-                              <span className="text-xs font-bold text-gray-300 ml-2 flex-shrink-0">{m.total}</span>
+                              <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors truncate">{m.displayName.split(' ')[0]}</span>
+                              <span className="text-xs font-bold text-gray-700 ml-2 flex-shrink-0">{m.total}</span>
                             </div>
                             {/* Stacked bar: resolved=green, active=blue, rest=gray */}
                             <div className="h-1.5 rounded-full bg-surface overflow-hidden flex">
@@ -491,10 +491,10 @@ export function BoardsModule() {
                       }
                     }}
                     style={{ cursor: 'pointer' }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#181a28" />
-                    <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 10 }} />
-                    <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8, fontSize: 12 }}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 10 }} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 12, color: '#1e293b' }}
                       labelFormatter={label => {
                         const s = (sprints ?? []).find((sp: SprintStats) => sp.iteration.name === label);
                         return `${label}${s?.iteration.attributes.timeFrame === 'current' ? ' · Active' : ''}`;
@@ -506,8 +506,8 @@ export function BoardsModule() {
                     <Bar dataKey="In Progress" stackId="a" fill={C.total}>
                       {iterData.map(e => <Cell key={e.path} fill={C.total} opacity={filters.iterationPath && e.path !== filters.iterationPath ? 0.18 : 1} />)}
                     </Bar>
-                    <Bar dataKey="Not Started" stackId="a" fill="#1e2130" radius={[3, 3, 0, 0]}>
-                      {iterData.map(e => <Cell key={e.path} fill="#1e2130" opacity={filters.iterationPath && e.path !== filters.iterationPath ? 0.18 : 1} />)}
+                    <Bar dataKey="Not Started" stackId="a" fill="#e2e8f0" radius={[3, 3, 0, 0]}>
+                      {iterData.map(e => <Cell key={e.path} fill="#e2e8f0" opacity={filters.iterationPath && e.path !== filters.iterationPath ? 0.5 : 1} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -551,7 +551,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
             <button key={seg.label}
               onClick={() => onSegmentClick(seg.label, seg.items)}
               className="flex items-center justify-center gap-2 transition-all hover:brightness-125 group relative"
-              style={{ width: `${w}%`, background: `${seg.color}22`, borderRight: idx < segments.length - 1 ? '1px solid #1e2130' : undefined }}
+              style={{ width: `${w}%`, background: `${seg.color}18`, borderRight: idx < segments.length - 1 ? '1px solid #e2e8f0' : undefined }}
               title={`${seg.label}: ${seg.items.length} items`}>
               <span className="text-sm font-black" style={{ color: seg.color }}>{seg.items.length}</span>
               <span className="text-[10px] font-semibold uppercase tracking-wide hidden sm:block" style={{ color: `${seg.color}88` }}>
@@ -594,11 +594,11 @@ function DataBar({ label, value, max, color, onClick }: {
   const pct = max > 0 ? Math.max(Math.round((value / max) * 100), 2) : 2;
   return (
     <button onClick={onClick} className="group flex items-center gap-3 w-full text-left">
-      <span className="text-sm text-gray-500 group-hover:text-white transition-colors w-28 truncate flex-shrink-0">{label}</span>
+      <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors w-28 truncate flex-shrink-0">{label}</span>
       <div className="flex-1 bg-surface rounded-full h-2">
         <div className="h-2 rounded-full transition-all group-hover:brightness-125" style={{ width: `${pct}%`, background: color }} />
       </div>
-      <span className="text-sm font-semibold text-gray-300 w-7 text-right flex-shrink-0">{value}</span>
+      <span className="text-sm font-semibold text-gray-700 w-7 text-right flex-shrink-0">{value}</span>
     </button>
   );
 }
@@ -629,7 +629,7 @@ function SprintBurndown({ sprint }: { sprint: SprintStats }) {
     <div className="rounded-xl border border-surface-border bg-surface-card p-5 flex flex-col">
       <div className="flex items-center justify-between mb-3">
         <Tag>Burndown</Tag>
-        <span className="text-3xl font-black text-white tabular-nums">
+        <span className="text-3xl font-black text-gray-900 tabular-nums">
           {pct}<span className="text-sm font-normal text-gray-500">%</span>
         </span>
       </div>
@@ -650,12 +650,12 @@ function SprintBurndown({ sprint }: { sprint: SprintStats }) {
       {burnData.length > 0 && (
         <ResponsiveContainer width="100%" height={165}>
           <LineChart data={burnData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#181a28" />
-            <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 10 }} interval="preserveStartEnd" />
-            <YAxis tick={{ fill: '#6b7280', fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8, fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 10 }} interval="preserveStartEnd" />
+            <YAxis tick={{ fill: '#64748b', fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 11, color: '#1e293b' }} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Line type="monotone" dataKey="Ideal" stroke="#2d3148" strokeDasharray="4 3" dot={false} strokeWidth={1.5} />
+            <Line type="monotone" dataKey="Ideal" stroke="#94a3b8" strokeDasharray="4 3" dot={false} strokeWidth={1.5} />
             <Line type="monotone" dataKey="Actual" stroke={C.total} strokeWidth={2.5} dot={false} />
           </LineChart>
         </ResponsiveContainer>
