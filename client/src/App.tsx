@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
-  RefreshCw, LogOut, PanelLeftClose, PanelLeft,
+  LogOut, PanelLeftClose, PanelLeft,
   Settings, Bell, Search, Layers, X, ChevronDown, LayoutDashboard,
   Sun, Moon,
 } from 'lucide-react';
@@ -483,7 +483,7 @@ function Dashboard({ user }: { user: AuthUser }) {
   const [showSettings, setShowSettings] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [conn, setConn] = useState<{ ok: boolean; label: string } | null>(null);
-  const [flushing, setFlushing] = useState(false);
+
   const { filters } = useFilterStore();
 
   useEffect(() => {
@@ -492,10 +492,6 @@ function Dashboard({ user }: { user: AuthUser }) {
       .catch(() => setConn({ ok: false, label: 'Connection failed' }));
   }, []);
 
-  async function handleFlush() {
-    setFlushing(true);
-    await api.flushCache().finally(() => setFlushing(false));
-  }
 
   const hasProject = !!filters.project;
   const activeItem = NAV_ITEMS.find(n => n.id === tab)!;
@@ -610,13 +606,8 @@ function Dashboard({ user }: { user: AuthUser }) {
         {/* ── Bottom dock ── */}
         <div className="flex-shrink-0 border-t border-gray-200 px-2 pt-2 pb-2.5">
 
-          {/* Utility row: expand (collapsed) / refresh / connection */}
-          <div className={cn(
-            'flex items-center mb-1',
-            collapsed ? 'flex-col gap-[2px]' : 'gap-1 px-1',
-          )}>
-            {/* Expand trigger — only when collapsed */}
-            {collapsed && (
+          {collapsed && (
+            <div className="flex justify-center mb-1">
               <button
                 onClick={() => setCollapsed(false)}
                 title="Expand sidebar"
@@ -624,34 +615,8 @@ function Dashboard({ user }: { user: AuthUser }) {
               >
                 <PanelLeft size={14} />
               </button>
-            )}
-
-            {/* Refresh cache */}
-            <button
-              onClick={handleFlush}
-              disabled={flushing}
-              title={flushing ? 'Refreshing…' : 'Refresh data cache'}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40"
-            >
-              <RefreshCw size={14} className={flushing ? 'animate-spin' : ''} />
-            </button>
-
-            {/* Connection status — expanded only */}
-            {!collapsed && conn && (
-              <div className={cn(
-                'flex items-center gap-1.5 px-1 min-w-0 flex-1',
-                conn.ok ? 'text-emerald-600' : 'text-red-500',
-              )}>
-                <span className={cn(
-                  'w-[6px] h-[6px] rounded-full flex-shrink-0',
-                  conn.ok ? 'bg-emerald-500' : 'bg-red-500',
-                )} />
-                <span className="text-label truncate leading-none">
-                  {conn.ok ? conn.label : 'Server offline'}
-                </span>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* User card */}
           <div className={cn(
