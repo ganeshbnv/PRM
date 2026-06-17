@@ -1,6 +1,8 @@
-import { useState, FormEvent } from 'react';
+import { useState, useLayoutEffect, useRef, FormEvent } from 'react';
 import axios from 'axios';
 import { useAuthStore, AuthUser } from '../../store/auth';
+
+const DOMAIN = 'globalhealthx.co';
 
 interface AuthResponse {
   token: string;
@@ -9,7 +11,6 @@ interface AuthResponse {
 
 export function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -18,20 +19,14 @@ export function AuthPage() {
 
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const DOMAIN = 'globalhealthx.co';
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    const resolvedEmail = mode === 'register' ? `${username.trim()}@${DOMAIN}` : email;
-
+    const email = `${username.trim()}@${DOMAIN}`;
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const payload = mode === 'login'
-        ? { email: resolvedEmail, password }
-        : { email: resolvedEmail, name, password };
+      const payload = mode === 'login' ? { email, password } : { email, name, password };
       const { data } = await axios.post<AuthResponse>(endpoint, payload);
       setAuth(data.token, data.user);
     } catch (err: unknown) {
@@ -47,7 +42,6 @@ export function AuthPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
-      {/* Logo / brand */}
       <div className="mb-10 text-center">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 mb-4">
           <span className="text-3xl font-bold text-brand-400">P</span>
@@ -55,18 +49,14 @@ export function AuthPage() {
         <h1 className="text-2xl font-bold text-white tracking-tight">Jarvis for PRM</h1>
       </div>
 
-      {/* Card */}
       <div className="w-full max-w-sm bg-surface-card border border-surface-border rounded-2xl p-8 shadow-xl">
-        {/* Mode toggle */}
         <div className="flex rounded-lg bg-surface-elevated p-1 mb-6">
           {(['login', 'register'] as const).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); setError(''); }}
               className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                mode === m
-                  ? 'bg-brand-500 text-white shadow'
-                  : 'text-gray-400 hover:text-white'
+                mode === m ? 'bg-brand-500 text-white shadow' : 'text-gray-400 hover:text-white'
               }`}
             >
               {m === 'login' ? 'Sign In' : 'Register'}
@@ -91,30 +81,7 @@ export function AuthPage() {
 
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
-            {mode === 'register' ? (
-              <div className="flex rounded-lg overflow-hidden border border-surface-border focus-within:border-brand-500 transition-colors">
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.replace(/[@\s]/g, ''))}
-                  required
-                  placeholder="yourname"
-                  className="flex-1 min-w-0 px-3 py-2.5 bg-surface-elevated text-white placeholder-gray-500 focus:outline-none text-sm"
-                />
-                <span className="flex items-center px-3 bg-surface-elevated text-gray-500 text-sm font-medium whitespace-nowrap select-none">
-                  @globalhealthx.co
-                </span>
-              </div>
-            ) : (
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="you@globalhealthx.co"
-                className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
-              />
-            )}
+            <DomainInput value={username} onChange={setUsername} />
           </div>
 
           <div>
@@ -145,12 +112,59 @@ export function AuthPage() {
           </button>
         </form>
 
-        {/* Domain restriction notice */}
         <p className="mt-5 text-center text-xs text-gray-500">
           Access restricted to{' '}
-          <span className="text-gray-400 font-medium">@globalhealthx.co</span> accounts only.
+          <span className="text-gray-400 font-medium">@{DOMAIN}</span> accounts only.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ── Domain input — suffix tracks typed text ───────────────────────────────────
+
+function DomainInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const mirrorRef = useRef<HTMLSpanElement>(null);
+  const [inputWidth, setInputWidth] = useState(72);
+
+  useLayoutEffect(() => {
+    if (mirrorRef.current) {
+      // +4px gives the cursor a little room
+      setInputWidth(mirrorRef.current.offsetWidth + 4);
+    }
+  }, [value]);
+
+  return (
+    <div className="flex items-center px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border focus-within:border-brand-500 transition-colors overflow-hidden relative">
+      {/* Invisible mirror used only to measure typed text width */}
+      <span
+        ref={mirrorRef}
+        aria-hidden
+        style={{
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'none',
+          whiteSpace: 'pre',
+          fontSize: '0.875rem',
+          fontFamily: 'inherit',
+        }}
+      >
+        {value || 'yourname'}
+      </span>
+
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/[@\s]/g, ''))}
+        required
+        placeholder="yourname"
+        style={{ width: inputWidth, minWidth: 4 }}
+        className="bg-transparent text-white text-sm outline-none placeholder-gray-500 shrink-0"
+      />
+
+      <span className="text-gray-500 text-sm whitespace-nowrap">
+        @{DOMAIN}
+      </span>
     </div>
   );
 }
