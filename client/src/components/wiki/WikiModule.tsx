@@ -2683,7 +2683,9 @@ function SpaceView({ space, onBack, currentUser }: {
   const [activePage, setActivePage] = useState<WPage | null>(null);
   const [pageLoading, setPageLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [fullWidth, setFullWidth] = useState(false);
+  const [fullWidth, setFullWidth] = useState<boolean>(() => {
+    try { return localStorage.getItem('wiki-full-width') === 'true'; } catch { return false; }
+  });
   const dragIdRef = useRef<string | null>(null);
   const [dropIndicator, setDropIndicator] = useState<DragIndicator>({ overId: null, position: 'before' });
 
@@ -2735,7 +2737,7 @@ function SpaceView({ space, onBack, currentUser }: {
   const handleDeleted = (id: string) => {
     const [updated] = removeNode(tree, id);
     setTree(updated);
-    if (activePage?.id === id) { setActivePage(null); setFullWidth(false); }
+    if (activePage?.id === id) { setActivePage(null); }
   };
 
   const dragProps: DragProps = { dragIdRef, indicator: dropIndicator, setIndicator: setDropIndicator, onMove: handleMove };
@@ -2863,8 +2865,12 @@ function SpaceView({ space, onBack, currentUser }: {
               page={activePage}
               currentUser={currentUser}
               fullWidth={fullWidth}
-              onToggleFullWidth={() => setFullWidth(v => !v)}
-              onBack={() => { setActivePage(null); setFullWidth(false); }}
+              onToggleFullWidth={() => setFullWidth(v => {
+                const next = !v;
+                try { localStorage.setItem('wiki-full-width', String(next)); } catch {}
+                return next;
+              })}
+              onBack={() => setActivePage(null)}
               onSaved={p => {
                 setActivePage(p);
                 setTree(prev => { const up = (ns: WPageNode[]): WPageNode[] => ns.map(n => n.id === p.id ? { ...n, title: p.title, emoji: p.emoji } : { ...n, children: up(n.children) }); return up(prev); });
