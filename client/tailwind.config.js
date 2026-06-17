@@ -13,11 +13,11 @@ export default {
           900: '#1a2d8a',
         },
         surface: {
-          DEFAULT: '#0d0d10',
-          card: '#111114',
-          elevated: '#1a1a1f',
-          border: '#252530',
-          raised: '#222236',
+          DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
+          card:    'rgb(var(--color-surface-card) / <alpha-value>)',
+          elevated:'rgb(var(--color-surface-elevated) / <alpha-value>)',
+          border:  'rgb(var(--color-surface-border) / <alpha-value>)',
+          raised:  'rgb(var(--color-surface-raised) / <alpha-value>)',
         },
       },
       fontFamily: {

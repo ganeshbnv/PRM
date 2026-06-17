@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, UserPlus, Trash2, ShieldCheck, ShieldOff, Copy, Check, Settings, Users, User } from 'lucide-react';
+import { X, UserPlus, Trash2, ShieldCheck, ShieldOff, Copy, Check, Settings, Users, User, Moon, Sun } from 'lucide-react';
 import { api, type ManagedUser } from '../../api/client';
 import type { AuthUser } from '../../store/auth';
+import { useThemeStore } from '../../store/theme';
 import { cn } from '../../utils/cn';
 import { format } from 'date-fns';
 
@@ -19,7 +20,7 @@ export function SettingsModal({ currentUser, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-[#0f0f12] border border-white/[0.08] rounded-2xl w-full max-w-2xl mx-4 flex flex-col shadow-2xl"
+      <div className="bg-surface-card border border-surface-border rounded-2xl w-full max-w-2xl mx-4 flex flex-col shadow-2xl"
         style={{ maxHeight: 'min(85vh, 700px)' }}>
 
         {/* Header */}
@@ -103,6 +104,92 @@ function ProfileTab({ user }: { user: AuthUser }) {
         {user.role === 'admin' && (
           <> You have <span className="text-brand-400 font-semibold">Super Admin</span> privileges — you can manage all users in this workspace.</>
         )}
+      </div>
+
+      <AppearanceSection />
+    </div>
+  );
+}
+
+// ── Appearance ────────────────────────────────────────────────────────────────
+
+function AppearanceSection() {
+  const { theme, setTheme } = useThemeStore();
+
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Appearance</span>
+      <div className="grid grid-cols-2 gap-3">
+        <ThemeCard
+          id="dark"
+          label="Dark"
+          icon={Moon}
+          active={theme === 'dark'}
+          preview={<DarkPreview />}
+          onClick={() => setTheme('dark')}
+        />
+        <ThemeCard
+          id="light"
+          label="Light"
+          icon={Sun}
+          active={theme === 'light'}
+          preview={<LightPreview />}
+          onClick={() => setTheme('light')}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ThemeCard({ label, icon: Icon, active, preview, onClick }: {
+  id: string; label: string; icon: React.ElementType;
+  active: boolean; preview: React.ReactNode; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex flex-col gap-2 p-3 rounded-xl border-2 transition-all text-left',
+        active
+          ? 'border-brand-500 bg-brand-500/8'
+          : 'border-surface-border bg-surface-elevated hover:border-surface-raised',
+      )}
+    >
+      <div className="w-full rounded-lg overflow-hidden ring-1 ring-white/10">{preview}</div>
+      <div className="flex items-center gap-1.5">
+        <Icon size={12} className={active ? 'text-brand-400' : 'text-gray-500'} />
+        <span className={cn('text-xs font-semibold', active ? 'text-brand-400' : 'text-gray-400')}>{label}</span>
+        {active && <span className="ml-auto text-[9px] text-brand-500 font-bold">ACTIVE</span>}
+      </div>
+    </button>
+  );
+}
+
+function DarkPreview() {
+  return (
+    <div className="w-full h-16 bg-[#0d0d10] p-2 flex flex-col gap-1.5">
+      <div className="flex gap-1.5">
+        <div className="w-8 h-full bg-[#111114] rounded" />
+        <div className="flex-1 flex flex-col gap-1">
+          <div className="h-2 bg-[#1a1a1f] rounded w-3/4" />
+          <div className="h-1.5 bg-[#252530] rounded w-1/2" />
+          <div className="h-1.5 bg-[#4c6ef5]/40 rounded w-2/3" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LightPreview() {
+  return (
+    <div className="w-full h-16 bg-[#f3f4f6] p-2 flex flex-col gap-1.5">
+      <div className="flex gap-1.5">
+        <div className="w-8 h-full bg-white rounded shadow-sm" />
+        <div className="flex-1 flex flex-col gap-1">
+          <div className="h-2 bg-[#e5e7eb] rounded w-3/4" />
+          <div className="h-1.5 bg-[#d1d5db] rounded w-1/2" />
+          <div className="h-1.5 bg-[#4c6ef5]/60 rounded w-2/3" />
+        </div>
       </div>
     </div>
   );

@@ -520,8 +520,7 @@ export function SprintIntelligenceDashboard({ project, team, iterationPath }: Pr
         </div>
 
         {/* AI Analysis — full width, multi-line */}
-        <div className="rounded-xl px-4 py-4 flex flex-col gap-3"
-          style={{ background: '#07080f', border: '1px solid #1c1f2e' }}>
+        <div className="surface-deep rounded-xl px-4 py-4 flex flex-col gap-3">
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">AI Analysis</span>
           <AiAnalysisSections summary={d.summary} />
         </div>
