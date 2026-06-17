@@ -478,6 +478,7 @@ function Dashboard({ user }: { user: AuthUser }) {
   const [collapsed, setCollapsed] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [conn, setConn] = useState<{ ok: boolean; label: string } | null>(null);
   const [flushing, setFlushing] = useState(false);
   const { filters } = useFilterStore();
@@ -662,7 +663,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                   <p className="text-[10px] text-gray-600 leading-none mt-[5px]">GlobalHealthX</p>
                 </div>
                 <button
-                  onClick={clearAuth}
+                  onClick={() => setShowLogoutConfirm(true)}
                   title="Sign out"
                   className="w-6 h-6 flex items-center justify-center rounded-md text-gray-700 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
                 >
@@ -708,6 +709,34 @@ function Dashboard({ user }: { user: AuthUser }) {
 
           {showSettings && (
             <SettingsModal currentUser={user} onClose={() => setShowSettings(false)} />
+          )}
+
+          {showLogoutConfirm && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+              onClick={(e) => { if (e.target === e.currentTarget) setShowLogoutConfirm(false); }}
+            >
+              <div className="bg-[#0f0f12] border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <p className="text-white font-semibold text-sm">Sign out?</p>
+                  <p className="text-gray-500 text-xs leading-relaxed">You'll need to sign back in to access PRM.</p>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="text-sm px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/8 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={clearAuth}
+                    className="text-sm font-semibold px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Tech Stack icon */}
