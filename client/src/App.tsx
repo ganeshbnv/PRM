@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
-  LogOut, PanelLeftClose, PanelLeft,
+  PanelLeftClose, PanelLeft,
   Settings, Bell, Search, Layers, X, ChevronDown, LayoutDashboard,
   Sun, Moon,
 } from 'lucide-react';
@@ -606,28 +606,6 @@ function Dashboard({ user }: { user: AuthUser }) {
             </button>
           </div>
 
-          {/* User card */}
-          <div className={cn(
-            'flex items-center rounded-lg px-2 py-[9px] hover:bg-white/[0.04] transition-colors',
-            collapsed ? 'justify-center' : 'gap-2.5',
-          )}>
-            <Avatar name={user.name} size="sm" />
-            {!collapsed && (
-              <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800 truncate leading-none">{user.name}</p>
-                  <p className="text-label text-gray-600 leading-none mt-[5px]">GlobalHealthX</p>
-                </div>
-                <button
-                  onClick={() => setShowLogoutConfirm(true)}
-                  title="Sign out"
-                  className="w-6 h-6 flex items-center justify-center rounded-md text-gray-700 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
-                >
-                  <LogOut size={12} />
-                </button>
-              </>
-            )}
-          </div>
         </div>
       </aside>
 
@@ -670,6 +648,15 @@ function Dashboard({ user }: { user: AuthUser }) {
             onClick={() => setShowSettings(true)}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
             <Settings size={14} />
+          </button>
+
+          {/* Profile / sign out */}
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            title="Sign out"
+            className="rounded-full hover:ring-2 hover:ring-brand-400 transition-all flex-shrink-0"
+          >
+            <Avatar name={user.name} size="sm" />
           </button>
 
           {showSettings && (
