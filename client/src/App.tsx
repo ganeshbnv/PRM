@@ -524,20 +524,10 @@ function Dashboard({ user }: { user: AuthUser }) {
           </div>
 
           {!collapsed && (
-            <>
-              <div className="flex-1 min-w-0">
-                <p className="text-gray-900 font-bold text-sm leading-none tracking-tight">PRM</p>
-                <p className="text-gray-600 text-label leading-none mt-[5px] whitespace-nowrap">Project Intelligence</p>
-              </div>
-              {/* Collapse trigger */}
-              <button
-                onClick={() => setCollapsed(true)}
-                title="Collapse sidebar"
-                className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0"
-              >
-                <PanelLeftClose size={13} />
-              </button>
-            </>
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-900 font-bold text-sm leading-none tracking-tight">PRM</p>
+              <p className="text-gray-600 text-label leading-none mt-[5px] whitespace-nowrap">Project Intelligence</p>
+            </div>
           )}
         </div>
 
@@ -606,17 +596,15 @@ function Dashboard({ user }: { user: AuthUser }) {
         {/* ── Bottom dock ── */}
         <div className="flex-shrink-0 border-t border-gray-200 px-2 pt-2 pb-2.5">
 
-          {collapsed && (
-            <div className="flex justify-center mb-1">
-              <button
-                onClick={() => setCollapsed(false)}
-                title="Expand sidebar"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <PanelLeft size={14} />
-              </button>
-            </div>
-          )}
+          <div className={cn('flex mb-1', collapsed ? 'justify-center' : 'justify-end px-1')}>
+            <button
+              onClick={() => setCollapsed(p => !p)}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              {collapsed ? <PanelLeft size={14} /> : <PanelLeftClose size={14} />}
+            </button>
+          </div>
 
           {/* User card */}
           <div className={cn(
