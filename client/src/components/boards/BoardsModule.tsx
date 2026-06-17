@@ -168,12 +168,13 @@ export function BoardsModule() {
     const { startDate, finishDate, timeFrame } = selectedSprint.iteration.attributes;
     sprintTf = timeFrame ?? '';
     if (startDate && finishDate) {
-      const start    = new Date(startDate).getTime();
-      const end      = new Date(finishDate).getTime();
-      const total_d  = Math.ceil((end - start) / 86400000);
-      const elapsed  = Math.min(Math.ceil((Date.now() - start) / 86400000), total_d);
+      const startDay = new Date(startDate); startDay.setHours(0, 0, 0, 0);
+      const endDay   = new Date(finishDate); endDay.setHours(0, 0, 0, 0);
+      const today    = new Date(); today.setHours(0, 0, 0, 0);
+      const total_d  = Math.round((endDay.getTime() - startDay.getTime()) / 86400000);
+      const elapsed  = Math.min(Math.max(0, Math.round((today.getTime() - startDay.getTime()) / 86400000)), total_d);
       timeElapsedPct = Math.round((elapsed / total_d) * 100);
-      daysLeft       = Math.max(0, total_d - elapsed);
+      daysLeft       = Math.max(0, Math.round((endDay.getTime() - today.getTime()) / 86400000));
       sprintDateRange = `${format(new Date(startDate), 'MMM d')} – ${format(new Date(finishDate), 'MMM d')}`;
     }
     completionPct = selectedSprint.total > 0

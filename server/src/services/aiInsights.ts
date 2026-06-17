@@ -219,12 +219,13 @@ export async function getAiInsights(
     sprintName = sprint.iteration.name;
     const { startDate, finishDate } = sprint.iteration.attributes;
     if (startDate && finishDate) {
-      const start = new Date(startDate).getTime();
-      const end   = new Date(finishDate).getTime();
-      const total = Math.ceil((end - start) / 86400000);
-      const elapsed = Math.min(Math.ceil((Date.now() - start) / 86400000), total);
-      sprintDaysTotal = total;
-      sprintDaysLeft  = Math.max(0, total - elapsed);
+      const startDay = new Date(startDate); startDay.setHours(0, 0, 0, 0);
+      const endDay   = new Date(finishDate); endDay.setHours(0, 0, 0, 0);
+      const today    = new Date(); today.setHours(0, 0, 0, 0);
+      const total    = Math.round((endDay.getTime() - startDay.getTime()) / 86400000);
+      const elapsed  = Math.min(Math.max(0, Math.round((today.getTime() - startDay.getTime()) / 86400000)), total);
+      sprintDaysTotal  = total;
+      sprintDaysLeft   = Math.max(0, Math.round((endDay.getTime() - today.getTime()) / 86400000));
       sprintElapsedPct = Math.round((elapsed / total) * 100);
     }
   }
