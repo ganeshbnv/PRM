@@ -504,13 +504,13 @@ function Dashboard({ user }: { user: AuthUser }) {
 
       {/* ── Sidebar ── */}
       <aside className={cn(
-        'relative flex flex-col flex-shrink-0 border-r border-white/[0.06] bg-surface-card transition-all duration-200',
+        'relative flex flex-col flex-shrink-0 border-r border-gray-200 bg-white transition-all duration-200',
         collapsed ? 'w-[60px]' : 'w-[220px]',
       )}>
 
         {/* ── Logo + collapse ── */}
         <div className={cn(
-          'flex items-center border-b border-white/[0.06] flex-shrink-0 min-h-[52px]',
+          'flex items-center border-b border-gray-200 flex-shrink-0 min-h-[52px]',
           collapsed ? 'justify-center px-0' : 'gap-2.5 px-3.5',
         )}>
           {/* Wordmark */}
@@ -527,14 +527,14 @@ function Dashboard({ user }: { user: AuthUser }) {
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-sm leading-none tracking-tight">PRM</p>
+                <p className="text-gray-900 font-bold text-sm leading-none tracking-tight">PRM</p>
                 <p className="text-gray-600 text-[10px] leading-none mt-[5px]">Project Intelligence</p>
               </div>
               {/* Collapse trigger */}
               <button
                 onClick={() => setCollapsed(true)}
                 title="Collapse sidebar"
-                className="w-6 h-6 flex items-center justify-center rounded-md text-gray-700 hover:text-gray-400 hover:bg-white/6 transition-colors flex-shrink-0"
+                className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors flex-shrink-0"
               >
                 <PanelLeftClose size={13} />
               </button>
@@ -562,8 +562,8 @@ function Dashboard({ user }: { user: AuthUser }) {
                     'w-full flex items-center rounded-lg transition-all duration-150 group relative select-none',
                     collapsed ? 'justify-center px-0 py-[9px]' : 'gap-2.5 px-2 py-[9px]',
                     isActive
-                      ? 'bg-white/[0.07]'
-                      : 'hover:bg-white/[0.04]',
+                      ? 'bg-brand-50'
+                      : 'hover:bg-gray-100',
                   )}
                 >
                   {/* Active indicator — gradient bar */}
@@ -585,7 +585,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                     <>
                       <span className={cn(
                         'flex-1 text-left text-[13px] font-medium leading-none tracking-[-0.01em]',
-                        isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-300',
+                        isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 group-hover:text-gray-800',
                       )}>
                         {item.label}
                       </span>
@@ -605,7 +605,7 @@ function Dashboard({ user }: { user: AuthUser }) {
         </nav>
 
         {/* ── Bottom dock ── */}
-        <div className="flex-shrink-0 border-t border-white/[0.06] px-2 pt-2 pb-2.5">
+        <div className="flex-shrink-0 border-t border-gray-200 px-2 pt-2 pb-2.5">
 
           {/* Utility row: expand (collapsed) / refresh / connection */}
           <div className={cn(
@@ -617,7 +617,7 @@ function Dashboard({ user }: { user: AuthUser }) {
               <button
                 onClick={() => setCollapsed(false)}
                 title="Expand sidebar"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-700 hover:text-gray-300 hover:bg-white/6 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 <PanelLeft size={14} />
               </button>
@@ -628,7 +628,7 @@ function Dashboard({ user }: { user: AuthUser }) {
               onClick={handleFlush}
               disabled={flushing}
               title={flushing ? 'Refreshing…' : 'Refresh data cache'}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-700 hover:text-gray-300 hover:bg-white/6 transition-colors disabled:opacity-40"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-40"
             >
               <RefreshCw size={14} className={flushing ? 'animate-spin' : ''} />
             </button>
@@ -659,7 +659,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-gray-200 truncate leading-none">{user.name}</p>
+                  <p className="text-[13px] font-semibold text-gray-800 truncate leading-none">{user.name}</p>
                   <p className="text-[10px] text-gray-600 leading-none mt-[5px]">GlobalHealthX</p>
                 </div>
                 <button
@@ -679,31 +679,31 @@ function Dashboard({ user }: { user: AuthUser }) {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Top bar */}
-        <header className="flex-shrink-0 flex items-center gap-4 px-5 py-3 border-b border-white/5 bg-surface-card">
+        <header className="flex-shrink-0 flex items-center gap-4 px-5 py-3 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2.5 min-w-0">
             <Icon size={16} className={cn('flex-shrink-0', activeItem.color)} />
-            <h1 className="text-white font-semibold text-sm">{activeItem.label}</h1>
-            <span className="text-gray-600 text-xs hidden sm:block">/ {activeItem.description}</span>
+            <h1 className="text-gray-900 font-semibold text-sm">{activeItem.label}</h1>
+            <span className="text-gray-400 text-xs hidden sm:block">/ {activeItem.description}</span>
           </div>
 
           <div className="flex-1" />
 
           {/* Search hint */}
-          <button className="hidden md:flex items-center gap-2 text-xs text-gray-600 bg-white/5 hover:bg-white/8 border border-white/5 rounded-lg px-3 py-1.5 transition-colors">
+          <button className="hidden md:flex items-center gap-2 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
             <Search size={12} />
             <span>Quick search…</span>
-            <kbd className="ml-2 px-1.5 py-0.5 rounded bg-white/5 text-[10px] font-mono">⌘K</kbd>
+            <kbd className="ml-2 px-1.5 py-0.5 rounded bg-gray-200 text-[10px] font-mono">⌘K</kbd>
           </button>
 
           {/* Notification bell */}
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors">
+          <button className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
             <Bell size={14} />
           </button>
 
           {/* Settings */}
           <button
             onClick={() => setShowSettings(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-colors">
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
             <Settings size={14} />
           </button>
 

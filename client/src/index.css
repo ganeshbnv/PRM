@@ -5,6 +5,9 @@
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 
 @layer base {
+  html {
+    color-scheme: light;
+  }
   body {
     background-color: #f1f5f9;
     color: #1e293b;
@@ -161,6 +164,15 @@
 .bg-red-900\/10     { background-color: #fef2f2; }
 .border-red-700\/60 { border-color: #fca5a5; }
 .bg-orange-900\/10  { background-color: #fff7ed; }
+
+/* ── Surface color guarantees (belt + suspenders alongside Tailwind config) ─ */
+
+.bg-surface          { background-color: #f1f5f9; }
+.bg-surface-card     { background-color: #ffffff; }
+.bg-surface-elevated { background-color: #e8edf5; }
+.bg-surface-raised   { background-color: #dde3ee; }
+.border-surface-border { border-color: #cbd5e1; }
+.text-surface-border { color: #cbd5e1; }
 
 /* ── Surface utilities ───────────────────────────────────────────────────── */
 
