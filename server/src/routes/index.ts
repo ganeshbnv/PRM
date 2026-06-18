@@ -121,30 +121,36 @@ router.get('/engineers/activity', wrap(async (req) => {
   });
 }));
 
-// Debug: returns raw commit samples so we can verify date formats + changeCounts
+// Debug: shows all commits fetched via pushes API (all branches, all repos)
 router.get('/engineers/debug-commits', wrap(async (req) => {
-  const project = proj(req);
-  const fromDate = req.query.fromDate as string | undefined;
-  const toDate   = req.query.toDate   as string | undefined;
-  const repos    = await reposSvc.getRepositories(project);
-  const samples  = [];
-  for (const repo of repos.slice(0, 3)) {
-    const commits = await reposSvc.getCommits({ project, repoId: repo.id, fromDate, toDate, top: 20 });
-    for (const c of commits.slice(0, 5)) {
-      const d = new Date(c.author.date);
-      samples.push({
-        repo: repo.name,
-        commitId: c.commitId.slice(0, 7),
-        authorDate: c.author.date,
-        authorName: c.author.name,
-        dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()],
-        isWeekendUTC: d.getUTCDay() === 0 || d.getUTCDay() === 6,
-        changeCounts: (c as any).changeCounts ?? null,
-        comment: c.comment.split('\n')[0].slice(0, 60),
-      });
-    }
-  }
-  return { fromDate, toDate, sampleCount: samples.length, samples };
+  const project  = proj(req);
+  const fromDate = (req.query.fromDate as string) ?? new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10);
+  const toDate   = (req.query.toDate   as string) ?? new Date().toISOString().slice(0, 10);
+  const allCommits = await reposSvc.getAllCommits(project, fromDate, toDate);
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const samples = allCommits.slice(0, 50).map(c => {
+    const d = new Date(c.author.date);
+    return {
+      repo:       c.repoName,
+      commitId:   c.commitId.slice(0, 7),
+      authorDate: c.author.date,
+      authorName: c.author.name,
+      dayLocal:   days[d.getDay()],
+      dayUTC:     days[d.getUTCDay()],
+      isWeekendLocal: d.getDay() === 0 || d.getDay() === 6,
+      isWeekendUTC:   d.getUTCDay() === 0 || d.getUTCDay() === 6,
+      changeCounts: (c as any).changeCounts ?? null,
+      comment:    c.comment.split('\n')[0].slice(0, 60),
+    };
+  });
+  const weekendLocal = allCommits.filter(c => { const d = new Date(c.author.date); return d.getDay() === 0 || d.getDay() === 6; });
+  return {
+    fromDate, toDate,
+    totalCommits:   allCommits.length,
+    weekendCommits: weekendLocal.length,
+    uniqueAuthors:  new Set(allCommits.map(c => c.author.email)).size,
+    samples,
+  };
 }));
 
 // ── AI Insights ───────────────────────────────────────────────────────────────
