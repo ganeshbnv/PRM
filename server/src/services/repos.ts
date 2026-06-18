@@ -38,24 +38,25 @@ export async function getCommits(filters: CommitFilters): Promise<GitCommit[]> {
   });
 }
 
-// ── Push-based all-branch commit fetch ────────────────────────────────────────
+// ── All-branch commit fetch via push IDs ──────────────────────────────────────
 //
-// ADO's commit API with itemVersion only queries ONE branch at a time.
-// The pushes API covers ALL branches — every push to any ref is recorded with
-// the full commit objects (author.date, committer.date, changeCounts).
-// We filter by push date (searchCriteria.fromDate/toDate) so we get 90 days
-// of pushes across all branches, then deduplicate commits by commitId.
+// Strategy:
+//   1. Pushes API (date-filtered) → push IDs covering ALL branches, all refs.
+//      The pushes list only contains {pushId, date, pushedBy, refUpdates} —
+//      commit entries are REFERENCES (commitId + url only, no author/comment).
+//   2. For each push, re-query the commits API with searchCriteria.pushId —
+//      this returns FULL GitCommit objects (author.date, changeCounts, etc.).
+//   3. Deduplicate by commitId across repos and pushes.
+//
+// This is the only reliable way to get full commit data from all branches.
 
-interface GitPush {
+interface GitPushRef {
   pushId: number;
   date: string;
   pushedBy: { displayName: string; uniqueName: string };
-  commits: GitCommit[];
-  refUpdates?: { name: string; oldObjectId: string; newObjectId: string }[];
 }
 
 function isoDate(d: string, endOfDay = false): string {
-  // Ensure ADO receives a full ISO-8601 datetime, not a bare yyyy-MM-dd
   if (d.includes('T')) return d;
   return endOfDay ? `${d}T23:59:59Z` : `${d}T00:00:00Z`;
 }
@@ -69,29 +70,43 @@ export async function getAllCommits(
 
   await Promise.all(repos.map(async (repo) => {
     try {
-      const params: Record<string, unknown> = { 'api-version': V };
-      if (fromDate) params['searchCriteria.fromDate'] = isoDate(fromDate);
-      if (toDate)   params['searchCriteria.toDate']   = isoDate(toDate, true);
+      // Step 1 — get push list (all branches, date-filtered by push date)
+      const pushParams: Record<string, unknown> = { 'api-version': V };
+      if (fromDate) pushParams['searchCriteria.fromDate'] = isoDate(fromDate);
+      if (toDate)   pushParams['searchCriteria.toDate']   = isoDate(toDate, true);
 
-      const cacheKey = `pushes:v2:${project}:${repo.id}:${fromDate ?? ''}:${toDate ?? ''}`;
-      const pushes = await cache.cached(cacheKey, () =>
-        ado.getAll<GitPush>(
+      const pushCacheKey = `pushes:v3:${project}:${repo.id}:${fromDate ?? ''}:${toDate ?? ''}`;
+      const pushes = await cache.cached(pushCacheKey, () =>
+        ado.getAll<GitPushRef>(
           `/${project}/_apis/git/repositories/${repo.id}/pushes`,
-          params
+          pushParams
         )
       );
 
-      for (const push of pushes) {
-        for (const c of (push.commits ?? [])) {
-          if (c?.commitId && !seen.has(c.commitId)) {
-            seen.add(c.commitId);
-            results.push({ ...c, repoId: repo.id, repoName: repo.name });
+      // Step 2 — fetch full commits per push in parallel
+      await Promise.all(pushes.map(async (push) => {
+        try {
+          const commitCacheKey = `commits:push:${project}:${repo.id}:${push.pushId}`;
+          const commits = await cache.cached(commitCacheKey, () =>
+            ado.getAll<GitCommit>(
+              ado.p(project).commits(repo.id),
+              { 'api-version': V, 'searchCriteria.pushId': push.pushId }
+            )
+          );
+
+          for (const c of commits) {
+            if (c?.commitId && !seen.has(c.commitId)) {
+              seen.add(c.commitId);
+              results.push({ ...c, repoId: repo.id, repoName: repo.name });
+            }
           }
+        } catch (pushErr) {
+          console.error(`[repos] push ${push.pushId} in "${repo.name}":`, (pushErr as Error).message);
         }
-      }
+      }));
+
     } catch (err) {
-      // One inaccessible repo should not break the entire request
-      console.error(`[repos] getAllCommits: skipping repo "${repo.name}" —`, (err as Error).message);
+      console.error(`[repos] getAllCommits: skipping "${repo.name}" —`, (err as Error).message);
     }
   }));
 
