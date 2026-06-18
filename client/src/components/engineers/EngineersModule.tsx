@@ -121,12 +121,20 @@ export function EngineersModule() {
     [weekendPeriods]
   );
 
+  // Set of all Sat/Sun date strings across every period — calendar-based, no isWeekend() dependency
+  const weekendDateSet = useMemo(() => {
+    const s = new Set<string>();
+    weekendPeriods.forEach(p => { s.add(p.satDate); s.add(p.sunDate); });
+    return s;
+  }, [weekendPeriods]);
+
   const mostRecentWarriors = useMemo(() => {
     if (!mostRecentPeriod) return [];
     return engineers
       .map(e => ({
         eng: e,
-        commits: e.wkCommits.filter(c => isInPeriod(c.author.date, mostRecentPeriod.satDate, mostRecentPeriod.sunDate)),
+        // Use e.commits (all commits) — not pre-filtered wkCommits — so timezone edge-cases can't hide data
+        commits: e.commits.filter(c => isInPeriod(c.author.date, mostRecentPeriod.satDate, mostRecentPeriod.sunDate)),
       }))
       .filter(x => x.commits.length > 0)
       .sort((a, b) => b.commits.length - a.commits.length);
@@ -138,18 +146,23 @@ export function EngineersModule() {
   );
 
   const weekendWarriors = useMemo(() => {
-    const base = engineers.filter(e => e.wkCommits.length > 0);
-    if (!activePeriod) return [...base].sort((a, b) => b.wkCommits.length - a.wkCommits.length);
-    return base
+    const commitsForPeriod = (e: RichEngineer) =>
+      activePeriod
+        // specific week: filter all commits by exact Sat or Sun date string
+        ? e.commits.filter(c => isInPeriod(c.author.date, activePeriod.satDate, activePeriod.sunDate))
+        // all weekends: filter all commits by the calendar-derived weekend date set
+        : e.commits.filter(c => weekendDateSet.has(commitLocalDate(c.author.date)));
+
+    return engineers
       .map(e => {
-        const periodCommits = e.wkCommits.filter(c => isInPeriod(c.author.date, activePeriod.satDate, activePeriod.sunDate));
+        const periodCommits = commitsForPeriod(e);
         return {
           ...e,
-          wkCommits:   periodCommits,
-          wkFiles:     periodCommits.reduce((s, c) => s + filesOf(c), 0),
-          satCommits:  periodCommits.filter(c => localDay(c.author.date) === 6).length,
-          sunCommits:  periodCommits.filter(c => localDay(c.author.date) === 0).length,
-          wkDates:     [...new Set(periodCommits.map(c => commitLocalDate(c.author.date)))],
+          wkCommits:    periodCommits,
+          wkFiles:      periodCommits.reduce((s, c) => s + filesOf(c), 0),
+          satCommits:   periodCommits.filter(c => localDay(c.author.date) === 6).length,
+          sunCommits:   periodCommits.filter(c => localDay(c.author.date) === 0).length,
+          wkDates:      [...new Set(periodCommits.map(c => commitLocalDate(c.author.date)))],
           lastWkCommit: periodCommits.length
             ? periodCommits.reduce((a, b) => a.author.date > b.author.date ? a : b).author.date
             : null,
@@ -157,7 +170,7 @@ export function EngineersModule() {
       })
       .filter(e => e.wkCommits.length > 0)
       .sort((a, b) => b.wkCommits.length - a.wkCommits.length);
-  }, [engineers, activePeriod]);
+  }, [engineers, activePeriod, weekendDateSet]);
 
   // ── Early returns after all hooks ─────────────────────────────────────────────
   if (loading) return <LoadingCard label="Loading engineer activity…" />;
