@@ -474,10 +474,17 @@ export default function App() {
   return <Dashboard user={user} />;
 }
 
+const VALID_TABS: Tab[] = ['boards', 'bugs', 'engineers', 'repos', 'wiki', 'risks'];
+
+function getTabFromHash(): Tab {
+  const hash = window.location.hash.slice(1) as Tab;
+  return VALID_TABS.includes(hash) ? hash : 'boards';
+}
+
 function Dashboard({ user }: { user: AuthUser }) {
   const { clearAuth } = useAuthStore();
   const { theme, toggle } = useThemeStore();
-  const [tab, setTab] = useState<Tab>('boards');
+  const [tab, setTab] = useState<Tab>(getTabFromHash);
   const [collapsed, setCollapsed] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -505,6 +512,19 @@ function Dashboard({ user }: { user: AuthUser }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [showProfileMenu]);
 
+  // Sync tab → URL hash
+  useEffect(() => {
+    if (window.location.hash.slice(1) !== tab) {
+      window.location.hash = tab;
+    }
+  }, [tab]);
+
+  // Browser back/forward → sync hash → tab
+  useEffect(() => {
+    function handlePopState() { setTab(getTabFromHash()); }
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const hasProject = !!filters.project;
   const activeItem = NAV_ITEMS.find(n => n.id === tab)!;

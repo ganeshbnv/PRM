@@ -38,23 +38,17 @@ export async function getCommits(filters: CommitFilters): Promise<GitCommit[]> {
   });
 }
 
-// ── All-branch commit fetch via push IDs ──────────────────────────────────────
+// ── All-branch commit fetch ────────────────────────────────────────────────────
 //
 // Strategy:
-//   1. Pushes API (date-filtered) → push IDs covering ALL branches, all refs.
-//      The pushes list only contains {pushId, date, pushedBy, refUpdates} —
-//      commit entries are REFERENCES (commitId + url only, no author/comment).
-//   2. For each push, re-query the commits API with searchCriteria.pushId —
-//      this returns FULL GitCommit objects (author.date, changeCounts, etc.).
-//   3. Deduplicate by commitId across repos and pushes.
+//   1. For each repo, enumerate all branches.
+//   2. For each branch, query the commits API with itemVersion.version=<branch>
+//      + date range filter → returns full GitCommit objects.
+//   3. Also query default branch (no itemVersion) to catch commits not on any
+//      named branch ref.
+//   4. Deduplicate by commitId across all repos and branches.
 //
-// This is the only reliable way to get full commit data from all branches.
-
-interface GitPushRef {
-  pushId: number;
-  date: string;
-  pushedBy: { displayName: string; uniqueName: string };
-}
+// This catches commits on feature branches, hotfix branches, and main.
 
 function isoDate(d: string, endOfDay = false): string {
   if (d.includes('T')) return d;
@@ -68,40 +62,48 @@ export async function getAllCommits(
   const seen    = new Set<string>();
   const results: Array<GitCommit & { repoId: string; repoName: string }> = [];
 
+  const dateParams: Record<string, unknown> = { 'api-version': V };
+  if (fromDate) dateParams['searchCriteria.fromDate'] = isoDate(fromDate);
+  if (toDate)   dateParams['searchCriteria.toDate']   = isoDate(toDate, true);
+
   await Promise.all(repos.map(async (repo) => {
     try {
-      // Step 1 — get push list (all branches, date-filtered by push date)
-      const pushParams: Record<string, unknown> = { 'api-version': V };
-      if (fromDate) pushParams['searchCriteria.fromDate'] = isoDate(fromDate);
-      if (toDate)   pushParams['searchCriteria.toDate']   = isoDate(toDate, true);
+      const branches = await getBranches(project, repo.id);
 
-      const pushCacheKey = `pushes:v3:${project}:${repo.id}:${fromDate ?? ''}:${toDate ?? ''}`;
-      const pushes = await cache.cached(pushCacheKey, () =>
-        ado.getAll<GitPushRef>(
-          `/${project}/_apis/git/repositories/${repo.id}/pushes`,
-          pushParams
-        )
-      );
+      // Build list of queries: one per branch + one without itemVersion (default branch)
+      type BranchQuery = { name: string; params: Record<string, unknown> };
+      const queries: BranchQuery[] = [];
 
-      // Step 2 — fetch full commits per push in parallel
-      await Promise.all(pushes.map(async (push) => {
+      // Default-branch query (no itemVersion) — catches anything not under named refs
+      queries.push({ name: '_default', params: { ...dateParams } });
+
+      // Per-branch queries
+      for (const branch of branches) {
+        const shortName = branch.name.replace(/^refs\/heads\//, '');
+        queries.push({
+          name: shortName,
+          params: {
+            ...dateParams,
+            'searchCriteria.itemVersion.version': shortName,
+            'searchCriteria.itemVersion.versionType': 'branch',
+          },
+        });
+      }
+
+      await Promise.all(queries.map(async (q) => {
+        const cacheKey = `commits:br2:${project}:${repo.id}:${q.name}:${fromDate ?? ''}:${toDate ?? ''}`;
         try {
-          const commitCacheKey = `commits:push:${project}:${repo.id}:${push.pushId}`;
-          const commits = await cache.cached(commitCacheKey, () =>
-            ado.getAll<GitCommit>(
-              ado.p(project).commits(repo.id),
-              { 'api-version': V, 'searchCriteria.pushId': push.pushId }
-            )
+          const commits = await cache.cached(cacheKey, () =>
+            ado.getAll<GitCommit>(ado.p(project).commits(repo.id), q.params)
           );
-
           for (const c of commits) {
             if (c?.commitId && !seen.has(c.commitId)) {
               seen.add(c.commitId);
               results.push({ ...c, repoId: repo.id, repoName: repo.name });
             }
           }
-        } catch (pushErr) {
-          console.error(`[repos] push ${push.pushId} in "${repo.name}":`, (pushErr as Error).message);
+        } catch (branchErr) {
+          console.error(`[repos] branch "${q.name}" in "${repo.name}":`, (branchErr as Error).message);
         }
       }));
 
@@ -110,6 +112,7 @@ export async function getAllCommits(
     }
   }));
 
+  console.log(`[repos] getAllCommits: ${results.length} commits from ${repos.length} repos (${fromDate ?? '*'} → ${toDate ?? '*'})`);
   return results;
 }
 
