@@ -55,6 +55,7 @@ export interface GitCommit {
   commitId: string;
   author: { name: string; email: string; date: string };
   comment: string;
+  changeCounts?: { Add: number; Edit: number; Delete: number };
   repoId: string;
   repoName: string;
 }
