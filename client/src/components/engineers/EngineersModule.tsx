@@ -80,22 +80,26 @@ export function EngineersModule() {
 
   const [selected,      setSelected]      = useState<RichEngineer | null>(null);
   const [weekendOnly,   setWeekendOnly]    = useState(false);
-  const [selectedWkSat, setSelectedWkSat] = useState<string | null>(null); // selected weekend's Sat date
+  const [selectedWkSat, setSelectedWkSat] = useState<string | null>(null);
 
-  if (loading) return <LoadingCard label="Loading engineer activity…" />;
-  if (error)   return <ErrorCard error={error} />;
+  // ── All derived state MUST be before any early return (Rules of Hooks) ───────
 
-  const engineers     = (data ?? []).filter(e => e.commits.length > 0).map(enrichEngineer);
-  const stale         = engineers.filter(e => !e.lastActivity || differenceInDays(new Date(), new Date(e.lastActivity)) >= 10);
-  const allCommitsFlat = engineers.flatMap(e => e.commits);
+  const engineers = useMemo(
+    () => (data ?? []).filter(e => e.commits.length > 0).map(enrichEngineer),
+    [data]
+  );
 
-  // ── Weekend period list (all 13 Sat-Sun pairs in last 90 days) ──────────────
+  const allCommitsFlat = useMemo(
+    () => engineers.flatMap(e => e.commits),
+    [engineers]
+  );
+
+  // Weekend period list (all Sat-Sun pairs in last 90 days)
   const weekendPeriods = useMemo((): WeekendPeriod[] => {
     const periods: WeekendPeriod[] = [];
     const d = new Date(subDays(new Date(), 90));
-    while (d.getDay() !== 6) d.setDate(d.getDate() + 1); // move to first Saturday
+    while (d.getDay() !== 6) d.setDate(d.getDate() + 1);
     const ceiling = new Date();
-
     while (d <= ceiling) {
       const satDate = format(d, 'yyyy-MM-dd');
       const sun     = addDays(d, 1);
@@ -109,13 +113,14 @@ export function EngineersModule() {
       });
       d.setDate(d.getDate() + 7);
     }
-    return periods.reverse(); // most recent first
+    return periods.reverse();
   }, [allCommitsFlat]);
 
-  // Most recent weekend that has any activity
-  const mostRecentPeriod = weekendPeriods.find(p => p.commitCount > 0);
+  const mostRecentPeriod = useMemo(
+    () => weekendPeriods.find(p => p.commitCount > 0) ?? null,
+    [weekendPeriods]
+  );
 
-  // Engineers who worked last weekend (for the top banner)
   const mostRecentWarriors = useMemo(() => {
     if (!mostRecentPeriod) return [];
     return engineers
@@ -127,10 +132,11 @@ export function EngineersModule() {
       .sort((a, b) => b.commits.length - a.commits.length);
   }, [engineers, mostRecentPeriod]);
 
-  // Active period (selected chip, or null = all)
-  const activePeriod = selectedWkSat ? weekendPeriods.find(p => p.satDate === selectedWkSat) ?? null : null;
+  const activePeriod = useMemo(
+    () => selectedWkSat ? weekendPeriods.find(p => p.satDate === selectedWkSat) ?? null : null,
+    [selectedWkSat, weekendPeriods]
+  );
 
-  // Warriors filtered to active period (or all)
   const weekendWarriors = useMemo(() => {
     const base = engineers.filter(e => e.wkCommits.length > 0);
     if (!activePeriod) return [...base].sort((a, b) => b.wkCommits.length - a.wkCommits.length);
@@ -152,6 +158,12 @@ export function EngineersModule() {
       .filter(e => e.wkCommits.length > 0)
       .sort((a, b) => b.wkCommits.length - a.wkCommits.length);
   }, [engineers, activePeriod]);
+
+  // ── Early returns after all hooks ─────────────────────────────────────────────
+  if (loading) return <LoadingCard label="Loading engineer activity…" />;
+  if (error)   return <ErrorCard error={error} />;
+
+  const stale = engineers.filter(e => !e.lastActivity || differenceInDays(new Date(), new Date(e.lastActivity)) >= 10);
 
   const totalWkCommits = weekendWarriors.reduce((s, e) => s + e.wkCommits.length, 0);
   const totalWkFiles   = weekendWarriors.reduce((s, e) => s + e.wkFiles, 0);
