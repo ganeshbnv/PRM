@@ -6,12 +6,11 @@ import { useFilterStore } from '../../store/filters';
 import { LoadingCard, ErrorCard } from '../common/Spinner';
 import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
-import type { EngineerActivity } from '../../types';
-import { format, differenceInDays, subDays } from 'date-fns';
+import type { EngineerActivity, GitCommit } from '../../types';
+import { format, differenceInDays, subDays, addDays } from 'date-fns';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-// Use browser local time — engineers commit in their local timezone, not UTC
 function localDay(dateStr: string): number {
   if (!dateStr) return -1;
   try { return new Date(dateStr).getDay(); } catch { return -1; }
@@ -19,7 +18,16 @@ function localDay(dateStr: string): number {
 
 function isWeekend(dateStr: string) {
   const d = localDay(dateStr);
-  return d === 0 || d === 6; // 0=Sun, 6=Sat
+  return d === 0 || d === 6;
+}
+
+function commitLocalDate(dateStr: string): string {
+  try { return format(new Date(dateStr), 'yyyy-MM-dd'); } catch { return ''; }
+}
+
+function isInPeriod(dateStr: string, satDate: string, sunDate: string) {
+  const cd = commitLocalDate(dateStr);
+  return cd === satDate || cd === sunDate;
 }
 
 function filesOf(c: { changeCounts?: { Add?: number; Edit?: number; Delete?: number; add?: number; edit?: number; delete?: number } }) {
@@ -39,7 +47,7 @@ function enrichEngineer(e: EngineerActivity) {
   const wkFiles    = wkCommits.reduce((s, c) => s + filesOf(c), 0);
   const satCommits = wkCommits.filter(c => localDay(c.author.date) === 6).length;
   const sunCommits = wkCommits.filter(c => localDay(c.author.date) === 0).length;
-  const wkDates    = [...new Set(wkCommits.map(c => format(new Date(c.author.date), 'MMM d, yyyy')))];
+  const wkDates    = [...new Set(wkCommits.map(c => commitLocalDate(c.author.date)))];
   const lastWkCommit = wkCommits.length
     ? wkCommits.reduce((a, b) => a.author.date > b.author.date ? a : b).author.date
     : null;
@@ -48,11 +56,20 @@ function enrichEngineer(e: EngineerActivity) {
 
 type RichEngineer = ReturnType<typeof enrichEngineer>;
 
-// ── main component ────────────────────────────────────────────────────────────
+interface WeekendPeriod {
+  satDate: string;
+  sunDate: string;
+  label: string;    // e.g. "Jun 14–15"
+  commitCount: number;
+  engineerCount: number;
+}
 
-// Engineers always look back 90 days to ensure weekends are covered
+// ── Engineers always look back 90 days ───────────────────────────────────────
+
 const ENG_FROM = format(subDays(new Date(), 90), 'yyyy-MM-dd');
 const ENG_TO   = format(new Date(), 'yyyy-MM-dd');
+
+// ── main component ────────────────────────────────────────────────────────────
 
 export function EngineersModule() {
   const { filters } = useFilterStore();
@@ -61,27 +78,91 @@ export function EngineersModule() {
     [filters.project]
   );
 
-  const [selected, setSelected]     = useState<RichEngineer | null>(null);
-  const [weekendOnly, setWeekendOnly] = useState(false);
+  const [selected,      setSelected]      = useState<RichEngineer | null>(null);
+  const [weekendOnly,   setWeekendOnly]    = useState(false);
+  const [selectedWkSat, setSelectedWkSat] = useState<string | null>(null); // selected weekend's Sat date
 
   if (loading) return <LoadingCard label="Loading engineer activity…" />;
   if (error)   return <ErrorCard error={error} />;
 
-  const engineers = (data ?? []).filter(e => e.commits.length > 0).map(enrichEngineer);
-  const stale     = engineers.filter(e => !e.lastActivity || differenceInDays(new Date(), new Date(e.lastActivity)) >= 10);
-
-  const weekendWarriors  = [...engineers].filter(e => e.wkCommits.length > 0).sort((a, b) => b.wkCommits.length - a.wkCommits.length);
-  const totalWkCommits   = engineers.reduce((s, e) => s + e.wkCommits.length, 0);
-  const totalWkFiles     = engineers.reduce((s, e) => s + e.wkFiles, 0);
-  const totalSat         = engineers.reduce((s, e) => s + e.satCommits, 0);
-  const totalSun         = engineers.reduce((s, e) => s + e.sunCommits, 0);
-
-  // Day-of-week distribution across ALL commits from all engineers
+  const engineers     = (data ?? []).filter(e => e.commits.length > 0).map(enrichEngineer);
+  const stale         = engineers.filter(e => !e.lastActivity || differenceInDays(new Date(), new Date(e.lastActivity)) >= 10);
   const allCommitsFlat = engineers.flatMap(e => e.commits);
+
+  // ── Weekend period list (all 13 Sat-Sun pairs in last 90 days) ──────────────
+  const weekendPeriods = useMemo((): WeekendPeriod[] => {
+    const periods: WeekendPeriod[] = [];
+    const d = new Date(subDays(new Date(), 90));
+    while (d.getDay() !== 6) d.setDate(d.getDate() + 1); // move to first Saturday
+    const ceiling = new Date();
+
+    while (d <= ceiling) {
+      const satDate = format(d, 'yyyy-MM-dd');
+      const sun     = addDays(d, 1);
+      const sunDate = format(sun, 'yyyy-MM-dd');
+      const wkC     = allCommitsFlat.filter(c => isInPeriod(c.author.date, satDate, sunDate));
+      periods.push({
+        satDate, sunDate,
+        label: `${format(d, 'MMM d')}–${format(sun, 'd')}`,
+        commitCount:   wkC.length,
+        engineerCount: new Set(wkC.map(c => c.author.email)).size,
+      });
+      d.setDate(d.getDate() + 7);
+    }
+    return periods.reverse(); // most recent first
+  }, [allCommitsFlat]);
+
+  // Most recent weekend that has any activity
+  const mostRecentPeriod = weekendPeriods.find(p => p.commitCount > 0);
+
+  // Engineers who worked last weekend (for the top banner)
+  const mostRecentWarriors = useMemo(() => {
+    if (!mostRecentPeriod) return [];
+    return engineers
+      .map(e => ({
+        eng: e,
+        commits: e.wkCommits.filter(c => isInPeriod(c.author.date, mostRecentPeriod.satDate, mostRecentPeriod.sunDate)),
+      }))
+      .filter(x => x.commits.length > 0)
+      .sort((a, b) => b.commits.length - a.commits.length);
+  }, [engineers, mostRecentPeriod]);
+
+  // Active period (selected chip, or null = all)
+  const activePeriod = selectedWkSat ? weekendPeriods.find(p => p.satDate === selectedWkSat) ?? null : null;
+
+  // Warriors filtered to active period (or all)
+  const weekendWarriors = useMemo(() => {
+    const base = engineers.filter(e => e.wkCommits.length > 0);
+    if (!activePeriod) return [...base].sort((a, b) => b.wkCommits.length - a.wkCommits.length);
+    return base
+      .map(e => {
+        const periodCommits = e.wkCommits.filter(c => isInPeriod(c.author.date, activePeriod.satDate, activePeriod.sunDate));
+        return {
+          ...e,
+          wkCommits:   periodCommits,
+          wkFiles:     periodCommits.reduce((s, c) => s + filesOf(c), 0),
+          satCommits:  periodCommits.filter(c => localDay(c.author.date) === 6).length,
+          sunCommits:  periodCommits.filter(c => localDay(c.author.date) === 0).length,
+          wkDates:     [...new Set(periodCommits.map(c => commitLocalDate(c.author.date)))],
+          lastWkCommit: periodCommits.length
+            ? periodCommits.reduce((a, b) => a.author.date > b.author.date ? a : b).author.date
+            : null,
+        };
+      })
+      .filter(e => e.wkCommits.length > 0)
+      .sort((a, b) => b.wkCommits.length - a.wkCommits.length);
+  }, [engineers, activePeriod]);
+
+  const totalWkCommits = weekendWarriors.reduce((s, e) => s + e.wkCommits.length, 0);
+  const totalWkFiles   = weekendWarriors.reduce((s, e) => s + e.wkFiles, 0);
+  const totalSat       = weekendWarriors.reduce((s, e) => s + e.satCommits, 0);
+  const totalSun       = weekendWarriors.reduce((s, e) => s + e.sunCommits, 0);
+
+  // DOW distribution chart data
   const dowCounts = [0,1,2,3,4,5,6].map(d => ({
-    day:     ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d],
+    day:    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d],
     Commits: allCommitsFlat.filter(c => localDay(c.author.date) === d).length,
-    isWk:    d === 0 || d === 6,
+    isWk:   d === 0 || d === 6,
   }));
 
   const display = weekendOnly
@@ -89,7 +170,7 @@ export function EngineersModule() {
     : [...engineers].sort((a, b) => b.commits.length - a.commits.length);
 
   const barData = display.slice(0, 15).map(e => ({
-    name:    e.displayName.split(' ')[0],
+    name: e.displayName.split(' ')[0],
     Commits: weekendOnly ? e.wkCommits.length : e.commits.length,
     'Files Changed': weekendOnly ? e.wkFiles : e.allFiles,
     ...(weekendOnly ? {} : { Weekend: e.wkCommits.length }),
@@ -97,25 +178,76 @@ export function EngineersModule() {
 
   const summaryTiles = weekendOnly
     ? [
-        { label: 'Weekend Warriors',  value: weekendWarriors.length,                                   color: 'text-violet-500' },
-        { label: 'Weekend Commits',   value: totalWkCommits,                                            color: 'text-blue-500'   },
-        { label: 'Files Changed',     value: totalWkFiles,                                              color: 'text-emerald-500' },
-        { label: 'Sat / Sun',         value: `${totalSat} / ${totalSun}`,                              color: 'text-orange-400' },
+        { label: activePeriod ? activePeriod.label : 'Weekend Warriors', value: weekendWarriors.length,  color: 'text-violet-500' },
+        { label: 'Weekend Commits',  value: totalWkCommits,                                               color: 'text-blue-500'   },
+        { label: 'Files Changed',    value: totalWkFiles,                                                 color: 'text-emerald-500' },
+        { label: 'Sat / Sun',        value: `${totalSat} / ${totalSun}`,                                 color: 'text-orange-400' },
       ]
     : [
-        { label: 'Total Engineers',   value: engineers.length                                                                     },
-        { label: 'Total Commits',     value: engineers.reduce((s, e) => s + e.commits.length, 0)                                  },
-        { label: 'PRs Opened',        value: engineers.reduce((s, e) => s + e.prsOpened.length, 0)                                },
-        { label: 'Inactive (10d+)',   value: stale.length,  color: stale.length ? 'text-orange-400' : 'text-emerald-400'          },
+        { label: 'Total Engineers',  value: engineers.length },
+        { label: 'Total Commits',    value: allCommitsFlat.length },
+        { label: 'PRs Opened',       value: engineers.reduce((s, e) => s + e.prsOpened.length, 0) },
+        { label: 'Inactive (10d+)',  value: stale.length, color: stale.length ? 'text-orange-400' : 'text-emerald-400' },
       ];
 
   return (
     <div className="flex flex-col gap-6">
 
-      {/* Weekend toggle */}
+      {/* ── Most Recent Weekend banner — always visible ───────────────────── */}
+      <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
+        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🌙</span>
+            <div>
+              <span className="text-sm font-bold text-violet-700 dark:text-violet-300">
+                Most Recent Weekend
+              </span>
+              {mostRecentPeriod
+                ? <span className="ml-2 text-sm text-violet-500">{mostRecentPeriod.label}</span>
+                : <span className="ml-2 text-xs text-gray-400">No weekend activity in 90 days</span>
+              }
+            </div>
+          </div>
+          {mostRecentPeriod && (
+            <span className="text-xs text-gray-500">
+              {mostRecentPeriod.commitCount} commits · {mostRecentPeriod.engineerCount} engineer{mostRecentPeriod.engineerCount !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        {mostRecentWarriors.length > 0 ? (
+          <div className="flex gap-2.5 flex-wrap">
+            {mostRecentWarriors.map(({ eng: e, commits: wc }) => (
+              <button
+                key={e.uniqueName}
+                onClick={() => setSelected(e)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-surface-elevated border border-violet-200 dark:border-violet-900/50 hover:border-violet-400 transition-all"
+              >
+                <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                  {e.displayName[0]}
+                </div>
+                <div className="text-left min-w-0">
+                  <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">{e.displayName}</div>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+                    <span className="text-violet-500 font-semibold">{wc.length} commits</span>
+                    {wc.filter(c => localDay(c.author.date) === 6).length > 0 &&
+                      <span className="px-1 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400">Sat</span>}
+                    {wc.filter(c => localDay(c.author.date) === 0).length > 0 &&
+                      <span className="px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">Sun</span>}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-400">No weekend commits detected in the last 90 days.</p>
+        )}
+      </div>
+
+      {/* ── Weekend toggle ────────────────────────────────────────────────── */}
       <div className="flex justify-end">
         <button
-          onClick={() => setWeekendOnly(v => !v)}
+          onClick={() => { setWeekendOnly(v => !v); setSelectedWkSat(null); }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
             weekendOnly
               ? 'bg-violet-500/15 border-violet-500/50 text-violet-600 dark:text-violet-400'
@@ -127,7 +259,52 @@ export function EngineersModule() {
         </button>
       </div>
 
-      {/* Summary tiles */}
+      {/* ── Week filter chips (only in weekendOnly mode) ──────────────────── */}
+      {weekendOnly && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold px-0.5">Filter by weekend</p>
+          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {/* "All" chip */}
+            <button
+              onClick={() => setSelectedWkSat(null)}
+              className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                !selectedWkSat
+                  ? 'bg-violet-500 border-violet-500 text-white'
+                  : 'bg-surface-elevated border-surface-border text-gray-500 hover:border-violet-400 hover:text-violet-500'
+              }`}
+            >
+              <span>All</span>
+              <span className="text-[9px] font-normal mt-0.5 opacity-70">{weekendPeriods.reduce((s, p) => s + p.commitCount, 0)} commits</span>
+            </button>
+
+            {weekendPeriods.map(p => {
+              const isSelected = selectedWkSat === p.satDate;
+              const hasData    = p.commitCount > 0;
+              return (
+                <button
+                  key={p.satDate}
+                  onClick={() => setSelectedWkSat(isSelected ? null : p.satDate)}
+                  disabled={!hasData}
+                  className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                    isSelected
+                      ? 'bg-violet-500 border-violet-500 text-white'
+                      : hasData
+                        ? 'bg-surface-elevated border-surface-border text-gray-600 dark:text-gray-300 hover:border-violet-400 hover:text-violet-500'
+                        : 'bg-surface-elevated border-surface-border text-gray-300 dark:text-gray-600 opacity-40 cursor-not-allowed'
+                  }`}
+                >
+                  <span>{p.label}</span>
+                  <span className={`text-[9px] font-normal mt-0.5 ${isSelected ? 'opacity-90' : 'opacity-60'}`}>
+                    {hasData ? `${p.engineerCount} eng · ${p.commitCount} commits` : 'no activity'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Summary tiles ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryTiles.map(s => (
           <div key={s.label} className="card">
@@ -137,10 +314,10 @@ export function EngineersModule() {
         ))}
       </div>
 
-      {/* Commits by day-of-week — always shown so weekend activity is immediately visible */}
-      {allCommitsFlat.length > 0 && (
+      {/* ── Commits by day of week ────────────────────────────────────────── */}
+      {!weekendOnly && allCommitsFlat.length > 0 && (
         <div className="card">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300">
               Commit Activity by Day of Week
               <span className="ml-2 text-xs font-normal text-gray-400">{allCommitsFlat.length} commits · last 90 days</span>
@@ -160,24 +337,22 @@ export function EngineersModule() {
                 formatter={(v: number, _n, p) => [`${v} commits`, p.payload.day]}
               />
               <Bar dataKey="Commits" radius={[4, 4, 0, 0]}>
-                {dowCounts.map((d, i) => (
-                  <Cell key={i} fill={d.isWk ? '#8b5cf6' : '#3b82f6'} />
-                ))}
+                {dowCounts.map((d, i) => <Cell key={i} fill={d.isWk ? '#8b5cf6' : '#3b82f6'} />)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
       )}
 
-      {/* Weekend Warriors spotlight (visible in all-data mode) */}
-      {!weekendOnly && weekendWarriors.length > 0 && (
+      {/* ── Weekend Warriors in weekendOnly mode ─────────────────────────── */}
+      {weekendOnly && weekendWarriors.length > 0 && (
         <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
           <div className="flex items-center gap-3 mb-3 flex-wrap">
             <span className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-              🌙 Weekend Warriors — {weekendWarriors.length} engineers committed on Sat / Sun
+              {activePeriod ? `Weekend ${activePeriod.label}` : 'All Weekends'} — {weekendWarriors.length} engineer{weekendWarriors.length !== 1 ? 's' : ''}
             </span>
             <span className="text-xs text-gray-500">
-              {totalWkCommits} commits · {totalWkFiles} files changed · {totalSat} Sat / {totalSun} Sun
+              {totalWkCommits} commits · {totalWkFiles} files · {totalSat} Sat / {totalSun} Sun
             </span>
           </div>
           <div className="flex gap-2.5 flex-wrap">
@@ -192,7 +367,7 @@ export function EngineersModule() {
                 </div>
                 <div className="text-left min-w-0">
                   <div className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">{e.displayName.split(' ')[0]}</div>
-                  <div className="text-[10px] text-violet-500">{e.wkCommits.length} wk · {e.wkFiles} files</div>
+                  <div className="text-[10px] text-violet-500">{e.wkCommits.length} commits · {e.wkFiles} files</div>
                 </div>
               </button>
             ))}
@@ -200,11 +375,19 @@ export function EngineersModule() {
         </div>
       )}
 
-      {/* Bar chart */}
+      {weekendOnly && weekendWarriors.length === 0 && (
+        <div className="card text-center py-10 text-gray-400">
+          {activePeriod ? `No weekend commits for ${activePeriod.label}` : 'No weekend commits found in the last 90 days'}
+        </div>
+      )}
+
+      {/* ── Bar chart ─────────────────────────────────────────────────────── */}
       {barData.length > 0 && (
         <div className="card">
           <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">
-            {weekendOnly ? 'Weekend Commits & Files Changed' : 'Top Contributors'}
+            {weekendOnly
+              ? `Weekend Commits${activePeriod ? ` — ${activePeriod.label}` : ' (all weekends)'}`
+              : 'Top Contributors'}
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={barData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
@@ -221,11 +404,11 @@ export function EngineersModule() {
         </div>
       )}
 
-      {/* Engineer table */}
+      {/* ── Engineer table ────────────────────────────────────────────────── */}
       <div className="card">
         <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">
           {weekendOnly
-            ? `Weekend Warriors — ${display.length} engineer${display.length !== 1 ? 's' : ''}`
+            ? `Weekend Warriors${activePeriod ? ` — ${activePeriod.label}` : ''} (${display.length})`
             : 'Engineer Activity'}
         </h3>
         <SortableTable
@@ -233,29 +416,29 @@ export function EngineersModule() {
           rowKey={r => r.uniqueName}
           onRowClick={r => setSelected(r)}
           columns={weekendOnly ? [
-            { key: 'name', header: 'Name',         sortable: true,  render: r => <span className="font-medium">{r.displayName}</span>,                                                                               sortValue: r => r.displayName },
-            { key: 'wkc',  header: 'Wk Commits',   sortable: true,  render: r => <span className="font-bold text-violet-500">{r.wkCommits.length}</span>,                                                            sortValue: r => r.wkCommits.length },
-            { key: 'wkf',  header: 'Files Changed', sortable: true, render: r => r.wkFiles,                                                                                                                           sortValue: r => r.wkFiles },
-            { key: 'sat',  header: 'Sat',           sortable: true,  render: r => r.satCommits ? <span className="text-violet-500">{r.satCommits}</span> : <span className="text-gray-400">—</span>,                sortValue: r => r.satCommits },
-            { key: 'sun',  header: 'Sun',           sortable: true,  render: r => r.sunCommits ? <span className="text-blue-400">{r.sunCommits}</span> : <span className="text-gray-400">—</span>,                  sortValue: r => r.sunCommits },
-            { key: 'days', header: 'Days Worked',   sortable: false, render: r => <span className="text-xs text-gray-500">{r.wkDates.slice(0, 3).join(' · ')}{r.wkDates.length > 3 ? ` +${r.wkDates.length - 3}` : ''}</span> },
-            { key: 'last', header: 'Last Weekend',  sortable: true,  render: r => r.lastWkCommit ? format(new Date(r.lastWkCommit), 'EEE MMM d') : '—',                                                              sortValue: r => r.lastWkCommit ?? '' },
+            { key: 'name', header: 'Name',          sortable: true,  render: r => <span className="font-medium">{r.displayName}</span>,                                                                                         sortValue: r => r.displayName },
+            { key: 'wkc',  header: 'Wk Commits',    sortable: true,  render: r => <span className="font-bold text-violet-500">{r.wkCommits.length}</span>,                                                                      sortValue: r => r.wkCommits.length },
+            { key: 'wkf',  header: 'Files Changed',  sortable: true,  render: r => r.wkFiles,                                                                                                                                   sortValue: r => r.wkFiles },
+            { key: 'sat',  header: 'Sat',            sortable: true,  render: r => r.satCommits ? <span className="text-violet-500">{r.satCommits}</span> : <span className="text-gray-400">—</span>,                          sortValue: r => r.satCommits },
+            { key: 'sun',  header: 'Sun',            sortable: true,  render: r => r.sunCommits ? <span className="text-blue-400">{r.sunCommits}</span>   : <span className="text-gray-400">—</span>,                          sortValue: r => r.sunCommits },
+            { key: 'days', header: 'Days Worked',    sortable: false, render: r => <span className="text-xs text-gray-500">{r.wkDates.slice(0,3).join(' · ')}{r.wkDates.length > 3 ? ` +${r.wkDates.length-3}` : ''}</span>  },
+            { key: 'last', header: 'Last Weekend',   sortable: true,  render: r => r.lastWkCommit ? format(new Date(r.lastWkCommit), 'EEE MMM d') : '—',                                                                        sortValue: r => r.lastWkCommit ?? '' },
           ] : [
-            { key: 'name',    header: 'Name',         sortable: true,  render: r => <span className="font-medium">{r.displayName}</span>,                                                                             sortValue: r => r.displayName },
-            { key: 'commits', header: 'Commits',       sortable: true,  render: r => r.commits.length,                                                                                                                sortValue: r => r.commits.length },
-            { key: 'files',   header: 'Files Changed', sortable: true,  render: r => r.allFiles,                                                                                                                      sortValue: r => r.allFiles },
+            { key: 'name',    header: 'Name',         sortable: true,  render: r => <span className="font-medium">{r.displayName}</span>,                                                                                        sortValue: r => r.displayName },
+            { key: 'commits', header: 'Commits',       sortable: true,  render: r => r.commits.length,                                                                                                                           sortValue: r => r.commits.length },
+            { key: 'files',   header: 'Files Changed', sortable: true,  render: r => r.allFiles,                                                                                                                                 sortValue: r => r.allFiles },
             { key: 'wk',      header: 'Weekend',       sortable: true,  render: r => r.wkCommits.length ? <span className="text-violet-500 font-semibold">{r.wkCommits.length}</span> : <span className="text-gray-400">0</span>, sortValue: r => r.wkCommits.length },
-            { key: 'prs',     header: 'PRs',           sortable: true,  render: r => r.prsOpened.length,                                                                                                              sortValue: r => r.prsOpened.length },
-            { key: 'reviews', header: 'Reviews',       sortable: true,  render: r => r.prsReviewed.length,                                                                                                            sortValue: r => r.prsReviewed.length },
-            { key: 'done',    header: 'Items Done',    sortable: true,  render: r => r.completedItems.length,                                                                                                         sortValue: r => r.completedItems.length },
-            { key: 'points',  header: 'Points',        sortable: true,  render: r => r.storyPointsCompleted,                                                                                                          sortValue: r => r.storyPointsCompleted },
-            { key: 'stale',   header: 'Stale',         sortable: true,  render: r => r.staleItems.length ? <span className="text-orange-400">{r.staleItems.length}</span> : '0',                                     sortValue: r => r.staleItems.length },
-            { key: 'last',    header: 'Last Active',   sortable: true,  render: r => r.lastActivity ? format(new Date(r.lastActivity), 'MMM d') : <span className="text-gray-500">—</span>,                          sortValue: r => r.lastActivity ?? '' },
+            { key: 'prs',     header: 'PRs',           sortable: true,  render: r => r.prsOpened.length,                                                                                                                         sortValue: r => r.prsOpened.length },
+            { key: 'reviews', header: 'Reviews',       sortable: true,  render: r => r.prsReviewed.length,                                                                                                                       sortValue: r => r.prsReviewed.length },
+            { key: 'done',    header: 'Items Done',    sortable: true,  render: r => r.completedItems.length,                                                                                                                    sortValue: r => r.completedItems.length },
+            { key: 'points',  header: 'Points',        sortable: true,  render: r => r.storyPointsCompleted,                                                                                                                     sortValue: r => r.storyPointsCompleted },
+            { key: 'stale',   header: 'Stale',         sortable: true,  render: r => r.staleItems.length ? <span className="text-orange-400">{r.staleItems.length}</span> : '0',                                                sortValue: r => r.staleItems.length },
+            { key: 'last',    header: 'Last Active',   sortable: true,  render: r => r.lastActivity ? format(new Date(r.lastActivity), 'MMM d') : <span className="text-gray-500">—</span>,                                     sortValue: r => r.lastActivity ?? '' },
           ]}
         />
       </div>
 
-      {/* Engineer detail modal */}
+      {/* ── Engineer detail modal ─────────────────────────────────────────── */}
       <Modal open={!!selected} onClose={() => setSelected(null)} title={`Activity: ${selected?.displayName ?? ''}`} width="max-w-4xl">
         {selected && <EngineerDetail engineer={selected} />}
       </Modal>
@@ -268,17 +451,15 @@ export function EngineersModule() {
 function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
   return (
     <div className="flex flex-col gap-6">
-
-      {/* Stat tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Commits',        value: e.commits.length },
-          { label: 'Files Changed',  value: e.allFiles },
-          { label: 'PRs Opened',     value: e.prsOpened.length },
-          { label: 'PRs Merged',     value: e.prsMerged.length },
-          { label: 'Items Assigned', value: e.assignedItems.length },
-          { label: 'Items Done',     value: e.completedItems.length },
-          { label: 'Story Points',   value: e.storyPointsCompleted },
+          { label: 'Commits',         value: e.commits.length },
+          { label: 'Files Changed',   value: e.allFiles },
+          { label: 'PRs Opened',      value: e.prsOpened.length },
+          { label: 'PRs Merged',      value: e.prsMerged.length },
+          { label: 'Items Assigned',  value: e.assignedItems.length },
+          { label: 'Items Done',      value: e.completedItems.length },
+          { label: 'Story Points',    value: e.storyPointsCompleted },
           { label: 'Weekend Commits', value: e.wkCommits.length, color: e.wkCommits.length ? 'text-violet-500' : undefined },
         ].map(s => (
           <div key={s.label} className="bg-surface-elevated rounded-lg p-3">
@@ -288,7 +469,6 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
         ))}
       </div>
 
-      {/* Weekend activity */}
       {e.wkCommits.length > 0 && (
         <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
           <h4 className="text-sm font-semibold text-violet-600 dark:text-violet-400 mb-3">
@@ -303,12 +483,10 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
             {e.wkCommits.map(c => (
               <li key={c.commitId} className="text-sm flex gap-2 items-center">
                 <span className={`flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                  new Date(c.author.date).getDay() === 6
+                  localDay(c.author.date) === 6
                     ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400'
                     : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
-                }`}>
-                  {dayLabel(c.author.date)}
-                </span>
+                }`}>{dayLabel(c.author.date)}</span>
                 <span className="font-mono text-xs text-gray-500 flex-shrink-0">{c.commitId.slice(0, 7)}</span>
                 <span className="truncate text-gray-700 dark:text-gray-200">{c.comment.split('\n')[0]}</span>
                 <span className="ml-auto text-xs text-gray-400 whitespace-nowrap flex-shrink-0">
@@ -320,7 +498,6 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
         </div>
       )}
 
-      {/* Stale items */}
       {e.staleItems.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-orange-400 mb-2">Stale Active Items</h4>
@@ -335,7 +512,6 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
         </div>
       )}
 
-      {/* Recent commits */}
       {e.commits.length > 0 && (
         <div>
           <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Recent Commits</h4>
