@@ -69,6 +69,9 @@ interface WeekendPeriod {
 const ENG_FROM = format(subDays(new Date(), 90), 'yyyy-MM-dd');
 const ENG_TO   = format(new Date(), 'yyyy-MM-dd');
 
+// Names to exclude from the Engineering module (non-coders: PMs, designers, etc.)
+const EXCLUDED_ENGINEERS = ['tanveer kaur'];
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export function EngineersModule() {
@@ -85,7 +88,10 @@ export function EngineersModule() {
   // ── All derived state MUST be before any early return (Rules of Hooks) ───────
 
   const engineers = useMemo(
-    () => (data ?? []).filter(e => e.commits.length > 0).map(enrichEngineer),
+    () => (data ?? [])
+      .filter(e => e.commits.length > 0)
+      .filter(e => !EXCLUDED_ENGINEERS.includes(e.displayName.toLowerCase()))
+      .map(enrichEngineer),
     [data]
   );
 
