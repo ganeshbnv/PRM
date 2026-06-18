@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useState, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { useApi } from '../../hooks/useApi';
 import { api } from '../../api/client';
 import { useFilterStore } from '../../store/filters';
@@ -7,35 +7,39 @@ import { LoadingCard, ErrorCard } from '../common/Spinner';
 import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
 import type { EngineerActivity } from '../../types';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, subDays } from 'date-fns';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+// Use browser local time — engineers commit in their local timezone, not UTC
+function localDay(dateStr: string): number {
+  if (!dateStr) return -1;
+  try { return new Date(dateStr).getDay(); } catch { return -1; }
+}
+
 function isWeekend(dateStr: string) {
-  if (!dateStr) return false;
-  const d = new Date(dateStr).getUTCDay(); // UTC day avoids timezone ambiguity with ADO timestamps
-  return d === 0 || d === 6;
+  const d = localDay(dateStr);
+  return d === 0 || d === 6; // 0=Sun, 6=Sat
 }
 
 function filesOf(c: { changeCounts?: { Add?: number; Edit?: number; Delete?: number; add?: number; edit?: number; delete?: number } }) {
-  // ADO returns both capitalised (Add/Edit/Delete) and lowercase variants depending on API version
   return (c.changeCounts?.Add ?? c.changeCounts?.add ?? 0)
        + (c.changeCounts?.Edit ?? c.changeCounts?.edit ?? 0)
        + (c.changeCounts?.Delete ?? c.changeCounts?.delete ?? 0);
 }
 
 function dayLabel(dateStr: string) {
-  if (!dateStr) return '?';
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(dateStr).getUTCDay()];
+  const d = localDay(dateStr);
+  return d === -1 ? '?' : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d];
 }
 
 function enrichEngineer(e: EngineerActivity) {
-  const wkCommits = e.commits.filter(c => isWeekend(c.author.date));
-  const allFiles  = e.commits.reduce((s, c) => s + filesOf(c), 0);
-  const wkFiles   = wkCommits.reduce((s, c) => s + filesOf(c), 0);
-  const satCommits = wkCommits.filter(c => new Date(c.author.date).getDay() === 6).length;
-  const sunCommits = wkCommits.filter(c => new Date(c.author.date).getDay() === 0).length;
-  const wkDates   = [...new Set(wkCommits.map(c => format(new Date(c.author.date), 'MMM d, yyyy')))];
+  const wkCommits  = e.commits.filter(c => isWeekend(c.author.date));
+  const allFiles   = e.commits.reduce((s, c) => s + filesOf(c), 0);
+  const wkFiles    = wkCommits.reduce((s, c) => s + filesOf(c), 0);
+  const satCommits = wkCommits.filter(c => localDay(c.author.date) === 6).length;
+  const sunCommits = wkCommits.filter(c => localDay(c.author.date) === 0).length;
+  const wkDates    = [...new Set(wkCommits.map(c => format(new Date(c.author.date), 'MMM d, yyyy')))];
   const lastWkCommit = wkCommits.length
     ? wkCommits.reduce((a, b) => a.author.date > b.author.date ? a : b).author.date
     : null;
@@ -46,11 +50,15 @@ type RichEngineer = ReturnType<typeof enrichEngineer>;
 
 // ── main component ────────────────────────────────────────────────────────────
 
+// Engineers always look back 90 days to ensure weekends are covered
+const ENG_FROM = format(subDays(new Date(), 90), 'yyyy-MM-dd');
+const ENG_TO   = format(new Date(), 'yyyy-MM-dd');
+
 export function EngineersModule() {
   const { filters } = useFilterStore();
   const { data, loading, error } = useApi(
-    () => api.getEngineerActivity({ fromDate: filters.fromDate, toDate: filters.toDate, project: filters.project }),
-    [filters.fromDate, filters.toDate, filters.project]
+    () => api.getEngineerActivity({ fromDate: ENG_FROM, toDate: ENG_TO, project: filters.project }),
+    [filters.project]
   );
 
   const [selected, setSelected]     = useState<RichEngineer | null>(null);
@@ -67,6 +75,14 @@ export function EngineersModule() {
   const totalWkFiles     = engineers.reduce((s, e) => s + e.wkFiles, 0);
   const totalSat         = engineers.reduce((s, e) => s + e.satCommits, 0);
   const totalSun         = engineers.reduce((s, e) => s + e.sunCommits, 0);
+
+  // Day-of-week distribution across ALL commits from all engineers
+  const allCommitsFlat = engineers.flatMap(e => e.commits);
+  const dowCounts = [0,1,2,3,4,5,6].map(d => ({
+    day:     ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d],
+    Commits: allCommitsFlat.filter(c => localDay(c.author.date) === d).length,
+    isWk:    d === 0 || d === 6,
+  }));
 
   const display = weekendOnly
     ? weekendWarriors
@@ -120,6 +136,38 @@ export function EngineersModule() {
           </div>
         ))}
       </div>
+
+      {/* Commits by day-of-week — always shown so weekend activity is immediately visible */}
+      {allCommitsFlat.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+              Commit Activity by Day of Week
+              <span className="ml-2 text-xs font-normal text-gray-400">{allCommitsFlat.length} commits · last 90 days</span>
+            </h3>
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-violet-500 inline-block" />Weekend</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-500 inline-block" />Weekday</span>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={dowCounts} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} allowDecimals={false} />
+              <Tooltip
+                contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }}
+                formatter={(v: number, _n, p) => [`${v} commits`, p.payload.day]}
+              />
+              <Bar dataKey="Commits" radius={[4, 4, 0, 0]}>
+                {dowCounts.map((d, i) => (
+                  <Cell key={i} fill={d.isWk ? '#8b5cf6' : '#3b82f6'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Weekend Warriors spotlight (visible in all-data mode) */}
       {!weekendOnly && weekendWarriors.length > 0 && (
