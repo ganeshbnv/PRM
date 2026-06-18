@@ -12,16 +12,21 @@ import { format, differenceInDays } from 'date-fns';
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function isWeekend(dateStr: string) {
-  const d = new Date(dateStr).getDay();
+  if (!dateStr) return false;
+  const d = new Date(dateStr).getUTCDay(); // UTC day avoids timezone ambiguity with ADO timestamps
   return d === 0 || d === 6;
 }
 
-function filesOf(c: { changeCounts?: { Add: number; Edit: number; Delete: number } }) {
-  return (c.changeCounts?.Add ?? 0) + (c.changeCounts?.Edit ?? 0) + (c.changeCounts?.Delete ?? 0);
+function filesOf(c: { changeCounts?: { Add?: number; Edit?: number; Delete?: number; add?: number; edit?: number; delete?: number } }) {
+  // ADO returns both capitalised (Add/Edit/Delete) and lowercase variants depending on API version
+  return (c.changeCounts?.Add ?? c.changeCounts?.add ?? 0)
+       + (c.changeCounts?.Edit ?? c.changeCounts?.edit ?? 0)
+       + (c.changeCounts?.Delete ?? c.changeCounts?.delete ?? 0);
 }
 
 function dayLabel(dateStr: string) {
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(dateStr).getDay()];
+  if (!dateStr) return '?';
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(dateStr).getUTCDay()];
 }
 
 function enrichEngineer(e: EngineerActivity) {

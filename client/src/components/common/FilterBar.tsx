@@ -53,10 +53,10 @@ function Dropdown({ label, value, options, onChange, placeholder = 'Select…', 
         onClick={() => setOpen(p => !p)}
         className={`
           ${minWidth} flex items-center justify-between gap-3
-          bg-white border rounded-lg px-3 py-2 text-sm font-medium transition-all
+          bg-white dark:bg-surface-elevated border rounded-lg px-3 py-2 text-sm font-medium transition-all
           ${open
-            ? 'border-brand-500 ring-2 ring-brand-500/20 text-gray-900'
-            : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'}
+            ? 'border-brand-500 ring-2 ring-brand-500/20 text-gray-900 dark:text-white'
+            : 'border-gray-200 dark:border-surface-border text-gray-700 dark:text-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-surface-card'}
         `}
       >
         <span className="truncate">{selected?.label ?? <span className="text-gray-400 font-normal">{placeholder}</span>}</span>
@@ -67,7 +67,7 @@ function Dropdown({ label, value, options, onChange, placeholder = 'Select…', 
       </button>
 
       {open && (
-        <div className="absolute top-[calc(100%+4px)] left-0 z-50 min-w-full bg-white border border-gray-200 rounded-xl shadow-lg py-1 animate-pop-up">
+        <div className="absolute top-[calc(100%+4px)] left-0 z-50 min-w-full bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-xl shadow-lg dark:shadow-black/40 py-1 animate-pop-up">
           {options.map(opt => (
             <button
               key={opt.value}
@@ -76,8 +76,8 @@ function Dropdown({ label, value, options, onChange, placeholder = 'Select…', 
               className={`
                 w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors
                 ${opt.value === value
-                  ? 'text-brand-600 bg-brand-50 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'}
+                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 font-medium'
+                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-surface-card'}
               `}
             >
               <span>{opt.label}</span>

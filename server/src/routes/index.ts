@@ -121,6 +121,32 @@ router.get('/engineers/activity', wrap(async (req) => {
   });
 }));
 
+// Debug: returns raw commit samples so we can verify date formats + changeCounts
+router.get('/engineers/debug-commits', wrap(async (req) => {
+  const project = proj(req);
+  const fromDate = req.query.fromDate as string | undefined;
+  const toDate   = req.query.toDate   as string | undefined;
+  const repos    = await reposSvc.getRepositories(project);
+  const samples  = [];
+  for (const repo of repos.slice(0, 3)) {
+    const commits = await reposSvc.getCommits({ project, repoId: repo.id, fromDate, toDate, top: 20 });
+    for (const c of commits.slice(0, 5)) {
+      const d = new Date(c.author.date);
+      samples.push({
+        repo: repo.name,
+        commitId: c.commitId.slice(0, 7),
+        authorDate: c.author.date,
+        authorName: c.author.name,
+        dayOfWeek: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getUTCDay()],
+        isWeekendUTC: d.getUTCDay() === 0 || d.getUTCDay() === 6,
+        changeCounts: (c as any).changeCounts ?? null,
+        comment: c.comment.split('\n')[0].slice(0, 60),
+      });
+    }
+  }
+  return { fromDate, toDate, sampleCount: samples.length, samples };
+}));
+
 // ── AI Insights ───────────────────────────────────────────────────────────────
 
 router.get('/boards/ai-insights', wrap(async (req) => {

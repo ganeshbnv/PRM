@@ -95,7 +95,7 @@ export interface GitCommit {
   author: { name: string; email: string; date: string };
   committer: { name: string; email: string; date: string };
   comment: string;
-  changeCounts?: { Add: number; Edit: number; Delete: number };
+  changeCounts?: { Add?: number; Edit?: number; Delete?: number; add?: number; edit?: number; delete?: number };
   url: string;
   remoteUrl: string;
 }
