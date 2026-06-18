@@ -40,19 +40,36 @@ export async function getCommits(filters: CommitFilters): Promise<GitCommit[]> {
 
 // ── All-branch commit fetch ────────────────────────────────────────────────────
 //
-// Strategy:
-//   1. For each repo, enumerate all branches.
-//   2. For each branch, query the commits API with itemVersion.version=<branch>
-//      + date range filter → returns full GitCommit objects.
-//   3. Also query default branch (no itemVersion) to catch commits not on any
-//      named branch ref.
-//   4. Deduplicate by commitId across all repos and branches.
-//
-// This catches commits on feature branches, hotfix branches, and main.
+// Strategy: for every branch in every repo, fetch commits with
+//   searchCriteria.itemVersion.version=<branch> + date range.
+// $top=5000 overrides the 100-commit default so high-activity branches
+// are fully covered. Skip-based pagination handles repos > 5000 commits.
+// All results are deduplicated by commitId.
 
 function isoDate(d: string, endOfDay = false): string {
   if (d.includes('T')) return d;
   return endOfDay ? `${d}T23:59:59Z` : `${d}T00:00:00Z`;
+}
+
+const COMMIT_PAGE = 5000;
+
+async function fetchAllCommitsForBranch(
+  project: string,
+  repoId: string,
+  baseParams: Record<string, unknown>
+): Promise<GitCommit[]> {
+  const all: GitCommit[] = [];
+  let skip = 0;
+
+  while (true) {
+    const params = { ...baseParams, 'searchCriteria.$top': COMMIT_PAGE, 'searchCriteria.$skip': skip };
+    const resp = await ado.getAll<GitCommit>(ado.p(project).commits(repoId), params);
+    all.push(...resp);
+    if (resp.length < COMMIT_PAGE) break;   // last page
+    skip += COMMIT_PAGE;
+  }
+
+  return all;
 }
 
 export async function getAllCommits(
@@ -69,41 +86,49 @@ export async function getAllCommits(
   await Promise.all(repos.map(async (repo) => {
     try {
       const branches = await getBranches(project, repo.id);
+      console.log(`[repos] "${repo.name}": ${branches.length} branches`);
 
-      // Build list of queries: one per branch + one without itemVersion (default branch)
-      type BranchQuery = { name: string; params: Record<string, unknown> };
-      const queries: BranchQuery[] = [];
+      // One query per branch — each returns commits reachable from that branch tip
+      // within the date window. Dedup by commitId handles overlap with main.
+      const branchQueries = branches.map(b => ({
+        branchRef: b.name,
+        shortName: b.name.replace(/^refs\/heads\//, ''),
+      }));
 
-      // Default-branch query (no itemVersion) — catches anything not under named refs
-      queries.push({ name: '_default', params: { ...dateParams } });
-
-      // Per-branch queries
-      for (const branch of branches) {
-        const shortName = branch.name.replace(/^refs\/heads\//, '');
-        queries.push({
-          name: shortName,
+      // Always include a "no-itemVersion" pass that hits the repo default branch
+      // in case any branch ref is missing from the list.
+      const allQueries = [
+        { branchRef: '_default', shortName: '_default', params: { ...dateParams } },
+        ...branchQueries.map(b => ({
+          branchRef: b.branchRef,
+          shortName: b.shortName,
           params: {
             ...dateParams,
-            'searchCriteria.itemVersion.version': shortName,
+            'searchCriteria.itemVersion.version':     b.shortName,
             'searchCriteria.itemVersion.versionType': 'branch',
           },
-        });
-      }
+        })),
+      ];
 
-      await Promise.all(queries.map(async (q) => {
-        const cacheKey = `commits:br2:${project}:${repo.id}:${q.name}:${fromDate ?? ''}:${toDate ?? ''}`;
+      await Promise.all(allQueries.map(async (q) => {
+        const cacheKey = `commits:br3:${project}:${repo.id}:${q.shortName}:${fromDate ?? ''}:${toDate ?? ''}`;
         try {
           const commits = await cache.cached(cacheKey, () =>
-            ado.getAll<GitCommit>(ado.p(project).commits(repo.id), q.params)
+            fetchAllCommitsForBranch(project, repo.id, q.params)
           );
+          let added = 0;
           for (const c of commits) {
             if (c?.commitId && !seen.has(c.commitId)) {
               seen.add(c.commitId);
               results.push({ ...c, repoId: repo.id, repoName: repo.name });
+              added++;
             }
           }
+          if (commits.length > 0) {
+            console.log(`[repos]   "${repo.name}" / "${q.shortName}": ${commits.length} raw → ${added} new`);
+          }
         } catch (branchErr) {
-          console.error(`[repos] branch "${q.name}" in "${repo.name}":`, (branchErr as Error).message);
+          console.error(`[repos] SKIP "${repo.name}" branch "${q.shortName}":`, (branchErr as Error).message);
         }
       }));
 
@@ -112,7 +137,7 @@ export async function getAllCommits(
     }
   }));
 
-  console.log(`[repos] getAllCommits: ${results.length} commits from ${repos.length} repos (${fromDate ?? '*'} → ${toDate ?? '*'})`);
+  console.log(`[repos] getAllCommits TOTAL: ${results.length} unique commits from ${repos.length} repos`);
   return results;
 }
 

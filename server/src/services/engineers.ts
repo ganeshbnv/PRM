@@ -51,6 +51,12 @@ export async function getEngineerActivity(project: string, filters: { fromDate?:
       }
     }
 
-    return Array.from(engineerMap.values());
+    const engineers = Array.from(engineerMap.values());
+    console.log(`[engineers] ${engineers.length} people found, ${allCommits.length} commits, ${allPrs.length} PRs`);
+    engineers
+      .filter(e => e.commits.length > 0)
+      .sort((a, b) => b.commits.length - a.commits.length)
+      .forEach(e => console.log(`[engineers]   ${e.displayName} <${e.uniqueName}>: ${e.commits.length} commits, ${e.prsOpened.length} PRs`));
+    return engineers;
   });
 }
