@@ -165,10 +165,16 @@ export async function getAllPullRequests(
 ): Promise<Array<GitPullRequest & { repoName: string }>> {
   const repos = await getRepositories(project);
   const results: Array<GitPullRequest & { repoName: string }> = [];
-  for (const repo of repos) {
-    const prs = await getPullRequests({ project, repoId: repo.id, status });
-    results.push(...prs.map((pr) => ({ ...pr, repoName: repo.name })));
-  }
+  await Promise.all(repos.map(async (repo) => {
+    try {
+      const prs = await getPullRequests({ project, repoId: repo.id, status });
+      console.log(`[repos] PRs "${repo.name}": ${prs.length}`);
+      results.push(...prs.map((pr) => ({ ...pr, repoName: repo.name })));
+    } catch (err) {
+      console.error(`[repos] PRs skipping "${repo.name}":`, (err as Error).message);
+    }
+  }));
+  console.log(`[repos] getAllPullRequests TOTAL: ${results.length}`);
   return results;
 }
 

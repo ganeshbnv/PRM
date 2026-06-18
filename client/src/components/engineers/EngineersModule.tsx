@@ -69,8 +69,19 @@ interface WeekendPeriod {
 const ENG_FROM = format(subDays(new Date(), 90), 'yyyy-MM-dd');
 const ENG_TO   = format(new Date(), 'yyyy-MM-dd');
 
-// Names to exclude from the Engineering module (non-coders: PMs, designers, etc.)
-const EXCLUDED_ENGINEERS = ['tanveer kaur'];
+// Names/email patterns to exclude from the Engineering module.
+// Add lower-cased displayNames or email substrings here.
+const EXCLUDED_NAMES = new Set(['tanveer kaur']);
+const EXCLUDED_EMAIL_FRAGMENTS = ['noreply', 'service@', 'bot@', 'local@', 'saridsa'];
+
+function isExcluded(e: EngineerActivity): boolean {
+  const name  = e.displayName.toLowerCase();
+  const email = e.uniqueName.toLowerCase();
+  if (EXCLUDED_NAMES.has(name)) return true;
+  if (name === 'local' || name === 'service') return true;
+  if (EXCLUDED_EMAIL_FRAGMENTS.some(f => email.includes(f))) return true;
+  return false;
+}
 
 // ── main component ────────────────────────────────────────────────────────────
 
@@ -90,7 +101,7 @@ export function EngineersModule() {
   const engineers = useMemo(
     () => (data ?? [])
       .filter(e => e.commits.length > 0)
-      .filter(e => !EXCLUDED_ENGINEERS.includes(e.displayName.toLowerCase()))
+      .filter(e => !isExcluded(e))
       .map(enrichEngineer),
     [data]
   );
@@ -177,6 +188,10 @@ export function EngineersModule() {
   if (loading) return <LoadingCard label="Loading engineer activity…" />;
   if (error)   return <ErrorCard error={error} />;
 
+  const totalRaw      = (data ?? []).length;
+  const totalExcluded = (data ?? []).filter(e => e.commits.length > 0 && isExcluded(e)).length;
+  const totalCommitsRaw = (data ?? []).reduce((s, e) => s + e.commits.length, 0);
+
   const stale = engineers.filter(e => !e.lastActivity || differenceInDays(new Date(), new Date(e.lastActivity)) >= 10);
 
   const totalWkCommits = weekendWarriors.reduce((s, e) => s + e.wkCommits.length, 0);
@@ -218,6 +233,22 @@ export function EngineersModule() {
 
   return (
     <div className="flex flex-col gap-6">
+
+      {/* ── Data coverage strip ───────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-3 px-1 text-xs text-gray-500">
+        <span className="font-semibold text-gray-700 dark:text-gray-300">Repo data</span>
+        <span>·</span>
+        <span><span className="font-bold text-gray-800 dark:text-white">{totalCommitsRaw.toLocaleString()}</span> raw commits</span>
+        <span>·</span>
+        <span><span className="font-bold text-gray-800 dark:text-white">{allCommitsFlat.length.toLocaleString()}</span> after dedup</span>
+        <span>·</span>
+        <span><span className="font-bold text-gray-800 dark:text-white">{totalRaw}</span> contributors</span>
+        {totalExcluded > 0 && (
+          <><span>·</span><span className="text-amber-500">{totalExcluded} bot/service excluded</span></>
+        )}
+        <span>·</span>
+        <span className="text-gray-400">last 90 days · all branches</span>
+      </div>
 
       {/* ── Most Recent Weekend banner ────────────────────────────────────── */}
       <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
