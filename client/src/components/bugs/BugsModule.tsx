@@ -133,11 +133,11 @@ export function BugsModule() {
             <button
               onClick={() => canPrev && setSprintPath(orderedSprints[currentIdx - 1].iteration.path)}
               disabled={!canPrev || ls}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
             <button
               onClick={() => canNext && setSprintPath(orderedSprints[currentIdx + 1].iteration.path)}
               disabled={!canNext || ls}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
           </div>
 
           {/* Sprint name + badge */}
@@ -146,7 +146,7 @@ export function BugsModule() {
               <div className="h-4 w-48 rounded-md bg-surface-elevated animate-pulse" />
             ) : selectedSprint ? (
               <div className="flex items-center gap-2.5">
-                <span className="text-sm font-bold text-white truncate">{selectedSprint.iteration.name}</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white truncate">{selectedSprint.iteration.name}</span>
                 {sprintTf === 'current' && (
                   <span className="flex-shrink-0 flex items-center gap-1 text-label font-bold px-2 py-0.5 rounded-full"
                     style={{ background: '#10b98118', color: '#10b981', border: '1px solid #10b98135' }}>
@@ -158,7 +158,7 @@ export function BugsModule() {
                 )}
               </div>
             ) : (
-              <span className="text-sm font-bold text-white">All Sprints</span>
+              <span className="text-sm font-bold text-gray-900 dark:text-white">All Sprints</span>
             )}
           </div>
 
@@ -302,7 +302,7 @@ function BugTable({ bugs }: { bugs: WorkItem[] }) {
         {
           key: 'title', header: 'Title', sortable: true, sortValue: (r) => r.fields['System.Title'],
           render: (r) => (
-            <span className="text-gray-200 hover:text-white transition-colors">{r.fields['System.Title']}</span>
+            <span className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors">{r.fields['System.Title']}</span>
           ),
         },
         { key: 'state', header: 'State', sortable: true, render: (r) => r.fields['System.State'], sortValue: (r) => r.fields['System.State'] },

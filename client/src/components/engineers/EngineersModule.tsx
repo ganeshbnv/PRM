@@ -50,7 +50,7 @@ export function EngineersModule() {
         ].map((s) => (
           <div key={s.label} className="card">
             <span className="text-xs text-gray-400 uppercase tracking-wider">{s.label}</span>
-            <span className={`text-3xl font-bold ${s.color ?? 'text-white'}`}>{s.value}</span>
+            <span className={`text-3xl font-bold ${s.color ?? 'text-gray-900 dark:text-white'}`}>{s.value}</span>
           </div>
         ))}
       </div>
@@ -58,7 +58,7 @@ export function EngineersModule() {
       {/* Activity bar */}
       {barData.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-4">Top Contributors (Commits)</h3>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">Top Contributors (Commits)</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={barData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
@@ -74,7 +74,7 @@ export function EngineersModule() {
 
       {/* Engineer table */}
       <div className="card">
-        <h3 className="text-sm font-semibold text-gray-300 mb-4">Engineer Activity Table</h3>
+        <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">Engineer Activity Table</h3>
         <SortableTable
           data={sorted}
           rowKey={(r) => r.uniqueName}
@@ -114,7 +114,7 @@ function EngineerDetail({ engineer: e }: { engineer: EngineerActivity }) {
         ].map((s) => (
           <div key={s.label} className="bg-surface-elevated rounded-lg p-3">
             <div className="text-xs text-gray-400">{s.label}</div>
-            <div className="text-2xl font-bold text-white">{s.value}</div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{s.value}</div>
           </div>
         ))}
       </div>
@@ -124,7 +124,7 @@ function EngineerDetail({ engineer: e }: { engineer: EngineerActivity }) {
           <h4 className="text-sm font-semibold text-orange-400 mb-2">Stale Active Items</h4>
           <ul className="space-y-1">
             {e.staleItems.map((i) => (
-              <li key={i.id} className="text-sm text-gray-300 flex gap-2">
+              <li key={i.id} className="text-sm text-gray-600 dark:text-gray-300 flex gap-2">
                 <span className="font-mono text-brand-500">{i.id}</span>
                 <span>{i.fields['System.Title']}</span>
               </li>
@@ -135,10 +135,10 @@ function EngineerDetail({ engineer: e }: { engineer: EngineerActivity }) {
 
       {e.commits.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-300 mb-2">Recent Commits</h4>
+          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Recent Commits</h4>
           <ul className="space-y-1 max-h-40 overflow-y-auto">
             {e.commits.slice(0, 20).map((c) => (
-              <li key={c.commitId} className="text-sm text-gray-300 flex gap-2">
+              <li key={c.commitId} className="text-sm text-gray-600 dark:text-gray-300 flex gap-2">
                 <span className="font-mono text-xs text-gray-500">{c.commitId.slice(0, 7)}</span>
                 <span className="truncate">{c.comment.split('\n')[0]}</span>
                 <span className="text-gray-500 ml-auto text-xs whitespace-nowrap">{c.repoName}</span>

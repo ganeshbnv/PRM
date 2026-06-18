@@ -46,13 +46,13 @@ export function SortableTable<T>({ columns, data, rowKey, onRowClick, emptyMessa
   return (
     <div className="overflow-x-auto rounded-lg border border-surface-border">
       <table className="w-full text-sm text-left">
-        <thead className="bg-surface-elevated text-gray-400 uppercase text-xs tracking-wider">
+        <thead className="bg-surface-elevated text-gray-500 dark:text-gray-400 uppercase text-xs tracking-wider">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
                 onClick={() => handleSort(col)}
-                className={`px-4 py-3 ${col.sortable ? 'cursor-pointer select-none hover:text-white' : ''}`}
+                className={`px-4 py-3 ${col.sortable ? 'cursor-pointer select-none hover:text-gray-900 dark:hover:text-white' : ''}`}
               >
                 {col.header}
                 {col.sortable && sortKey === col.key && (
@@ -77,7 +77,7 @@ export function SortableTable<T>({ columns, data, rowKey, onRowClick, emptyMessa
                 className={`border-t border-surface-border hover:bg-surface-elevated transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-gray-200">
+                  <td key={col.key} className="px-4 py-3 text-gray-700 dark:text-gray-200">
                     {col.render(row)}
                   </td>
                 ))}

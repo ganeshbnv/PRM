@@ -29,8 +29,8 @@ export function Modal({ open, onClose, title, children, width = 'max-w-3xl' }: P
     >
       <div className={`relative bg-surface-card border border-surface-border rounded-2xl shadow-2xl w-full ${width} max-h-[85vh] flex flex-col`}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-border">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <button onClick={onClose} className="btn-ghost rounded-lg p-1.5 text-gray-400 hover:text-white">✕</button>
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h2>
+          <button onClick={onClose} className="btn-ghost rounded-lg p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">✕</button>
         </div>
         <div className="overflow-y-auto flex-1 p-6">{children}</div>
       </div>

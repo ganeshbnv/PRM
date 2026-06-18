@@ -85,7 +85,7 @@ export function RisksModule() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* By severity bar */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Risks by Severity</h3>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">Risks by Severity</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={bySev}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
@@ -103,7 +103,7 @@ export function RisksModule() {
 
         {/* By category bar */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Risks by Category</h3>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">Risks by Category</h3>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={byCategory} layout="vertical" margin={{ left: 48, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" horizontal={false} />
@@ -167,7 +167,7 @@ function RiskRow({ risk }: { risk: Risk }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={SEV_CLASS[risk.severity]}>{risk.severity}</span>
-          <span className="text-sm font-medium text-white">{risk.title}</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">{risk.title}</span>
         </div>
         <p className="text-xs text-gray-400 mt-1">{risk.description}</p>
       </div>

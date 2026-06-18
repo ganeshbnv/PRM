@@ -74,7 +74,7 @@ export function ReposModule() {
       {/* Commit timeline */}
       {timelineData.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Commit Activity Over Time</h3>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">Commit Activity Over Time</h3>
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={timelineData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
@@ -90,7 +90,7 @@ export function ReposModule() {
       {/* Commits by repo */}
       {repoBar.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Commits by Repo</h3>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">Commits by Repo</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={repoBar} layout="vertical" margin={{ left: 80, right: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" horizontal={false} />
@@ -112,7 +112,7 @@ export function ReposModule() {
           </div>
           <ul className="space-y-1">
             {noReviewerPRs.slice(0, 5).map((p) => (
-              <li key={p.pullRequestId} className="text-sm text-gray-300 flex gap-2">
+              <li key={p.pullRequestId} className="text-sm text-gray-600 dark:text-gray-300 flex gap-2">
                 <span className="font-mono text-brand-500">#{p.pullRequestId}</span>
                 <span className="truncate">{p.title}</span>
                 <span className="text-gray-500 text-xs ml-auto">{p.repoName}</span>
@@ -125,7 +125,7 @@ export function ReposModule() {
       {/* PR table */}
       <div className="card">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-300">Active Pull Requests</h3>
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300">Active Pull Requests</h3>
           <button className="btn-ghost text-xs" onClick={() => { setModalPRTitle('All Active PRs'); setModalPRs(activePRs); }}>View all ({activePRs.length})</button>
         </div>
         <PRTable prs={activePRs.slice(0, 10)} />

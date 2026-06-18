@@ -220,10 +220,10 @@ export function BoardsModule() {
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button onClick={() => canPrev && setFilter('iterationPath', orderedSprints[currentIdx - 1].iteration.path)}
               disabled={!canPrev || ls}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
             <button onClick={() => canNext && setFilter('iterationPath', orderedSprints[currentIdx + 1].iteration.path)}
               disabled={!canNext || ls}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
           </div>
 
           {/* Sprint identity */}
@@ -233,7 +233,7 @@ export function BoardsModule() {
             ) : selectedSprint ? (
               <>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-base font-bold text-white leading-none truncate">{selectedSprint.iteration.name}</h2>
+                  <h2 className="text-base font-bold text-gray-900 dark:text-white leading-none truncate">{selectedSprint.iteration.name}</h2>
                   {sprintTf === 'current' && (
                     <span className="flex-shrink-0 flex items-center gap-1 text-label font-bold px-2 py-0.5 rounded-full"
                       style={{ background: '#10b98118', color: '#10b981', border: '1px solid #10b98135' }}>
@@ -385,7 +385,7 @@ export function BoardsModule() {
               <span className="text-gray-500">Analytics scoped to</span>
               <span className="font-bold" style={{ color: activeTileData.color }}>{activeTileData.label}</span>
               <span className="text-gray-600">— {activeTileData.count} of {total} items</span>
-              <button onClick={() => setActiveTile(null)} className="ml-auto text-gray-600 hover:text-white transition-colors">show all ×</button>
+              <button onClick={() => setActiveTile(null)} className="ml-auto text-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors">show all ×</button>
             </div>
           )}
 
