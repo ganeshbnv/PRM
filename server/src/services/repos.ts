@@ -16,6 +16,7 @@ export interface CommitFilters {
   fromDate?: string;
   toDate?: string;
   author?: string;
+  branchName?: string;
   top?: number;
 }
 
@@ -27,6 +28,10 @@ export async function getCommits(filters: CommitFilters): Promise<GitCommit[]> {
     if (filters.toDate) params['searchCriteria.toDate'] = filters.toDate;
     if (filters.author) params['searchCriteria.author'] = filters.author;
     if (filters.top) params['searchCriteria.$top'] = filters.top;
+    if (filters.branchName) {
+      params['searchCriteria.itemVersion.version'] = filters.branchName;
+      params['searchCriteria.itemVersion.versionType'] = 'branch';
+    }
     return ado.getAll<GitCommit>(ado.p(filters.project).commits(filters.repoId), params);
   });
 }
@@ -35,11 +40,26 @@ export async function getAllCommits(
   project: string, fromDate?: string, toDate?: string
 ): Promise<Array<GitCommit & { repoId: string; repoName: string }>> {
   const repos = await getRepositories(project);
+  const seen = new Set<string>();
   const results: Array<GitCommit & { repoId: string; repoName: string }> = [];
-  for (const repo of repos) {
-    const commits = await getCommits({ project, repoId: repo.id, fromDate, toDate, top: 500 });
-    results.push(...commits.map((c) => ({ ...c, repoId: repo.id, repoName: repo.name })));
-  }
+
+  // Fetch all branches of every repo in parallel, then per-branch commits in parallel.
+  // Dedup by commitId so merged commits aren't double-counted.
+  await Promise.all(repos.map(async (repo) => {
+    const branches = await getBranches(project, repo.id);
+    await Promise.all(branches.map(async (branch) => {
+      const branchName = branch.name.replace(/^refs\/heads\//, '');
+      const commits = await getCommits({ project, repoId: repo.id, fromDate, toDate, branchName });
+      // for loop has no await → runs atomically, safe with concurrent promises
+      for (const c of commits) {
+        if (!seen.has(c.commitId)) {
+          seen.add(c.commitId);
+          results.push({ ...c, repoId: repo.id, repoName: repo.name });
+        }
+      }
+    }));
+  }));
+
   return results;
 }
 
