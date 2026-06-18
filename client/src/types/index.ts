@@ -94,15 +94,10 @@ export interface PipelineRun {
 export interface EngineerActivity {
   displayName: string;
   uniqueName: string;
-  assignedItems: WorkItem[];
-  completedItems: WorkItem[];
-  activeItems: WorkItem[];
-  staleItems: WorkItem[];
   commits: GitCommit[];
   prsOpened: GitPullRequest[];
   prsMerged: GitPullRequest[];
   prsReviewed: GitPullRequest[];
-  storyPointsCompleted: number;
   lastActivity: string | null;
 }
 

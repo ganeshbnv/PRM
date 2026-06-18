@@ -6,7 +6,7 @@ import { useFilterStore } from '../../store/filters';
 import { LoadingCard, ErrorCard } from '../common/Spinner';
 import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
-import type { EngineerActivity, GitCommit } from '../../types';
+import type { EngineerActivity } from '../../types';
 import { format, differenceInDays, subDays, addDays } from 'date-fns';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@ type RichEngineer = ReturnType<typeof enrichEngineer>;
 interface WeekendPeriod {
   satDate: string;
   sunDate: string;
-  label: string;    // e.g. "Jun 14–15"
+  label: string;
   commitCount: number;
   engineerCount: number;
 }
@@ -100,7 +100,6 @@ export function EngineersModule() {
     [engineers]
   );
 
-  // Weekend period list (all Sat-Sun pairs in last 90 days)
   const weekendPeriods = useMemo((): WeekendPeriod[] => {
     const periods: WeekendPeriod[] = [];
     const d = new Date(subDays(new Date(), 90));
@@ -127,7 +126,6 @@ export function EngineersModule() {
     [weekendPeriods]
   );
 
-  // Set of all Sat/Sun date strings across every period — calendar-based, no isWeekend() dependency
   const weekendDateSet = useMemo(() => {
     const s = new Set<string>();
     weekendPeriods.forEach(p => { s.add(p.satDate); s.add(p.sunDate); });
@@ -139,7 +137,6 @@ export function EngineersModule() {
     return engineers
       .map(e => ({
         eng: e,
-        // Use e.commits (all commits) — not pre-filtered wkCommits — so timezone edge-cases can't hide data
         commits: e.commits.filter(c => isInPeriod(c.author.date, mostRecentPeriod.satDate, mostRecentPeriod.sunDate)),
       }))
       .filter(x => x.commits.length > 0)
@@ -154,9 +151,7 @@ export function EngineersModule() {
   const weekendWarriors = useMemo(() => {
     const commitsForPeriod = (e: RichEngineer) =>
       activePeriod
-        // specific week: filter all commits by exact Sat or Sun date string
         ? e.commits.filter(c => isInPeriod(c.author.date, activePeriod.satDate, activePeriod.sunDate))
-        // all weekends: filter all commits by the calendar-derived weekend date set
         : e.commits.filter(c => weekendDateSet.has(commitLocalDate(c.author.date)));
 
     return engineers
@@ -189,7 +184,6 @@ export function EngineersModule() {
   const totalSat       = weekendWarriors.reduce((s, e) => s + e.satCommits, 0);
   const totalSun       = weekendWarriors.reduce((s, e) => s + e.sunCommits, 0);
 
-  // DOW distribution chart data
   const dowCounts = [0,1,2,3,4,5,6].map(d => ({
     day:    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d],
     Commits: allCommitsFlat.filter(c => localDay(c.author.date) === d).length,
@@ -202,7 +196,7 @@ export function EngineersModule() {
 
   const barData = display.slice(0, 15).map(e => ({
     name: e.displayName.split(' ')[0],
-    __eng: e,  // kept for click handler — not rendered by Recharts
+    __eng: e,
     Commits: weekendOnly ? e.wkCommits.length : e.commits.length,
     'Files Changed': weekendOnly ? e.wkFiles : e.allFiles,
     ...(weekendOnly ? {} : { Weekend: e.wkCommits.length }),
@@ -225,7 +219,7 @@ export function EngineersModule() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Most Recent Weekend banner — always visible ───────────────────── */}
+      {/* ── Most Recent Weekend banner ────────────────────────────────────── */}
       <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -296,7 +290,6 @@ export function EngineersModule() {
         <div className="flex flex-col gap-2">
           <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold px-0.5">Filter by weekend</p>
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
-            {/* "All" chip */}
             <button
               onClick={() => setSelectedWkSat(null)}
               className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
@@ -346,7 +339,7 @@ export function EngineersModule() {
         ))}
       </div>
 
-      {/* ── Commits by day of week ────────────────────────────────────────── */}
+      {/* ── Commit activity by day of week ────────────────────────────────── */}
       {!weekendOnly && allCommitsFlat.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -376,7 +369,7 @@ export function EngineersModule() {
         </div>
       )}
 
-      {/* ── Weekend Warriors in weekendOnly mode ─────────────────────────── */}
+      {/* ── Weekend Warriors panel (weekendOnly mode) ─────────────────────── */}
       {weekendOnly && weekendWarriors.length > 0 && (
         <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
           <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -479,7 +472,7 @@ export function EngineersModule() {
         <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">
           {weekendOnly
             ? `Weekend Warriors${activePeriod ? ` — ${activePeriod.label}` : ''} (${display.length})`
-            : 'Engineer Activity'}
+            : `Engineers (${display.length})`}
         </h3>
         <SortableTable
           data={display}
@@ -498,12 +491,10 @@ export function EngineersModule() {
             { key: 'commits', header: 'Commits',       sortable: true,  render: r => r.commits.length,                                                                                                                           sortValue: r => r.commits.length },
             { key: 'files',   header: 'Files Changed', sortable: true,  render: r => r.allFiles,                                                                                                                                 sortValue: r => r.allFiles },
             { key: 'wk',      header: 'Weekend',       sortable: true,  render: r => r.wkCommits.length ? <span className="text-violet-500 font-semibold">{r.wkCommits.length}</span> : <span className="text-gray-400">0</span>, sortValue: r => r.wkCommits.length },
-            { key: 'prs',     header: 'PRs',           sortable: true,  render: r => r.prsOpened.length,                                                                                                                         sortValue: r => r.prsOpened.length },
+            { key: 'prs',     header: 'PRs Opened',    sortable: true,  render: r => r.prsOpened.length,                                                                                                                         sortValue: r => r.prsOpened.length },
+            { key: 'merged',  header: 'PRs Merged',    sortable: true,  render: r => r.prsMerged.length,                                                                                                                         sortValue: r => r.prsMerged.length },
             { key: 'reviews', header: 'Reviews',       sortable: true,  render: r => r.prsReviewed.length,                                                                                                                       sortValue: r => r.prsReviewed.length },
-            { key: 'done',    header: 'Items Done',    sortable: true,  render: r => r.completedItems.length,                                                                                                                    sortValue: r => r.completedItems.length },
-            { key: 'points',  header: 'Points',        sortable: true,  render: r => r.storyPointsCompleted,                                                                                                                     sortValue: r => r.storyPointsCompleted },
-            { key: 'stale',   header: 'Stale',         sortable: true,  render: r => r.staleItems.length ? <span className="text-orange-400">{r.staleItems.length}</span> : '0',                                                sortValue: r => r.staleItems.length },
-            { key: 'last',    header: 'Last Active',   sortable: true,  render: r => r.lastActivity ? format(new Date(r.lastActivity), 'MMM d') : <span className="text-gray-500">—</span>,                                     sortValue: r => r.lastActivity ?? '' },
+            { key: 'last',    header: 'Last Commit',   sortable: true,  render: r => r.lastActivity ? format(new Date(r.lastActivity), 'MMM d') : <span className="text-gray-500">—</span>,                                     sortValue: r => r.lastActivity ?? '' },
           ]}
         />
       </div>
@@ -516,21 +507,23 @@ export function EngineersModule() {
   );
 }
 
-// ── engineer detail ───────────────────────────────────────────────────────────
+// ── engineer detail popup ─────────────────────────────────────────────────────
 
 function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
   return (
     <div className="flex flex-col gap-6">
+
+      {/* Repo stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Commits',         value: e.commits.length },
+          { label: 'Total Commits',   value: e.commits.length },
           { label: 'Files Changed',   value: e.allFiles },
           { label: 'PRs Opened',      value: e.prsOpened.length },
           { label: 'PRs Merged',      value: e.prsMerged.length },
-          { label: 'Items Assigned',  value: e.assignedItems.length },
-          { label: 'Items Done',      value: e.completedItems.length },
-          { label: 'Story Points',    value: e.storyPointsCompleted },
+          { label: 'PR Reviews',      value: e.prsReviewed.length },
           { label: 'Weekend Commits', value: e.wkCommits.length, color: e.wkCommits.length ? 'text-violet-500' : undefined },
+          { label: 'Sat Commits',     value: e.satCommits, color: e.satCommits ? 'text-violet-400' : undefined },
+          { label: 'Sun Commits',     value: e.sunCommits, color: e.sunCommits ? 'text-blue-400' : undefined },
         ].map(s => (
           <div key={s.label} className="bg-surface-elevated rounded-lg p-3">
             <div className="text-xs text-gray-400">{s.label}</div>
@@ -539,6 +532,7 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
         ))}
       </div>
 
+      {/* Weekend activity */}
       {e.wkCommits.length > 0 && (
         <div className="rounded-xl border border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-950/20 p-4">
           <h4 className="text-sm font-semibold text-violet-600 dark:text-violet-400 mb-3">
@@ -568,37 +562,49 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
         </div>
       )}
 
-      {e.staleItems.length > 0 && (
+      {/* PRs */}
+      {e.prsOpened.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-orange-400 mb-2">Stale Active Items</h4>
-          <ul className="space-y-1">
-            {e.staleItems.map(i => (
-              <li key={i.id} className="text-sm text-gray-600 dark:text-gray-300 flex gap-2">
-                <span className="font-mono text-brand-500">{i.id}</span>
-                <span>{i.fields['System.Title']}</span>
+          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Pull Requests</h4>
+          <ul className="space-y-1 max-h-36 overflow-y-auto">
+            {e.prsOpened.slice(0, 20).map(pr => (
+              <li key={pr.pullRequestId} className="text-sm flex gap-2 items-center">
+                <span className={`flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  pr.status === 'completed'
+                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                    : pr.status === 'abandoned'
+                      ? 'bg-gray-100 dark:bg-gray-900/40 text-gray-500'
+                      : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
+                }`}>{pr.status}</span>
+                <span className="truncate text-gray-700 dark:text-gray-200">{pr.title}</span>
+                <span className="ml-auto text-xs text-gray-400 whitespace-nowrap flex-shrink-0">{(pr as any).repoName}</span>
               </li>
             ))}
           </ul>
         </div>
       )}
 
+      {/* All commits */}
       {e.commits.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Recent Commits</h4>
+          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">
+            Recent Commits <span className="text-xs font-normal text-gray-400">({e.commits.length} total)</span>
+          </h4>
           <ul className="space-y-1 max-h-44 overflow-y-auto">
-            {e.commits.slice(0, 25).map(c => (
+            {e.commits.slice(0, 30).map(c => (
               <li key={c.commitId} className="text-sm flex gap-2 items-center">
                 <span className={`flex-shrink-0 text-[10px] font-bold ${isWeekend(c.author.date) ? 'text-violet-500' : 'text-gray-400'}`}>
                   {dayLabel(c.author.date)}
                 </span>
                 <span className="font-mono text-xs text-gray-500 flex-shrink-0">{c.commitId.slice(0, 7)}</span>
                 <span className="truncate text-gray-600 dark:text-gray-300">{c.comment.split('\n')[0]}</span>
-                <span className="text-gray-400 ml-auto text-xs whitespace-nowrap flex-shrink-0">{c.repoName}</span>
+                <span className="text-gray-400 ml-auto text-xs whitespace-nowrap flex-shrink-0">{(c as any).repoName}</span>
               </li>
             ))}
           </ul>
         </div>
       )}
+
     </div>
   );
 }
