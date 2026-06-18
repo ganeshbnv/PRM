@@ -313,7 +313,7 @@ export function BoardsModule() {
       </div>
 
       {/* ── KPI Tiles ───────────────────────────────────────────────────────── */}
-      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(130px, 1fr))` }}>
+      <div className="flex gap-3 overflow-x-auto scrollbar-none pb-0.5">
         {tiles.map(tile => {
           const sel  = tile.key === '__total__' ? !activeTile : activeTile === tile.key;
           const pct  = tile.key !== '__total__' && total > 0 ? Math.round((tile.count / total) * 100) : null;
@@ -323,7 +323,7 @@ export function BoardsModule() {
                 setActiveTile(tile.key === '__total__' ? null : (activeTile === tile.key ? null : tile.key));
                 openModal(tile.label, tile.items);
               }}
-              className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all group cursor-pointer"
+              className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all group cursor-pointer flex-shrink-0 min-w-[110px] flex-1"
               style={{
                 border:     `2px solid ${sel ? tile.color : 'var(--tile-border)'}`,
                 background: sel ? `${tile.color}12` : 'var(--tile-bg)',
