@@ -202,6 +202,7 @@ export function EngineersModule() {
 
   const barData = display.slice(0, 15).map(e => ({
     name: e.displayName.split(' ')[0],
+    __eng: e,  // kept for click handler — not rendered by Recharts
     Commits: weekendOnly ? e.wkCommits.length : e.commits.length,
     'Files Changed': weekendOnly ? e.wkFiles : e.allFiles,
     ...(weekendOnly ? {} : { Weekend: e.wkCommits.length }),
@@ -415,21 +416,59 @@ export function EngineersModule() {
       {/* ── Bar chart ─────────────────────────────────────────────────────── */}
       {barData.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4">
-            {weekendOnly
-              ? `Weekend Commits${activePeriod ? ` — ${activePeriod.label}` : ' (all weekends)'}`
-              : 'Top Contributors'}
-          </h3>
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+              {weekendOnly
+                ? `Weekend Commits${activePeriod ? ` — ${activePeriod.label}` : ' (all weekends)'}`
+                : 'Top Contributors'}
+            </h3>
+            <span className="text-xs text-gray-400">Click a bar or name to view details</span>
+          </div>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={barData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
+            <BarChart
+              data={barData}
+              margin={{ top: 4, right: 16, bottom: 4, left: 0 }}
+              style={{ cursor: 'pointer' }}
+              onClick={(chartData) => {
+                const eng = (chartData?.activePayload?.[0]?.payload as any)?.__eng;
+                if (eng) setSelected(eng);
+              }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
-              <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <XAxis
+                dataKey="name"
+                tick={(props: any) => {
+                  const { x, y, payload, index } = props;
+                  const eng = barData[index]?.__eng;
+                  return (
+                    <g
+                      transform={`translate(${x},${y})`}
+                      onClick={(e) => { e.stopPropagation(); if (eng) setSelected(eng); }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <text
+                        x={0} y={0} dy={14}
+                        textAnchor="middle"
+                        fill="#a78bfa"
+                        fontSize={11}
+                        fontWeight={600}
+                        style={{ textDecoration: 'underline' }}
+                      >
+                        {payload.value}
+                      </text>
+                    </g>
+                  );
+                }}
+              />
               <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+              <Tooltip
+                contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }}
+                cursor={{ fill: 'rgba(139,92,246,0.08)' }}
+              />
               <Legend wrapperStyle={{ fontSize: 11, color: '#9ca3af' }} />
-              <Bar dataKey="Commits" fill={weekendOnly ? '#8b5cf6' : '#3b82f6'} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Files Changed" fill="#10b981" radius={[4, 4, 0, 0]} />
-              {!weekendOnly && <Bar dataKey="Weekend" fill="#8b5cf6" radius={[4, 4, 0, 0]} />}
+              <Bar dataKey="Commits" fill={weekendOnly ? '#8b5cf6' : '#3b82f6'} radius={[4, 4, 0, 0]} cursor="pointer" />
+              <Bar dataKey="Files Changed" fill="#10b981" radius={[4, 4, 0, 0]} cursor="pointer" />
+              {!weekendOnly && <Bar dataKey="Weekend" fill="#8b5cf6" radius={[4, 4, 0, 0]} cursor="pointer" />}
             </BarChart>
           </ResponsiveContainer>
         </div>
