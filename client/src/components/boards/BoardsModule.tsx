@@ -319,8 +319,11 @@ export function BoardsModule() {
           const pct  = tile.key !== '__total__' && total > 0 ? Math.round((tile.count / total) * 100) : null;
           return (
             <button key={tile.key}
-              onClick={() => setActiveTile(tile.key === '__total__' ? null : (activeTile === tile.key ? null : tile.key))}
-              className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all"
+              onClick={() => {
+                setActiveTile(tile.key === '__total__' ? null : (activeTile === tile.key ? null : tile.key));
+                openModal(tile.label, tile.items);
+              }}
+              className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all group cursor-pointer"
               style={{
                 border:     `2px solid ${sel ? tile.color : 'var(--tile-border)'}`,
                 background: sel ? `${tile.color}12` : 'var(--tile-bg)',
@@ -329,6 +332,11 @@ export function BoardsModule() {
               }}>
               <div className="absolute top-0 left-0 right-0 h-[3px]"
                 style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.25 }} />
+              {/* hover hint */}
+              <div className="absolute inset-0 flex items-end justify-center pb-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full"
+                  style={{ background: `${tile.color}22`, color: tile.color }}>view tickets</span>
+              </div>
               <span className="text-xs uppercase tracking-wide font-semibold mt-1.5"
                 style={{ color: sel ? tile.color : '#64748b' }}>{tile.label}</span>
               <span className="text-2xl font-bold leading-none tabular-nums"
@@ -682,6 +690,12 @@ function WorkItemTable({ items }: { items: WorkItem[] }) {
             {r.fields['System.State']}
           </span>
         ), sortValue: r => r.fields['System.State'] },
+        { key: 'pri',    header: 'Priority',       sortable: true, render: r => {
+            const p = r.fields['Microsoft.VSTS.Common.Priority'];
+            if (!p) return <span className="text-gray-500">—</span>;
+            const colors: Record<number,string> = { 1:'text-red-400 bg-red-500/10', 2:'text-orange-400 bg-orange-500/10', 3:'text-yellow-400 bg-yellow-500/10', 4:'text-gray-400 bg-gray-500/10' };
+            return <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${colors[p] ?? 'text-gray-400'}`}>P{p}</span>;
+          }, sortValue: r => r.fields['Microsoft.VSTS.Common.Priority'] ?? 99 },
         { key: 'who',    header: 'Assignee',      sortable: true, render: r => r.fields['System.AssignedTo']?.displayName ?? '—',                             sortValue: r => r.fields['System.AssignedTo']?.displayName ?? '' },
         { key: 'sprint', header: 'Sprint',        sortable: true, render: r => r.fields['System.IterationPath']?.split('\\').pop() ?? '—',                    sortValue: r => r.fields['System.IterationPath'] ?? '' },
         { key: 'when',   header: 'Last Updated',  sortable: true, render: r => format(new Date(r.fields['System.ChangedDate']), 'MMM d, yyyy'),               sortValue: r => r.fields['System.ChangedDate'] },
