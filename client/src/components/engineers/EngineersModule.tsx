@@ -71,7 +71,12 @@ const ENG_TO   = format(new Date(), 'yyyy-MM-dd');
 
 // Names/email patterns to exclude from the Engineering module.
 // Add lower-cased displayNames or email substrings here.
-const EXCLUDED_NAMES = new Set(['tanveer kaur']);
+const EXCLUDED_NAMES = new Set([
+  'tanveer kaur',
+  'ganesh bandi',
+  'meghana pasupuleti',
+  'rohit sagar kata',
+]);
 const EXCLUDED_EMAIL_FRAGMENTS = ['noreply', 'service@', 'bot@', 'local@', 'saridsa'];
 
 function isExcluded(e: EngineerActivity): boolean {
