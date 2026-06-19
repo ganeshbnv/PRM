@@ -82,6 +82,7 @@ router.get('/repos/prs/all', wrap(async (req) => {
 }));
 
 router.get('/repos/branches/all', wrap(async (req) => reposSvc.getAllBranches(proj(req))));
+router.get('/repos/branches/summaries', wrap(async (req) => reposSvc.getBranchSummaries(proj(req))));
 
 router.get('/repos/:repoId/commits', wrap(async (req) => {
   return reposSvc.getCommits({

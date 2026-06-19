@@ -91,6 +91,13 @@ export interface PipelineRun {
   pipelineName: string;
 }
 
+export interface BranchSummary {
+  repoId:     string;
+  repoName:   string;
+  branchName: string;
+  lastCommit: (GitCommit & { repoId: string; repoName: string }) | null;
+}
+
 export interface EngineerActivity {
   displayName: string;
   uniqueName: string;

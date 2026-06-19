@@ -32,7 +32,7 @@ export default client;
 
 import type {
   WorkItem, SprintStats, GitRepository, GitCommit,
-  GitPullRequest, EngineerActivity, Risk, GlobalFilters,
+  GitPullRequest, EngineerActivity, BranchSummary, Risk, GlobalFilters,
 } from '../types';
 
 type Filters = Partial<GlobalFilters>;
@@ -70,6 +70,8 @@ export const api = {
   // Engineers
   getEngineerActivity: (f: Filters) =>
     client.get<EngineerActivity[]>('/engineers/activity', { params: f }).then((r) => r.data),
+  getBranchSummaries: (project: string) =>
+    client.get<BranchSummary[]>('/repos/branches/summaries', { params: { project } }).then((r) => r.data),
 
   // AI Insights
   getAiInsights: (project: string, team: string, iterationPath?: string) =>

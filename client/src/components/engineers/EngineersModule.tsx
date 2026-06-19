@@ -6,7 +6,7 @@ import { useFilterStore } from '../../store/filters';
 import { LoadingCard, ErrorCard } from '../common/Spinner';
 import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
-import type { EngineerActivity } from '../../types';
+import type { EngineerActivity, BranchSummary } from '../../types';
 import { format, differenceInDays, subDays, addDays } from 'date-fns';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -88,17 +88,8 @@ function isExcluded(e: EngineerActivity): boolean {
   return false;
 }
 
-function exclusionReason(e: EngineerActivity): string {
-  const name  = e.displayName.toLowerCase();
-  const email = e.uniqueName.toLowerCase();
-  if (EXCLUDED_NAMES.has(name)) return 'non-engineering role';
-  if (name === 'local' || name === 'service') return 'reserved name';
-  const frag = EXCLUDED_EMAIL_FRAGMENTS.find(f => email.includes(f));
-  if (frag) return `email contains "${frag}"`;
-  return 'unknown';
-}
 
-type CoveragePanel = 'raw' | 'dedup' | 'contributors' | 'excluded' | 'daterange' | 'branches';
+type CoveragePanel = 'raw' | 'dedup' | 'contributors' | 'daterange' | 'branches';
 
 // ── main component ────────────────────────────────────────────────────────────
 
@@ -106,6 +97,10 @@ export function EngineersModule() {
   const { filters } = useFilterStore();
   const { data, loading, error } = useApi(
     () => api.getEngineerActivity({ fromDate: ENG_FROM, toDate: ENG_TO, project: filters.project }),
+    [filters.project]
+  );
+  const { data: branchSummaries, loading: branchLoading } = useApi(
+    () => api.getBranchSummaries(filters.project),
     [filters.project]
   );
 
@@ -206,9 +201,9 @@ export function EngineersModule() {
   if (loading) return <LoadingCard label="Loading engineer activity…" />;
   if (error)   return <ErrorCard error={error} />;
 
-  const totalRaw      = (data ?? []).length;
-  const totalExcluded = (data ?? []).filter(e => e.commits.length > 0 && isExcluded(e)).length;
-  const totalCommitsRaw = (data ?? []).reduce((s, e) => s + e.commits.length, 0);
+  const engineerData  = (data ?? []).filter(e => !isExcluded(e) && e.commits.length > 0);
+  const totalRaw      = engineerData.length;
+  const totalCommitsRaw = engineerData.reduce((s, e) => s + e.commits.length, 0);
 
   const stale = engineers.filter(e => !e.lastActivity || differenceInDays(new Date(), new Date(e.lastActivity)) >= 10);
 
@@ -268,17 +263,8 @@ export function EngineersModule() {
         <span className="text-gray-300 dark:text-gray-600">·</span>
         <button onClick={() => setCoveragePanel('contributors')}
           className="font-medium hover:text-blue-600 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
-          <span className="font-bold text-gray-800 dark:text-white">{totalRaw}</span> contributors
+          <span className="font-bold text-gray-800 dark:text-white">{totalRaw}</span> engineers
         </button>
-        {totalExcluded > 0 && (
-          <>
-            <span className="text-gray-300 dark:text-gray-600">·</span>
-            <button onClick={() => setCoveragePanel('excluded')}
-              className="text-amber-500 hover:text-amber-600 underline decoration-dotted underline-offset-2 transition-colors font-medium">
-              {totalExcluded} excluded
-            </button>
-          </>
-        )}
         <span className="text-gray-300 dark:text-gray-600">·</span>
         <button onClick={() => setCoveragePanel('daterange')}
           className="text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
@@ -571,6 +557,91 @@ export function EngineersModule() {
         />
       </div>
 
+      {/* ── Branch Coverage ──────────────────────────────────────────────── */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+            Branch Coverage
+            <span className="ml-2 text-xs font-normal text-gray-400">last commit per branch · engineers only</span>
+          </h3>
+          {branchLoading && <span className="text-xs text-gray-400 animate-pulse">Loading branches…</span>}
+        </div>
+        {!branchLoading && branchSummaries && (() => {
+          // Group branches by repo
+          const engEmails = new Set(engineers.map(e => e.uniqueName.toLowerCase()));
+          const byRepo: Record<string, BranchSummary[]> = {};
+          branchSummaries.forEach(b => {
+            if (!byRepo[b.repoName]) byRepo[b.repoName] = [];
+            byRepo[b.repoName].push(b);
+          });
+          return (
+            <div className="flex flex-col gap-4">
+              {Object.entries(byRepo).map(([repoName, branches]) => (
+                <div key={repoName} className="rounded-lg border border-surface-border overflow-hidden">
+                  <div className="px-4 py-2 bg-surface-elevated flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{repoName}</span>
+                    <span className="text-xs text-gray-400">{branches.length} branches</span>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-surface-border">
+                      <tr className="text-xs uppercase text-gray-400 tracking-wider">
+                        <th className="px-4 py-2 text-left">Branch</th>
+                        <th className="px-4 py-2 text-left">Last Commit By</th>
+                        <th className="px-4 py-2 text-left">Message</th>
+                        <th className="px-4 py-2 text-right">Date</th>
+                        <th className="px-4 py-2 text-right font-mono">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {branches.map(b => {
+                        const c = b.lastCommit;
+                        const authorEmail = c?.author.email.toLowerCase() ?? '';
+                        const isEngineer  = engEmails.has(authorEmail);
+                        const eng = engineers.find(e => e.uniqueName.toLowerCase() === authorEmail);
+                        return (
+                          <tr key={b.branchName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                            <td className="px-4 py-2.5">
+                              <span className="font-mono text-xs text-blue-500 dark:text-blue-400">{b.branchName}</span>
+                            </td>
+                            <td className="px-4 py-2.5">
+                              {c ? (
+                                isEngineer
+                                  ? <button className="flex items-center gap-1.5 hover:underline" onClick={() => eng && setSelected(eng)}>
+                                      <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">{c.author.name[0]}</span>
+                                      <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{c.author.name}</span>
+                                    </button>
+                                  : <span className="text-xs text-gray-400 italic">{c.author.name}</span>
+                              ) : <span className="text-xs text-gray-300">—</span>}
+                            </td>
+                            <td className="px-4 py-2.5 max-w-xs">
+                              {c ? (
+                                <span className="text-xs text-gray-600 dark:text-gray-300 truncate block">
+                                  <span className="font-mono text-gray-400 mr-1.5">{c.commitId.slice(0, 7)}</span>
+                                  {c.comment.split('\n')[0]}
+                                </span>
+                              ) : <span className="text-xs text-gray-300">no commits</span>}
+                            </td>
+                            <td className="px-4 py-2.5 text-right text-xs text-gray-500 whitespace-nowrap">
+                              {c ? format(new Date(c.author.date), 'MMM d, yyyy') : '—'}
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-xs text-gray-400 whitespace-nowrap">
+                              {c ? format(new Date(c.author.date), 'HH:mm:ss') : ''}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+        {!branchLoading && !branchSummaries && (
+          <p className="text-xs text-gray-400 py-4 text-center">No branch data available.</p>
+        )}
+      </div>
+
       {/* ── Engineer detail modal ─────────────────────────────────────────── */}
       <Modal open={!!selected} onClose={() => setSelected(null)} title={`Activity: ${selected?.displayName ?? ''}`} width="max-w-4xl">
         {selected && <EngineerDetail engineer={selected} />}
@@ -581,10 +652,9 @@ export function EngineersModule() {
         open={coveragePanel !== null}
         onClose={() => setCoveragePanel(null)}
         title={
-          coveragePanel === 'raw'          ? `Raw Commits — all contributors, all branches (${totalCommitsRaw.toLocaleString()} total)` :
-          coveragePanel === 'dedup'        ? `Deduplicated Commits — included engineers only (${allCommitsFlat.length.toLocaleString()} total)` :
-          coveragePanel === 'contributors' ? `All Contributors — ${totalRaw} unique git identities found` :
-          coveragePanel === 'excluded'     ? `Excluded Contributors — ${totalExcluded} filtered out` :
+          coveragePanel === 'raw'          ? `Raw Commits — engineers, all branches (${totalCommitsRaw.toLocaleString()} total)` :
+          coveragePanel === 'dedup'        ? `Deduplicated Commits — ${allCommitsFlat.length.toLocaleString()} unique commits` :
+          coveragePanel === 'contributors' ? `Engineers — ${totalRaw} active contributors` :
           coveragePanel === 'daterange'    ? `Date Range — last 90 days` :
           coveragePanel === 'branches'     ? `Branch Coverage — all repos queried` : ''
         }
@@ -599,29 +669,22 @@ export function EngineersModule() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
                   <tr>
-                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Engineer</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3 text-right">Raw Commits</th>
-                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Deduped</th>
                     <th className="px-4 py-3">Last Commit</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...(data ?? [])].sort((a, b) => b.commits.length - a.commits.length).map(e => {
-                    const excluded = isExcluded(e) || e.commits.length === 0;
+                  {engineerData.sort((a, b) => b.commits.length - a.commits.length).map(e => {
+                    const deduped = engineers.find(eng => eng.uniqueName === e.uniqueName);
                     return (
                       <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
                         <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{e.displayName}</td>
                         <td className="px-4 py-2.5 text-xs text-gray-500 font-mono">{e.uniqueName}</td>
                         <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{e.commits.length.toLocaleString()}</td>
-                        <td className="px-4 py-2.5">
-                          {excluded
-                            ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                                ⛔ {e.commits.length === 0 ? 'no commits' : exclusionReason(e)}
-                              </span>
-                            : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">✓ engineer</span>
-                          }
-                        </td>
+                        <td className="px-4 py-2.5 text-right text-emerald-600 dark:text-emerald-400">{deduped?.commits.length ?? '—'}</td>
                         <td className="px-4 py-2.5 text-xs text-gray-500">
                           {e.lastActivity
                             ? <><div>{format(new Date(e.lastActivity), 'MMM d, yyyy')}</div><div className="font-mono text-gray-400">{format(new Date(e.lastActivity), 'HH:mm:ss')}</div></>
@@ -697,77 +760,28 @@ export function EngineersModule() {
         {coveragePanel === 'contributors' && (
           <div className="flex flex-col gap-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Every unique git identity that committed to any branch in the last 90 days. Multiple rows for the same person means they use different git email configs.
+              Active software engineers with commits in the last 90 days.
             </p>
             <div className="overflow-x-auto rounded-lg border border-surface-border">
               <table className="w-full text-sm text-left">
                 <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
                   <tr>
                     <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email / Identity</th>
+                    <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3 text-right">Commits</th>
                     <th className="px-4 py-3 text-right">PRs Opened</th>
-                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-right">Weekend</th>
                     <th className="px-4 py-3">Last Activity</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...(data ?? [])].sort((a, b) => b.commits.length - a.commits.length).map(e => {
-                    const excl = isExcluded(e);
-                    return (
-                      <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
-                        <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{e.displayName}</td>
-                        <td className="px-4 py-2.5 text-xs text-gray-500 font-mono break-all">{e.uniqueName}</td>
-                        <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{e.commits.length}</td>
-                        <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-400">{e.prsOpened.length}</td>
-                        <td className="px-4 py-2.5">
-                          {excl
-                            ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">⛔ excluded</span>
-                            : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">✓ engineer</span>
-                          }
-                        </td>
-                        <td className="px-4 py-2.5 text-xs text-gray-500">
-                          {e.lastActivity
-                            ? <><div>{format(new Date(e.lastActivity), 'MMM d, yyyy')}</div><div className="font-mono text-gray-400">{format(new Date(e.lastActivity), 'HH:mm:ss')}</div></>
-                            : '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {coveragePanel === 'excluded' && (
-          <div className="flex flex-col gap-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              These identities were found in ADO but are hidden from all Engineers charts and tables. To un-exclude someone, remove them from <code className="bg-surface-elevated px-1 rounded">EXCLUDED_NAMES</code> or <code className="bg-surface-elevated px-1 rounded">EXCLUDED_EMAIL_FRAGMENTS</code> in EngineersModule.tsx.
-            </p>
-            <div className="overflow-x-auto rounded-lg border border-surface-border">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email / Identity</th>
-                    <th className="px-4 py-3 text-right">Commits hidden</th>
-                    <th className="px-4 py-3">Exclusion reason</th>
-                    <th className="px-4 py-3">Last Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(data ?? [])
-                    .filter(e => isExcluded(e) && e.commits.length > 0)
-                    .sort((a, b) => b.commits.length - a.commits.length)
-                    .map(e => (
-                    <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                  {engineers.sort((a, b) => b.commits.length - a.commits.length).map(e => (
+                    <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors cursor-pointer" onClick={() => { setCoveragePanel(null); setSelected(e); }}>
                       <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{e.displayName}</td>
                       <td className="px-4 py-2.5 text-xs text-gray-500 font-mono">{e.uniqueName}</td>
-                      <td className="px-4 py-2.5 text-right font-bold text-red-500">{e.commits.length.toLocaleString()}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="text-xs px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">{exclusionReason(e)}</span>
-                      </td>
+                      <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{e.commits.length}</td>
+                      <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-400">{e.prsOpened.length}</td>
+                      <td className="px-4 py-2.5 text-right text-violet-500">{e.wkCommits.length || '—'}</td>
                       <td className="px-4 py-2.5 text-xs text-gray-500">
                         {e.lastActivity
                           ? <><div>{format(new Date(e.lastActivity), 'MMM d, yyyy')}</div><div className="font-mono text-gray-400">{format(new Date(e.lastActivity), 'HH:mm:ss')}</div></>

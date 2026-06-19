@@ -195,3 +195,56 @@ export async function getAllBranches(project: string): Promise<Array<GitBranch &
   }
   return results;
 }
+
+// ── Branch summaries (last commit per branch, lightweight $top=1) ─────────────
+
+export interface BranchSummary {
+  repoId:     string;
+  repoName:   string;
+  branchName: string;
+  lastCommit: (GitCommit & { repoId: string; repoName: string }) | null;
+}
+
+export async function getBranchSummaries(project: string): Promise<BranchSummary[]> {
+  const repos = await getRepositories(project);
+  const results: BranchSummary[] = [];
+
+  await Promise.all(repos.map(async (repo) => {
+    try {
+      const branches = await getBranches(project, repo.id);
+      await Promise.all(branches.map(async (branch) => {
+        const shortName = branch.name.replace(/^refs\/heads\//, '');
+        const cacheKey  = `branch-summary:v1:${project}:${repo.id}:${shortName}`;
+        try {
+          const commits = await cache.cached(cacheKey, () =>
+            ado.getAll<GitCommit>(ado.p(project).commits(repo.id), {
+              'api-version': V,
+              'searchCriteria.$top': 1,
+              'searchCriteria.itemVersion.version':     shortName,
+              'searchCriteria.itemVersion.versionType': 'branch',
+            })
+          );
+          results.push({
+            repoId:     repo.id,
+            repoName:   repo.name,
+            branchName: shortName,
+            lastCommit: commits[0] ? { ...commits[0], repoId: repo.id, repoName: repo.name } : null,
+          });
+        } catch {
+          results.push({ repoId: repo.id, repoName: repo.name, branchName: shortName, lastCommit: null });
+        }
+      }));
+    } catch (err) {
+      console.error(`[repos] getBranchSummaries: skipping "${repo.name}" —`, (err as Error).message);
+    }
+  }));
+
+  results.sort((a, b) => {
+    const repoC = a.repoName.localeCompare(b.repoName);
+    if (repoC !== 0) return repoC;
+    return a.branchName.localeCompare(b.branchName);
+  });
+
+  console.log(`[repos] getBranchSummaries: ${results.length} branches across ${repos.length} repos`);
+  return results;
+}
