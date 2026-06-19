@@ -70,6 +70,10 @@ export interface WVersionDetail extends WVersion { content: string }
 export interface WAttachment { id: string; filename: string; storedName: string; mimeType: string; size: number; createdAt: string; uploader: Pick<WUser, 'id' | 'name'> }
 
 export const wikiAuth = {
+  sso: (prmToken: string, email: string, name: string) =>
+    wikiClient.post<{ user: WUser; tokens: { accessToken: string; refreshToken: string } }>(
+      '/auth/sso', { email, name }, { headers: { Authorization: `Bearer ${prmToken}` } }
+    ).then(r => r.data),
   login: (email: string, password: string) =>
     wikiClient.post<{ user: WUser; tokens: { accessToken: string; refreshToken: string } }>('/auth/login', { email, password }).then(r => r.data),
   register: (email: string, name: string, password: string) =>

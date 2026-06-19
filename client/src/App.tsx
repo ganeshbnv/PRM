@@ -6,6 +6,7 @@ import {
   Sun, Moon,
 } from 'lucide-react';
 import { FilterBar } from './components/common/FilterBar';
+import { WikiModule } from './components/wiki/WikiModule';
 import { BoardsModule } from './components/boards/BoardsModule';
 import { BugsModule } from './components/bugs/BugsModule';
 import { EngineersModule } from './components/engineers/EngineersModule';
@@ -761,7 +762,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             {tab === 'bugs'      && <BugsModule />}
             {tab === 'engineers' && <EngineersModule />}
             {tab === 'repos'     && <ReposModule />}
-            {tab === 'wiki'      && <iframe src="http://localhost:5173" className="w-full h-full border-0" title="Wiki" allow="clipboard-read; clipboard-write" />}
+            {tab === 'wiki'      && <WikiModule />}
             {tab === 'risks'     && <RisksModule />}
           </main>
         )}

@@ -2895,8 +2895,6 @@ function SpaceView({ space, onBack, currentUser }: {
 
 // ─── Root WikiModule ──────────────────────────────────────────────────────────
 
-const WIKI_EMAIL = 'wiki@prm.internal';
-const WIKI_PASS  = 'wiki-prm-default';
 
 type View = 'loading' | 'spaces' | 'space';
 
@@ -2924,7 +2922,7 @@ export function WikiModule() {
   };
 
   const autoAuth = useCallback(async () => {
-    // 1. Reuse stored token
+    // 1. Reuse stored wiki token if still valid
     const stored = getWikiAuth();
     if (stored?.accessToken) {
       try {
@@ -2933,30 +2931,22 @@ export function WikiModule() {
         setUser(synced); loadSpaces(); setView('spaces'); return;
       } catch { clearWikiAuth(); }
     }
-    // 2. Login (account already registered)
+    // 2. SSO — exchange PRM session for a wiki session (no password needed)
     try {
-      const r = await wikiAuth.login(WIKI_EMAIL, WIKI_PASS);
+      const prmStored = localStorage.getItem('prm-auth');
+      const prmToken: string | null = prmStored ? (JSON.parse(prmStored) as { state?: { token?: string } })?.state?.token ?? null : null;
+      if (!prmToken || !prmUser?.email) throw new Error('no prm session');
+      const r = await wikiAuth.sso(prmToken, prmUser.email, realName);
       setWikiAuth(r.tokens, r.user);
-      const synced = await syncName(r.user);
-      setUser(synced); loadSpaces(); setView('spaces'); return;
-    } catch (loginErr: unknown) {
-      // If login failed for a reason other than "wrong credentials / not found",
-      // surface the error rather than blindly falling through to register.
-      const status = (loginErr as { response?: { status?: number } })?.response?.status;
-      if (status !== 401 && status !== 404) {
-        setAuthError('Wiki server unavailable. Make sure it is running.');
-        return;
-      }
-    }
-    // 3. First run — register with the real name
-    try {
-      const r = await wikiAuth.register(WIKI_EMAIL, realName, WIKI_PASS);
-      setWikiAuth(r.tokens, r.user); setUser(r.user); loadSpaces(); setView('spaces');
+      setUser(r.user); loadSpaces(); setView('spaces');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message;
-      setAuthError(msg ?? 'Wiki server unavailable. Make sure it is running.');
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const msg = status
+        ? 'Wiki server unavailable. Make sure it is running.'
+        : 'Could not connect to wiki. Make sure the wiki server is running.';
+      setAuthError(msg);
     }
-  }, [loadSpaces, realName]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadSpaces, realName, prmUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { void autoAuth(); }, [autoAuth]);
 
