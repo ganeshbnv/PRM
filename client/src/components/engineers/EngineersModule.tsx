@@ -516,7 +516,7 @@ export function EngineersModule() {
             { key: 'sat',  header: 'Sat',            sortable: true,  render: r => r.satCommits ? <span className="text-violet-500">{r.satCommits}</span> : <span className="text-gray-400">—</span>,                          sortValue: r => r.satCommits },
             { key: 'sun',  header: 'Sun',            sortable: true,  render: r => r.sunCommits ? <span className="text-blue-400">{r.sunCommits}</span>   : <span className="text-gray-400">—</span>,                          sortValue: r => r.sunCommits },
             { key: 'days', header: 'Days Worked',    sortable: false, render: r => <span className="text-xs text-gray-500">{r.wkDates.slice(0,3).join(' · ')}{r.wkDates.length > 3 ? ` +${r.wkDates.length-3}` : ''}</span>  },
-            { key: 'last', header: 'Last Weekend',   sortable: true,  render: r => r.lastWkCommit ? format(new Date(r.lastWkCommit), 'EEE MMM d') : '—',                                                                        sortValue: r => r.lastWkCommit ?? '' },
+            { key: 'last', header: 'Last Weekend',   sortable: true,  render: r => r.lastWkCommit ? <div><div>{format(new Date(r.lastWkCommit), 'EEE MMM d, yyyy')}</div><div className="text-[10px] font-mono text-gray-400">{format(new Date(r.lastWkCommit), 'HH:mm:ss')}</div></div> : '—', sortValue: r => r.lastWkCommit ?? '' },
           ] : [
             { key: 'name',    header: 'Name',         sortable: true,  render: r => <span className="font-medium">{r.displayName}</span>,                                                                                        sortValue: r => r.displayName },
             { key: 'commits', header: 'Commits',       sortable: true,  render: r => r.commits.length,                                                                                                                           sortValue: r => r.commits.length },
@@ -525,7 +525,7 @@ export function EngineersModule() {
             { key: 'prs',     header: 'PRs Opened',    sortable: true,  render: r => r.prsOpened.length,                                                                                                                         sortValue: r => r.prsOpened.length },
             { key: 'merged',  header: 'PRs Merged',    sortable: true,  render: r => r.prsMerged.length,                                                                                                                         sortValue: r => r.prsMerged.length },
             { key: 'reviews', header: 'Reviews',       sortable: true,  render: r => r.prsReviewed.length,                                                                                                                       sortValue: r => r.prsReviewed.length },
-            { key: 'last',    header: 'Last Commit',   sortable: true,  render: r => r.lastActivity ? format(new Date(r.lastActivity), 'MMM d') : <span className="text-gray-500">—</span>,                                     sortValue: r => r.lastActivity ?? '' },
+            { key: 'last',    header: 'Last Commit',   sortable: true,  render: r => r.lastActivity ? <div><div>{format(new Date(r.lastActivity), 'MMM d, yyyy')}</div><div className="text-[10px] font-mono text-gray-400">{format(new Date(r.lastActivity), 'HH:mm:ss')}</div></div> : <span className="text-gray-500">—</span>, sortValue: r => r.lastActivity ?? '' },
           ]}
         />
       </div>
@@ -608,7 +608,10 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
                       : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
                 }`}>{pr.status}</span>
                 <span className="truncate text-gray-700 dark:text-gray-200">{pr.title}</span>
-                <span className="ml-auto text-xs text-gray-400 whitespace-nowrap flex-shrink-0">{(pr as any).repoName}</span>
+                <span className="ml-auto flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[10px] font-mono text-gray-400 whitespace-nowrap">{format(new Date(pr.creationDate), 'MMM d, yyyy · HH:mm')}</span>
+                  <span className="text-[10px] text-gray-500 whitespace-nowrap">{(pr as any).repoName}</span>
+                </span>
               </li>
             ))}
           </ul>
@@ -629,7 +632,10 @@ function EngineerDetail({ engineer: e }: { engineer: RichEngineer }) {
                 </span>
                 <span className="font-mono text-xs text-gray-500 flex-shrink-0">{c.commitId.slice(0, 7)}</span>
                 <span className="truncate text-gray-600 dark:text-gray-300">{c.comment.split('\n')[0]}</span>
-                <span className="text-gray-400 ml-auto text-xs whitespace-nowrap flex-shrink-0">{(c as any).repoName}</span>
+                <span className="ml-auto flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[10px] font-mono text-gray-400 whitespace-nowrap">{format(new Date(c.author.date), 'MMM d, yyyy · HH:mm')}</span>
+                  <span className="text-[10px] text-gray-500 whitespace-nowrap">{(c as any).repoName}</span>
+                </span>
               </li>
             ))}
           </ul>
