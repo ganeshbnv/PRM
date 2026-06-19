@@ -88,6 +88,18 @@ function isExcluded(e: EngineerActivity): boolean {
   return false;
 }
 
+function exclusionReason(e: EngineerActivity): string {
+  const name  = e.displayName.toLowerCase();
+  const email = e.uniqueName.toLowerCase();
+  if (EXCLUDED_NAMES.has(name)) return 'non-engineering role';
+  if (name === 'local' || name === 'service') return 'reserved name';
+  const frag = EXCLUDED_EMAIL_FRAGMENTS.find(f => email.includes(f));
+  if (frag) return `email contains "${frag}"`;
+  return 'unknown';
+}
+
+type CoveragePanel = 'raw' | 'dedup' | 'contributors' | 'excluded' | 'daterange' | 'branches';
+
 // ── main component ────────────────────────────────────────────────────────────
 
 export function EngineersModule() {
@@ -100,6 +112,7 @@ export function EngineersModule() {
   const [selected,      setSelected]      = useState<RichEngineer | null>(null);
   const [weekendOnly,   setWeekendOnly]    = useState(false);
   const [selectedWkSat, setSelectedWkSat] = useState<string | null>(null);
+  const [coveragePanel, setCoveragePanel] = useState<CoveragePanel | null>(null);
 
   // ── All derived state MUST be before any early return (Rules of Hooks) ───────
 
@@ -240,19 +253,42 @@ export function EngineersModule() {
     <div className="flex flex-col gap-6">
 
       {/* ── Data coverage strip ───────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3 px-1 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-2 px-1 text-xs text-gray-500">
         <span className="font-semibold text-gray-700 dark:text-gray-300">Repo data</span>
-        <span>·</span>
-        <span><span className="font-bold text-gray-800 dark:text-white">{totalCommitsRaw.toLocaleString()}</span> raw commits</span>
-        <span>·</span>
-        <span><span className="font-bold text-gray-800 dark:text-white">{allCommitsFlat.length.toLocaleString()}</span> after dedup</span>
-        <span>·</span>
-        <span><span className="font-bold text-gray-800 dark:text-white">{totalRaw}</span> contributors</span>
+        <span className="text-gray-300 dark:text-gray-600">·</span>
+        <button onClick={() => setCoveragePanel('raw')}
+          className="font-medium hover:text-blue-600 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
+          <span className="font-bold text-gray-800 dark:text-white">{totalCommitsRaw.toLocaleString()}</span> raw commits
+        </button>
+        <span className="text-gray-300 dark:text-gray-600">·</span>
+        <button onClick={() => setCoveragePanel('dedup')}
+          className="font-medium hover:text-blue-600 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
+          <span className="font-bold text-gray-800 dark:text-white">{allCommitsFlat.length.toLocaleString()}</span> after dedup
+        </button>
+        <span className="text-gray-300 dark:text-gray-600">·</span>
+        <button onClick={() => setCoveragePanel('contributors')}
+          className="font-medium hover:text-blue-600 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
+          <span className="font-bold text-gray-800 dark:text-white">{totalRaw}</span> contributors
+        </button>
         {totalExcluded > 0 && (
-          <><span>·</span><span className="text-amber-500">{totalExcluded} bot/service excluded</span></>
+          <>
+            <span className="text-gray-300 dark:text-gray-600">·</span>
+            <button onClick={() => setCoveragePanel('excluded')}
+              className="text-amber-500 hover:text-amber-600 underline decoration-dotted underline-offset-2 transition-colors font-medium">
+              {totalExcluded} excluded
+            </button>
+          </>
         )}
-        <span>·</span>
-        <span className="text-gray-400">last 90 days · all branches</span>
+        <span className="text-gray-300 dark:text-gray-600">·</span>
+        <button onClick={() => setCoveragePanel('daterange')}
+          className="text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
+          last 90 days
+        </button>
+        <span className="text-gray-300 dark:text-gray-600">·</span>
+        <button onClick={() => setCoveragePanel('branches')}
+          className="text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 underline decoration-dotted underline-offset-2 transition-colors">
+          all branches
+        </button>
       </div>
 
       {/* ── Most Recent Weekend banner ────────────────────────────────────── */}
@@ -538,6 +574,331 @@ export function EngineersModule() {
       {/* ── Engineer detail modal ─────────────────────────────────────────── */}
       <Modal open={!!selected} onClose={() => setSelected(null)} title={`Activity: ${selected?.displayName ?? ''}`} width="max-w-4xl">
         {selected && <EngineerDetail engineer={selected} />}
+      </Modal>
+
+      {/* ── Coverage detail modals ────────────────────────────────────────── */}
+      <Modal
+        open={coveragePanel !== null}
+        onClose={() => setCoveragePanel(null)}
+        title={
+          coveragePanel === 'raw'          ? `Raw Commits — all contributors, all branches (${totalCommitsRaw.toLocaleString()} total)` :
+          coveragePanel === 'dedup'        ? `Deduplicated Commits — included engineers only (${allCommitsFlat.length.toLocaleString()} total)` :
+          coveragePanel === 'contributors' ? `All Contributors — ${totalRaw} unique git identities found` :
+          coveragePanel === 'excluded'     ? `Excluded Contributors — ${totalExcluded} filtered out` :
+          coveragePanel === 'daterange'    ? `Date Range — last 90 days` :
+          coveragePanel === 'branches'     ? `Branch Coverage — all repos queried` : ''
+        }
+        width="max-w-5xl"
+      >
+        {coveragePanel === 'raw' && (
+          <div className="flex flex-col gap-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Raw counts include commits that appear in multiple branches (same commit reachable from feature + main = counted once per branch query). The "after dedup" number collapses these by <code className="bg-surface-elevated px-1 rounded">commitId</code>.
+            </p>
+            <div className="overflow-x-auto rounded-lg border border-surface-border">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3 text-right">Raw Commits</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Last Commit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...(data ?? [])].sort((a, b) => b.commits.length - a.commits.length).map(e => {
+                    const excluded = isExcluded(e) || e.commits.length === 0;
+                    return (
+                      <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                        <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{e.displayName}</td>
+                        <td className="px-4 py-2.5 text-xs text-gray-500 font-mono">{e.uniqueName}</td>
+                        <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{e.commits.length.toLocaleString()}</td>
+                        <td className="px-4 py-2.5">
+                          {excluded
+                            ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                                ⛔ {e.commits.length === 0 ? 'no commits' : exclusionReason(e)}
+                              </span>
+                            : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">✓ engineer</span>
+                          }
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-gray-500">
+                          {e.lastActivity
+                            ? <><div>{format(new Date(e.lastActivity), 'MMM d, yyyy')}</div><div className="font-mono text-gray-400">{format(new Date(e.lastActivity), 'HH:mm:ss')}</div></>
+                            : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {coveragePanel === 'dedup' && (
+          <div className="flex flex-col gap-5">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-surface-elevated rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{allCommitsFlat.length.toLocaleString()}</div>
+                <div className="text-xs text-gray-400 mt-1">Unique commits</div>
+              </div>
+              <div className="bg-surface-elevated rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{engineers.length}</div>
+                <div className="text-xs text-gray-400 mt-1">Engineers</div>
+              </div>
+              <div className="bg-surface-elevated rounded-lg p-3 text-center">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {new Set(allCommitsFlat.map(c => (c as any).repoName)).size}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">Repos</div>
+              </div>
+            </div>
+            {engineers.sort((a, b) => b.commits.length - a.commits.length).map(e => (
+              <div key={e.uniqueName} className="rounded-lg border border-surface-border">
+                <div className="flex items-center gap-3 px-4 py-3 bg-surface-elevated rounded-t-lg">
+                  <div className="w-7 h-7 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">{e.displayName[0]}</div>
+                  <div>
+                    <div className="font-semibold text-sm text-gray-800 dark:text-gray-200">{e.displayName}</div>
+                    <div className="text-xs text-gray-400">{e.uniqueName}</div>
+                  </div>
+                  <div className="ml-auto flex items-center gap-4 text-xs text-gray-500">
+                    <span><span className="font-bold text-gray-800 dark:text-white">{e.commits.length}</span> commits</span>
+                    <span><span className="font-bold text-gray-800 dark:text-white">{e.allFiles}</span> files</span>
+                    <span><span className="font-bold text-violet-500">{e.wkCommits.length}</span> weekend</span>
+                  </div>
+                </div>
+                <ul className="divide-y divide-surface-border max-h-48 overflow-y-auto">
+                  {[...e.commits].sort((a, b) => b.author.date.localeCompare(a.author.date)).slice(0, 20).map(c => (
+                    <li key={c.commitId} className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-surface-elevated transition-colors">
+                      <span className={`flex-shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ${isWeekend(c.author.date) ? 'bg-violet-100 dark:bg-violet-900/40 text-violet-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                        {dayLabel(c.author.date)}
+                      </span>
+                      <span className="font-mono text-xs text-gray-400 flex-shrink-0">{c.commitId.slice(0, 7)}</span>
+                      <span className="truncate text-gray-700 dark:text-gray-300">{c.comment.split('\n')[0]}</span>
+                      <span className="ml-auto flex-shrink-0 text-right">
+                        <div className="text-[10px] text-gray-500">{format(new Date(c.author.date), 'MMM d, yyyy')}</div>
+                        <div className="text-[10px] font-mono text-gray-400">{format(new Date(c.author.date), 'HH:mm:ss')}</div>
+                      </span>
+                      <span className="flex-shrink-0 text-[10px] text-gray-400">{(c as any).repoName}</span>
+                    </li>
+                  ))}
+                </ul>
+                {e.commits.length > 20 && (
+                  <div className="px-4 py-2 text-xs text-gray-400 border-t border-surface-border">
+                    + {e.commits.length - 20} more commits not shown
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {coveragePanel === 'contributors' && (
+          <div className="flex flex-col gap-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Every unique git identity that committed to any branch in the last 90 days. Multiple rows for the same person means they use different git email configs.
+            </p>
+            <div className="overflow-x-auto rounded-lg border border-surface-border">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Email / Identity</th>
+                    <th className="px-4 py-3 text-right">Commits</th>
+                    <th className="px-4 py-3 text-right">PRs Opened</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Last Activity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...(data ?? [])].sort((a, b) => b.commits.length - a.commits.length).map(e => {
+                    const excl = isExcluded(e);
+                    return (
+                      <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                        <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{e.displayName}</td>
+                        <td className="px-4 py-2.5 text-xs text-gray-500 font-mono break-all">{e.uniqueName}</td>
+                        <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{e.commits.length}</td>
+                        <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-400">{e.prsOpened.length}</td>
+                        <td className="px-4 py-2.5">
+                          {excl
+                            ? <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">⛔ excluded</span>
+                            : <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">✓ engineer</span>
+                          }
+                        </td>
+                        <td className="px-4 py-2.5 text-xs text-gray-500">
+                          {e.lastActivity
+                            ? <><div>{format(new Date(e.lastActivity), 'MMM d, yyyy')}</div><div className="font-mono text-gray-400">{format(new Date(e.lastActivity), 'HH:mm:ss')}</div></>
+                            : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {coveragePanel === 'excluded' && (
+          <div className="flex flex-col gap-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              These identities were found in ADO but are hidden from all Engineers charts and tables. To un-exclude someone, remove them from <code className="bg-surface-elevated px-1 rounded">EXCLUDED_NAMES</code> or <code className="bg-surface-elevated px-1 rounded">EXCLUDED_EMAIL_FRAGMENTS</code> in EngineersModule.tsx.
+            </p>
+            <div className="overflow-x-auto rounded-lg border border-surface-border">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Email / Identity</th>
+                    <th className="px-4 py-3 text-right">Commits hidden</th>
+                    <th className="px-4 py-3">Exclusion reason</th>
+                    <th className="px-4 py-3">Last Activity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data ?? [])
+                    .filter(e => isExcluded(e) && e.commits.length > 0)
+                    .sort((a, b) => b.commits.length - a.commits.length)
+                    .map(e => (
+                    <tr key={e.uniqueName} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                      <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{e.displayName}</td>
+                      <td className="px-4 py-2.5 text-xs text-gray-500 font-mono">{e.uniqueName}</td>
+                      <td className="px-4 py-2.5 text-right font-bold text-red-500">{e.commits.length.toLocaleString()}</td>
+                      <td className="px-4 py-2.5">
+                        <span className="text-xs px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">{exclusionReason(e)}</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-gray-500">
+                        {e.lastActivity
+                          ? <><div>{format(new Date(e.lastActivity), 'MMM d, yyyy')}</div><div className="font-mono text-gray-400">{format(new Date(e.lastActivity), 'HH:mm:ss')}</div></>
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {coveragePanel === 'daterange' && (() => {
+          const weeks: { label: string; count: number; engineers: Set<string> }[] = [];
+          const from = new Date(ENG_FROM);
+          const to   = new Date(ENG_TO);
+          const cur  = new Date(from);
+          while (cur <= to) {
+            const wStart = new Date(cur);
+            const wEnd   = new Date(cur); wEnd.setDate(wEnd.getDate() + 6);
+            const label  = `${format(wStart, 'MMM d')} – ${format(wEnd > to ? to : wEnd, 'MMM d')}`;
+            const wkC    = allCommitsFlat.filter(c => {
+              const d = new Date(c.author.date);
+              return d >= wStart && d <= wEnd;
+            });
+            weeks.push({ label, count: wkC.length, engineers: new Set(wkC.map(c => c.author.email)) });
+            cur.setDate(cur.getDate() + 7);
+          }
+          const maxCount = Math.max(...weeks.map(w => w.count), 1);
+          return (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-surface-elevated rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{ENG_FROM}</div>
+                  <div className="text-xs text-gray-400 mt-1">From date</div>
+                </div>
+                <div className="bg-surface-elevated rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{ENG_TO}</div>
+                  <div className="text-xs text-gray-400 mt-1">To date</div>
+                </div>
+                <div className="bg-surface-elevated rounded-lg p-3 text-center">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">90</div>
+                  <div className="text-xs text-gray-400 mt-1">Days</div>
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-lg border border-surface-border">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Week</th>
+                      <th className="px-4 py-3 text-right">Commits</th>
+                      <th className="px-4 py-3 text-right">Active engineers</th>
+                      <th className="px-4 py-3">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weeks.map(w => (
+                      <tr key={w.label} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                        <td className="px-4 py-2.5 text-gray-700 dark:text-gray-300">{w.label}</td>
+                        <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{w.count}</td>
+                        <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-400">{w.engineers.size}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="h-2 rounded-full bg-surface-border overflow-hidden w-48">
+                            <div
+                              className="h-full rounded-full bg-blue-500"
+                              style={{ width: `${Math.round((w.count / maxCount) * 100)}%` }}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
+        {coveragePanel === 'branches' && (() => {
+          const repoMap: Record<string, { commits: number; engineers: Set<string> }> = {};
+          allCommitsFlat.forEach(c => {
+            const r = (c as any).repoName as string;
+            if (!repoMap[r]) repoMap[r] = { commits: 0, engineers: new Set() };
+            repoMap[r].commits++;
+            repoMap[r].engineers.add(c.author.email);
+          });
+          const rows = Object.entries(repoMap).sort((a, b) => b[1].commits - a[1].commits);
+          return (
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Every branch in every repo is queried via ADO <code className="bg-surface-elevated px-1 rounded">refs/heads/</code>. Commits are fetched per-branch with <code className="bg-surface-elevated px-1 rounded">$top=5000</code> + pagination, then deduplicated by <code className="bg-surface-elevated px-1 rounded">commitId</code> globally.
+              </p>
+              <div className="overflow-x-auto rounded-lg border border-surface-border">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-surface-elevated text-xs uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                    <tr>
+                      <th className="px-4 py-3">Repository</th>
+                      <th className="px-4 py-3 text-right">Commits</th>
+                      <th className="px-4 py-3 text-right">Engineers</th>
+                      <th className="px-4 py-3">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map(([repo, stats]) => (
+                      <tr key={repo} className="border-t border-surface-border hover:bg-surface-elevated transition-colors">
+                        <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-200">{repo}</td>
+                        <td className="px-4 py-2.5 text-right font-bold text-gray-900 dark:text-white">{stats.commits}</td>
+                        <td className="px-4 py-2.5 text-right text-gray-600 dark:text-gray-400">{stats.engineers.size}</td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 rounded-full bg-surface-border overflow-hidden w-32">
+                              <div
+                                className="h-full rounded-full bg-blue-500"
+                                style={{ width: `${Math.round((stats.commits / allCommitsFlat.length) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-400">{Math.round((stats.commits / allCommitsFlat.length) * 100)}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-gray-400">
+                All branches within each repository are automatically discovered and queried. Branch counts not shown here (query the debug endpoint for full branch breakdown).
+              </p>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );
