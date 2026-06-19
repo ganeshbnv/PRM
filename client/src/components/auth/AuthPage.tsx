@@ -166,7 +166,7 @@ function DomainInput({ value, onChange }: { value: string; onChange: (v: string)
         className="bg-transparent text-white text-sm outline-none placeholder-gray-500 shrink-0"
       />
 
-      <span className="text-gray-500 text-sm whitespace-nowrap">
+      <span className={`text-sm whitespace-nowrap transition-colors ${value ? 'text-white' : 'text-gray-500'}`}>
         @{DOMAIN}
       </span>
     </div>
