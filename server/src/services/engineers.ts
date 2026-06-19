@@ -2,6 +2,19 @@ import * as repos from './repos';
 import * as cache from './cache';
 import type { GitCommit, GitPullRequest } from '../models/ado';
 
+// Known git identity aliases → canonical { name, email }
+// Add rows here whenever the same person commits under multiple git identities.
+const IDENTITY_ALIASES: Record<string, { name: string; email: string }> = {
+  'moulichand16@gmail.com':             { name: 'Mouli Chand Birudugadda', email: 'moulichand@globalhealthx.co' },
+  'moulichand16':                       { name: 'Mouli Chand Birudugadda', email: 'moulichand@globalhealthx.co' },
+};
+
+function canonical(name: string, email: string): { name: string; email: string } {
+  return IDENTITY_ALIASES[email.toLowerCase()]
+      ?? IDENTITY_ALIASES[name.toLowerCase()]
+      ?? { name, email };
+}
+
 export interface EngineerActivity {
   displayName: string;
   uniqueName: string;
@@ -13,7 +26,7 @@ export interface EngineerActivity {
 }
 
 export async function getEngineerActivity(project: string, filters: { fromDate?: string; toDate?: string } = {}): Promise<EngineerActivity[]> {
-  const cacheKey = `engineers:activity:v2:${project}:${JSON.stringify(filters)}`;
+  const cacheKey = `engineers:activity:v3:${project}:${JSON.stringify(filters)}`;
   return cache.cached(cacheKey, async () => {
     const [allCommits, allPrs] = await Promise.all([
       repos.getAllCommits(project, filters.fromDate, filters.toDate),
@@ -34,13 +47,15 @@ export async function getEngineerActivity(project: string, filters: { fromDate?:
     }
 
     for (const commit of allCommits) {
-      const eng = ensureEngineer(commit.author.name, commit.author.email);
+      const id = canonical(commit.author.name, commit.author.email);
+      const eng = ensureEngineer(id.name, id.email);
       eng.commits.push(commit);
       if (!eng.lastActivity || commit.author.date > eng.lastActivity) eng.lastActivity = commit.author.date;
     }
 
     for (const pr of allPrs) {
-      const eng = ensureEngineer(pr.createdBy.displayName, pr.createdBy.uniqueName);
+      const id = canonical(pr.createdBy.displayName, pr.createdBy.uniqueName);
+      const eng = ensureEngineer(id.name, id.email);
       eng.prsOpened.push(pr);
       if (pr.status === 'completed') eng.prsMerged.push(pr);
       if (!eng.lastActivity || pr.creationDate > eng.lastActivity) eng.lastActivity = pr.creationDate;
