@@ -10,7 +10,6 @@ import { BoardsModule } from './components/boards/BoardsModule';
 import { BugsModule } from './components/bugs/BugsModule';
 import { EngineersModule } from './components/engineers/EngineersModule';
 import { ReposModule } from './components/repos/ReposModule';
-import { WikiModule } from './components/wiki/WikiModule';
 import { RisksModule } from './components/risks/RisksModule';
 import { AuthPage } from './components/auth/AuthPage';
 import { SettingsModal } from './components/settings/SettingsModal';
@@ -762,7 +761,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             {tab === 'bugs'      && <BugsModule />}
             {tab === 'engineers' && <EngineersModule />}
             {tab === 'repos'     && <ReposModule />}
-            {tab === 'wiki'      && <WikiModule />}
+            {tab === 'wiki'      && <iframe src="http://localhost:5173" className="w-full h-full border-0" title="Wiki" allow="clipboard-read; clipboard-write" />}
             {tab === 'risks'     && <RisksModule />}
           </main>
         )}
