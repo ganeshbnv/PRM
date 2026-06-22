@@ -1,8 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { body } from 'express-validator';
+import jwt from 'jsonwebtoken';
 import { validate } from '../middleware/validate';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import * as authService from '../services/auth.service';
+
+const PRM_JWT_SECRET = process.env.PRM_JWT_SECRET ?? 'prm-ghx-jwt-secret-2024-change-in-prod';
 
 export const authRouter = Router();
 
@@ -43,6 +46,21 @@ authRouter.post(
     }
   }
 );
+
+authRouter.post('/sso', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const prmToken = req.headers.authorization?.replace(/^Bearer\s+/i, '');
+    if (!prmToken) { res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'PRM token required' } }); return; }
+    try { jwt.verify(prmToken, PRM_JWT_SECRET); }
+    catch { res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Invalid PRM token' } }); return; }
+
+    const { email, name } = req.body as { email?: string; name?: string };
+    if (!email || !name) { res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'email and name required' } }); return; }
+
+    const result = await authService.ssoLogin(email, name);
+    res.json(result);
+  } catch (err) { next(err); }
+});
 
 authRouter.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
   try {

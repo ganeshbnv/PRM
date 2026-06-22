@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { prisma } from '../utils/prisma';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import { redis } from '../utils/redis';
@@ -61,6 +62,23 @@ export async function updateProfile(userId: string, data: { name?: string; avata
     select: { id: true, email: true, name: true, avatarUrl: true, createdAt: true },
   });
   return user;
+}
+
+export async function ssoLogin(email: string, name: string) {
+  let existing = await prisma.user.findUnique({ where: { email } });
+
+  if (!existing) {
+    const hashed = await bcrypt.hash(crypto.randomUUID(), 12);
+    existing = await prisma.user.create({
+      data: { email, name, password: hashed },
+    });
+  } else if (existing.name !== name) {
+    existing = await prisma.user.update({ where: { id: existing.id }, data: { name } });
+  }
+
+  const tokens = await issueTokens(existing.id);
+  const { password: _, ...safeUser } = existing;
+  return { user: safeUser, tokens };
 }
 
 async function issueTokens(userId: string) {
