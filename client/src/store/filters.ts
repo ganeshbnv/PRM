@@ -16,7 +16,9 @@ const defaultFilters: GlobalFilters = {
   workItemType: '',
   areaPath: '',
   iterationPath: '',
-  team: 'default',
+  team: '',
+  selectedTeams: [],
+  selectedSprints: [],
 };
 
 export const useFilterStore = create<FilterStore>((set) => ({

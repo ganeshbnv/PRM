@@ -132,4 +132,6 @@ export interface GlobalFilters {
   areaPath: string;
   iterationPath: string;
   team: string;
+  selectedTeams: string[];
+  selectedSprints: string[];
 }

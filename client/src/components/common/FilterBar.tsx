@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useFilterStore } from '../../store/filters';
 import { api } from '../../api/client';
+import { CheckDropdown } from './CheckDropdown';
 
 type Tab = 'boards' | 'bugs' | 'engineers' | 'repos' | 'wiki' | 'risks';
 interface Props { activeTab: Tab; }
@@ -111,6 +112,7 @@ export function FilterBar({ activeTab }: Props) {
     api.getTeams(filters.project)
       .then((list: { name: string }[]) => {
         setTeams(list.map((t) => t.name).sort());
+        setFilter('selectedTeams', []);
         setFilter('team', '');
         setFilter('iterationPath', '');
       })
@@ -122,10 +124,7 @@ export function FilterBar({ activeTab }: Props) {
     ...projects.map(p => ({ value: p, label: p })),
   ];
 
-  const teamOptions: DropdownOption[] = [
-    { value: '', label: 'All Teams' },
-    ...teams.map(t => ({ value: t, label: t })),
-  ];
+  const teamOptions = teams.map(t => ({ value: t, label: t }));
 
   const typeOptions: DropdownOption[] = [
     { value: '',            label: 'All Types'   },
@@ -153,11 +152,17 @@ export function FilterBar({ activeTab }: Props) {
 
       {/* Team */}
       {show.team && teams.length > 0 && (
-        <Dropdown
+        <CheckDropdown
           label="Team"
-          value={filters.team}
           options={teamOptions}
-          onChange={(v) => { setFilter('team', v); setFilter('iterationPath', ''); }}
+          selected={filters.selectedTeams}
+          onChange={(v) => {
+            setFilter('selectedTeams', v);
+            setFilter('team', v[0] ?? '');
+            setFilter('iterationPath', '');
+            setFilter('selectedSprints', []);
+          }}
+          allLabel="All Teams"
           minWidth="min-w-[160px]"
         />
       )}

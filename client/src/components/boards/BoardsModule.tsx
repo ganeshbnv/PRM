@@ -10,7 +10,8 @@ import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
 import type { WorkItem, SprintStats } from '../../types';
 import { format } from 'date-fns';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { CheckDropdown } from '../common/CheckDropdown';
 import { KanbanBoard } from './KanbanBoard';
 import { AiInsights, SprintIntelligenceDashboard } from './AiInsights';
 
@@ -64,28 +65,47 @@ export function BoardsModule() {
   const [modalTitle, setModalTitle] = useState('');
   const [activeTile, setActiveTile] = useState<string | null>(null);
 
-  const { data: sprints, loading: ls, error: es } = useApi(
-    () => api.getSprintStats(filters.project, filters.team),
-    [filters.project, filters.team],
+  // Sprint stats — fetch for each selected team and merge; fall back to single/no team
+  const teamKeys = filters.selectedTeams.length > 0 ? filters.selectedTeams : (filters.team ? [filters.team] : ['']);
+  const { data: sprintsByTeam, loading: ls, error: es } = useApi(
+    () => Promise.all(
+      teamKeys.map(t => api.getSprintStats(filters.project, t || undefined as unknown as string))
+    ).then(results => {
+      const seen = new Set<string>();
+      return results.flat().filter(s => { if (seen.has(s.iteration.id)) return false; seen.add(s.iteration.id); return true; });
+    }),
+    [filters.project, teamKeys.join(',')],
   );
+  const sprints = sprintsByTeam;
 
   useEffect(() => {
-    if (!sprints || filters.iterationPath) return;
+    if (!sprints || filters.selectedSprints.length > 0 || filters.iterationPath) return;
     const cur = sprints.find(s => s.iteration.attributes.timeFrame === 'current');
     if (cur) setFilter('iterationPath', cur.iteration.path);
   }, [sprints]);
 
-  const { data: items, loading: li, error: ei, refresh: ri } = useApi(
-    () => api.getWorkItems({
-      iterationPath: filters.iterationPath || undefined,
-      assignedTo:    filters.assignedTo    || undefined,
-      workItemType:  filters.workItemType   || undefined,
-      project:       filters.project,
-      team:          filters.team           || undefined,
-    }),
-    [filters.iterationPath, filters.assignedTo, filters.workItemType, filters.project, filters.team],
+  // Work items — when multiple sprints selected fetch each and merge, else use iterationPath
+  const effectiveSprints = filters.selectedSprints.length > 0 ? filters.selectedSprints : (filters.iterationPath ? [filters.iterationPath] : []);
+  const { data: rawItems, loading: li, error: ei, refresh: ri } = useApi(
+    () => {
+      const paths = effectiveSprints.length > 0 ? effectiveSprints : [undefined as unknown as string];
+      return Promise.all(paths.map(path =>
+        api.getWorkItems({
+          iterationPath: path || undefined,
+          assignedTo:    filters.assignedTo   || undefined,
+          workItemType:  filters.workItemType  || undefined,
+          project:       filters.project,
+          team:          filters.team          || undefined,
+        })
+      )).then(results => {
+        const seen = new Set<number>();
+        return results.flat().filter(i => { if (seen.has(i.id)) return false; seen.add(i.id); return true; });
+      });
+    },
+    [effectiveSprints.join(','), filters.assignedTo, filters.workItemType, filters.project, filters.team],
     { skip: !sprints },
   );
+  const items = rawItems;
 
   if (li && !items) return <LoadingCard label="Loading sprint data…" />;
   if (ei) return <ErrorCard error={`Work items: ${ei}`} />;
@@ -153,11 +173,15 @@ export function BoardsModule() {
     ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'future'),
   ];
 
-  const currentIdx     = orderedSprints.findIndex(s => s.iteration.path === filters.iterationPath);
-  const canPrev        = currentIdx > 0;
-  const canNext        = currentIdx >= 0 && currentIdx < orderedSprints.length - 1;
-  const selectedSprint = filters.iterationPath
-    ? (sprints ?? []).find(s => s.iteration.path === filters.iterationPath)
+  const sprintOptions = useMemo(() => orderedSprints.map(s => ({ value: s.iteration.path, label: s.iteration.name })), [orderedSprints]);
+
+  // For the prev/next nav and sprint header, use the first selected sprint (or current)
+  const primaryPath = filters.selectedSprints.length > 0 ? filters.selectedSprints[0] : filters.iterationPath;
+  const currentIdx  = orderedSprints.findIndex(s => s.iteration.path === primaryPath);
+  const canPrev     = currentIdx > 0;
+  const canNext     = currentIdx >= 0 && currentIdx < orderedSprints.length - 1;
+  const selectedSprint = primaryPath
+    ? (sprints ?? []).find(s => s.iteration.path === primaryPath)
     : (sprints ?? []).find(s => s.iteration.attributes.timeFrame === 'current');
 
   let timeElapsedPct = 0, completionPct = 0;
@@ -218,10 +242,10 @@ export function BoardsModule() {
         <div className="flex items-center gap-3 px-6 pt-5 pb-4">
           {/* Prev / Next sprint */}
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <button onClick={() => canPrev && setFilter('iterationPath', orderedSprints[currentIdx - 1].iteration.path)}
+            <button onClick={() => { if (canPrev) { const p = orderedSprints[currentIdx - 1].iteration.path; setFilter('iterationPath', p); setFilter('selectedSprints', [p]); setActiveTile(null); }}}
               disabled={!canPrev || ls}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
-            <button onClick={() => canNext && setFilter('iterationPath', orderedSprints[currentIdx + 1].iteration.path)}
+            <button onClick={() => { if (canNext) { const p = orderedSprints[currentIdx + 1].iteration.path; setFilter('iterationPath', p); setFilter('selectedSprints', [p]); setActiveTile(null); }}}
               disabled={!canNext || ls}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
           </div>
@@ -256,14 +280,19 @@ export function BoardsModule() {
           </div>
 
           {/* Sprint picker */}
-          <select value={filters.iterationPath}
-            onChange={e => { setFilter('iterationPath', e.target.value); setActiveTile(null); }}
-            className="text-xs text-gray-400 bg-surface-elevated border border-surface-border rounded-lg px-2.5 py-1.5 max-w-[180px] truncate flex-shrink-0">
-            <option value="">All Sprints</option>
-            {orderedSprints.map(s => (
-              <option key={s.iteration.id} value={s.iteration.path}>{s.iteration.name}</option>
-            ))}
-          </select>
+          <CheckDropdown
+            label=""
+            options={sprintOptions}
+            selected={filters.selectedSprints}
+            onChange={v => {
+              setFilter('selectedSprints', v);
+              setFilter('iterationPath', v[0] ?? '');
+              setActiveTile(null);
+            }}
+            allLabel="All Sprints"
+            minWidth="min-w-[160px]"
+            disabled={ls}
+          />
 
           <button onClick={ri} className="text-gray-600 hover:text-gray-300 text-sm transition-colors flex-shrink-0" title="Refresh">↺</button>
 
