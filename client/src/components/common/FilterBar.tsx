@@ -111,7 +111,7 @@ export function FilterBar({ activeTab }: Props) {
     api.getTeams(filters.project)
       .then((list: { name: string }[]) => {
         setTeams(list.map((t) => t.name).sort());
-        setFilter('team', list[0]?.name ?? '');
+        setFilter('team', '');
         setFilter('iterationPath', '');
       })
       .catch(() => {});
@@ -122,7 +122,10 @@ export function FilterBar({ activeTab }: Props) {
     ...projects.map(p => ({ value: p, label: p })),
   ];
 
-  const teamOptions: DropdownOption[] = teams.map(t => ({ value: t, label: t }));
+  const teamOptions: DropdownOption[] = [
+    { value: '', label: 'All Teams' },
+    ...teams.map(t => ({ value: t, label: t })),
+  ];
 
   const typeOptions: DropdownOption[] = [
     { value: '',            label: 'All Types'   },
