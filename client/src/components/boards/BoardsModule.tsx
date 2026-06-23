@@ -107,6 +107,15 @@ export function BoardsModule() {
   );
   const items = rawItems;
 
+  // ── Sprint context (must be before any early returns — hooks rules) ──────────
+  const orderedSprints = useMemo(() => [
+    ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'past'),
+    ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'current'),
+    ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'future'),
+  ], [sprints]);
+
+  const sprintOptions = useMemo(() => orderedSprints.map(s => ({ value: s.iteration.path, label: s.iteration.name })), [orderedSprints]);
+
   if (li && !items) return <LoadingCard label="Loading sprint data…" />;
   if (ei) return <ErrorCard error={`Work items: ${ei}`} />;
 
@@ -165,15 +174,6 @@ export function BoardsModule() {
   }
   const memberLoad = Object.values(memberMap).sort((a, b) => b.total - a.total);
   const maxLoad    = memberLoad[0]?.total ?? 1;
-
-  // ── Sprint context ───────────────────────────────────────────────────────────
-  const orderedSprints = [
-    ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'past'),
-    ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'current'),
-    ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'future'),
-  ];
-
-  const sprintOptions = useMemo(() => orderedSprints.map(s => ({ value: s.iteration.path, label: s.iteration.name })), [orderedSprints]);
 
   // For the prev/next nav and sprint header, use the first selected sprint (or current)
   const primaryPath = filters.selectedSprints.length > 0 ? filters.selectedSprints[0] : filters.iterationPath;
