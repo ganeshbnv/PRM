@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check, SlidersHorizontal, X } from 'lucide-react';
 import { useFilterStore } from '../../store/filters';
 import { api } from '../../api/client';
@@ -7,7 +8,7 @@ import type { CheckOption } from '../common/CheckDropdown';
 
 const LABEL = 'block text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1.5';
 
-// ── Single-select dropdown ────────────────────────────────────────────────────
+// ── Single-select dropdown (portal-based to escape overflow clipping) ─────────
 
 interface DropdownOption { value: string; label: string; }
 interface DropdownProps {
@@ -17,20 +18,44 @@ interface DropdownProps {
 
 function Dropdown({ label, value, options, onChange, placeholder = 'Select…', minWidth = 'min-w-[160px]' }: DropdownProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
   const selected = options.find(o => o.value === value);
+
+  const openMenu = () => {
+    if (!btnRef.current) return;
+    const r = btnRef.current.getBoundingClientRect();
+    setPos({ left: r.left, top: r.bottom + 4, width: Math.max(r.width, 180) });
+    setOpen(true);
+  };
 
   useEffect(() => {
     if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const h = (e: MouseEvent) => {
+      if (btnRef.current?.contains(e.target as Node) || menuRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const reposition = () => {
+      if (!btnRef.current) return;
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ left: r.left, top: r.bottom + 4, width: Math.max(r.width, 180) });
+    };
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => { window.removeEventListener('scroll', reposition, true); window.removeEventListener('resize', reposition); };
+  }, [open]);
+
   return (
-    <div ref={ref} className="relative flex-shrink-0">
+    <div className="flex-shrink-0">
       <p className={LABEL}>{label}</p>
-      <button type="button" onClick={() => setOpen(p => !p)}
+      <button ref={btnRef} type="button" onClick={() => open ? setOpen(false) : openMenu()}
         className={`${minWidth} flex items-center justify-between gap-3 bg-white dark:bg-surface-elevated border rounded-lg px-3 py-2 text-sm font-medium transition-all
           ${open
             ? 'border-brand-500 ring-2 ring-brand-500/20 text-gray-900 dark:text-white'
@@ -39,8 +64,11 @@ function Dropdown({ label, value, options, onChange, placeholder = 'Select…', 
         <span className="truncate">{selected?.label ?? <span className="text-gray-400 font-normal">{placeholder}</span>}</span>
         <ChevronDown size={14} className={`flex-shrink-0 text-gray-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
-        <div className="absolute top-[calc(100%+4px)] left-0 z-50 min-w-full bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-xl shadow-lg dark:shadow-black/40 py-1 animate-pop-up">
+
+      {open && pos && createPortal(
+        <div ref={menuRef}
+          style={{ position: 'fixed', left: pos.left, top: pos.top, minWidth: pos.width, zIndex: 9999 }}
+          className="bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-xl shadow-lg dark:shadow-black/40 py-1">
           {options.map(opt => (
             <button key={opt.value} type="button" onClick={() => { onChange(opt.value); setOpen(false); }}
               className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors
@@ -52,7 +80,8 @@ function Dropdown({ label, value, options, onChange, placeholder = 'Select…', 
               {opt.value === value && <Check size={13} className="flex-shrink-0 text-brand-500" />}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -173,15 +202,15 @@ export function BoardsFilterBar({ sprintOptions, sprintsLoading }: Props) {
           minWidth="min-w-[120px]"
         />
 
-        {/* Person */}
+        {/* Team Member */}
         <div className="flex-shrink-0">
-          <p className={LABEL}>Person</p>
+          <p className={LABEL}>Team Member</p>
           <input
             type="text"
-            placeholder="Assigned to…"
+            placeholder="Search by name…"
             value={filters.assignedTo}
             onChange={e => setFilter('assignedTo', e.target.value)}
-            className="w-36 bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400
+            className="w-56 bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-lg px-3 py-2 text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400
               focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all hover:border-gray-300 dark:hover:border-gray-500"
           />
         </div>
