@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 
-export interface CheckOption { value: string; label: string; }
+export interface CheckOption { value: string; label: string; group?: string; }
 
 interface Props {
   label: string;
@@ -48,7 +48,6 @@ export function CheckDropdown({
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  // Reposition on scroll / resize
   useEffect(() => {
     if (!open) return;
     const reposition = () => {
@@ -67,6 +66,24 @@ export function CheckDropdown({
     : `${selected.length} selected`;
 
   const isAll = selected.length === 0;
+
+  // Build grouped sections
+  const grouped: { group: string | null; items: CheckOption[] }[] = [];
+  const ungrouped: CheckOption[] = [];
+  const groupOrder: string[] = [];
+  for (const opt of options) {
+    if (opt.group) {
+      if (!groupOrder.includes(opt.group)) groupOrder.push(opt.group);
+    } else {
+      ungrouped.push(opt);
+    }
+  }
+  for (const g of groupOrder) {
+    grouped.push({ group: g, items: options.filter(o => o.group === g) });
+  }
+  if (ungrouped.length > 0) grouped.push({ group: null, items: ungrouped });
+
+  const hasGroups = groupOrder.length > 0;
 
   return (
     <div>
@@ -111,8 +128,37 @@ export function CheckDropdown({
 
           <div className="h-px bg-gray-100 dark:bg-white/5 mx-2 my-1" />
 
-          <div className="max-h-60 overflow-y-auto">
-            {options.map(opt => {
+          <div className="max-h-72 overflow-y-auto">
+            {hasGroups ? grouped.map(({ group, items }, gi) => (
+              <div key={group ?? '__ungrouped__'}>
+                {gi > 0 && <div className="h-px bg-gray-100 dark:bg-white/5 mx-2 my-1" />}
+                {group && (
+                  <p className="px-3 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                    {group}
+                  </p>
+                )}
+                {items.map(opt => {
+                  const checked = selected.includes(opt.value);
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => toggle(opt.value)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors
+                        ${checked
+                          ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-surface-card'}`}
+                    >
+                      <span className={`w-4 h-4 rounded flex-shrink-0 border-2 flex items-center justify-center transition-colors
+                        ${checked ? 'bg-brand-500 border-brand-500' : 'border-gray-300 dark:border-gray-600'}`}>
+                        {checked && <Check size={9} className="text-white" strokeWidth={3} />}
+                      </span>
+                      <span className="truncate">{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )) : options.map(opt => {
               const checked = selected.includes(opt.value);
               return (
                 <button

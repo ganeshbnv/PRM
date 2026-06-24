@@ -114,7 +114,11 @@ export function BoardsModule() {
     ...(sprints ?? []).filter(s => s.iteration.attributes.timeFrame === 'future'),
   ], [sprints]);
 
-  const sprintOptions = useMemo(() => orderedSprints.map(s => ({ value: s.iteration.path, label: s.iteration.name })), [orderedSprints]);
+  const sprintOptions = useMemo(() => [
+    ...orderedSprints.filter(s => s.iteration.attributes.timeFrame === 'current').map(s => ({ value: s.iteration.path, label: s.iteration.name, group: 'Active' })),
+    ...orderedSprints.filter(s => s.iteration.attributes.timeFrame === 'future').map(s => ({ value: s.iteration.path, label: s.iteration.name, group: 'Upcoming' })),
+    ...orderedSprints.filter(s => s.iteration.attributes.timeFrame === 'past').map(s => ({ value: s.iteration.path, label: s.iteration.name, group: 'Past' })),
+  ], [orderedSprints]);
 
   if (li && !items) return <LoadingCard label="Loading sprint data…" />;
   if (ei) return <ErrorCard error={`Work items: ${ei}`} />;
