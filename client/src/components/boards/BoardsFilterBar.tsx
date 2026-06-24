@@ -113,7 +113,7 @@ export function BoardsFilterBar({ sprintOptions, sprintsLoading }: Props) {
 
   return (
     <div className="flex-shrink-0 bg-surface-card border-b border-surface-border">
-      <div className="flex items-end gap-3 px-4 sm:px-5 py-3 overflow-x-auto scrollbar-none">
+      <div className="flex items-end gap-5 px-5 sm:px-6 py-4 overflow-x-auto scrollbar-none">
 
         {/* Icon */}
         <div className="flex-shrink-0 self-end mb-2.5 text-gray-400">
