@@ -580,7 +580,7 @@ function Dashboard({ user }: { user: AuthUser }) {
         {/* ── Nav ── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2">
           {!collapsed && (
-            <p className="px-2 mb-2 text-label font-semibold uppercase tracking-[0.12em] text-gray-700 select-none">
+            <p className="px-2 mb-2 text-label font-semibold uppercase tracking-[0.12em] text-gray-400 dark:text-gray-500 select-none">
               Modules
             </p>
           )}
@@ -611,7 +611,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                     'w-[28px] h-[28px] flex items-center justify-center rounded-[7px] flex-shrink-0 transition-all duration-150',
                     isActive
                       ? cn(item.iconBg, item.color)
-                      : 'text-gray-600 group-hover:text-gray-400',
+                      : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300',
                   )}>
                     <ItemIcon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
                   </div>
@@ -620,7 +620,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                     <>
                       <span className={cn(
                         'flex-1 text-left text-sm font-medium leading-none tracking-[-0.01em]',
-                        isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 group-hover:text-gray-800',
+                        isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-gray-200',
                       )}>
                         {item.label}
                       </span>
@@ -659,7 +659,7 @@ function Dashboard({ user }: { user: AuthUser }) {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Top bar */}
-        <header className="flex-shrink-0 flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 border-b border-gray-200 bg-white">
+        <header className="flex-shrink-0 flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 border-b border-gray-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none z-10">
           {/* Hamburger — mobile only */}
           <button
             onClick={() => setMobileNavOpen(true)}

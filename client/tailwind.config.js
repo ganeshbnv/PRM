@@ -15,11 +15,11 @@ export default {
           900: '#1a2d8a',
         },
         surface: {
-          DEFAULT: '#f1f5f9',
+          DEFAULT: '#f0f2f8',
           card:    '#ffffff',
-          elevated:'#e8edf5',
-          border:  '#cbd5e1',
-          raised:  '#dde3ee',
+          elevated:'#e8edf8',
+          border:  '#d4dce8',
+          raised:  '#dce4f2',
         },
       },
       fontSize: {
