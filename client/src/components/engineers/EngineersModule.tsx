@@ -232,16 +232,16 @@ export function EngineersModule() {
 
   const summaryTiles = weekendOnly
     ? [
-        { label: activePeriod ? activePeriod.label : 'Weekend Warriors', value: weekendWarriors.length,  color: 'text-violet-500' },
-        { label: 'Weekend Commits',  value: totalWkCommits,                                               color: 'text-blue-500'   },
-        { label: 'Files Changed',    value: totalWkFiles,                                                 color: 'text-emerald-500' },
-        { label: 'Sat / Sun',        value: `${totalSat} / ${totalSun}`,                                 color: 'text-orange-400' },
+        { label: activePeriod ? activePeriod.label : 'Weekend Warriors', value: weekendWarriors.length,  color: 'text-violet-500',  stripe: 'bg-violet-500'  },
+        { label: 'Weekend Commits',  value: totalWkCommits,                                               color: 'text-blue-500',    stripe: 'bg-blue-500'    },
+        { label: 'Files Changed',    value: totalWkFiles,                                                 color: 'text-emerald-500', stripe: 'bg-emerald-500' },
+        { label: 'Sat / Sun',        value: `${totalSat} / ${totalSun}`,                                 color: 'text-orange-400',  stripe: 'bg-orange-400'  },
       ]
     : [
-        { label: 'Total Engineers',  value: engineers.length },
-        { label: 'Total Commits',    value: allCommitsFlat.length },
-        { label: 'PRs Opened',       value: engineers.reduce((s, e) => s + e.prsOpened.length, 0) },
-        { label: 'Inactive (10d+)',  value: stale.length, color: stale.length ? 'text-orange-400' : 'text-emerald-400' },
+        { label: 'Total Engineers',  value: engineers.length,                                              color: 'text-sky-400',     stripe: 'bg-sky-400'     },
+        { label: 'Total Commits',    value: allCommitsFlat.length,                                         color: 'text-violet-400',  stripe: 'bg-violet-400'  },
+        { label: 'PRs Opened',       value: engineers.reduce((s, e) => s + e.prsOpened.length, 0),        color: 'text-emerald-400', stripe: 'bg-emerald-400' },
+        { label: 'Inactive (10d+)',  value: stale.length, color: stale.length ? 'text-orange-400' : 'text-emerald-400', stripe: stale.length ? 'bg-orange-400' : 'bg-emerald-400' },
       ];
 
   return (
@@ -390,8 +390,9 @@ export function EngineersModule() {
       {/* ── Summary tiles ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryTiles.map(s => (
-          <div key={s.label} className="card">
-            <span className="text-xs text-gray-400 uppercase tracking-wider">{s.label}</span>
+          <div key={s.label} className="card relative overflow-hidden">
+            {s.stripe && <div className={`absolute top-0 left-0 right-0 h-[3px] ${s.stripe}`} />}
+            <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-1 block">{s.label}</span>
             <span className={`text-3xl font-bold ${s.color ?? 'text-gray-900 dark:text-white'}`}>{s.value}</span>
           </div>
         ))}
@@ -412,11 +413,11 @@ export function EngineersModule() {
           </div>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={dowCounts} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" vertical={false} />
-              <XAxis dataKey="day" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: 'var(--tile-muted)', fontSize: 12 }} />
+              <YAxis tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} allowDecimals={false} />
               <Tooltip
-                contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }}
+                contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }}
                 formatter={(v: number, _n, p) => [`${v} commits`, p.payload.day]}
               />
               <Bar dataKey="Commits" radius={[4, 4, 0, 0]}>
@@ -485,7 +486,7 @@ export function EngineersModule() {
                 if (eng) setSelected(eng);
               }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
               <XAxis
                 dataKey="name"
                 tick={(props: any) => {
@@ -511,12 +512,12 @@ export function EngineersModule() {
                   );
                 }}
               />
-              <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+              <YAxis tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
               <Tooltip
-                contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }}
+                contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }}
                 cursor={{ fill: 'rgba(139,92,246,0.08)' }}
               />
-              <Legend wrapperStyle={{ fontSize: 11, color: '#9ca3af' }} />
+              <Legend wrapperStyle={{ fontSize: 11, color: 'var(--tile-muted)' }} />
               <Bar dataKey="Commits" fill={weekendOnly ? '#8b5cf6' : '#3b82f6'} radius={[4, 4, 0, 0]} cursor="pointer" />
               <Bar dataKey="Files Changed" fill="#10b981" radius={[4, 4, 0, 0]} cursor="pointer" />
               {!weekendOnly && <Bar dataKey="Weekend" fill="#8b5cf6" radius={[4, 4, 0, 0]} cursor="pointer" />}

@@ -69,13 +69,21 @@ export function RisksModule() {
             medium: 'text-yellow-400',
             low: 'text-blue-400',
           };
+          const stripeMap: Record<RiskSeverity, string> = {
+            critical: 'bg-red-400',
+            high: 'bg-orange-400',
+            medium: 'bg-yellow-400',
+            low: 'bg-blue-400',
+          };
           return (
             <div
               key={s}
-              className="card cursor-pointer hover:bg-surface-elevated transition-colors"
+              className={`card cursor-pointer hover:bg-surface-elevated transition-colors relative overflow-hidden ${filter === s ? 'ring-2 ring-offset-1 ring-offset-surface-card' : ''}`}
+              style={filter === s ? { ringColor: undefined } : undefined}
               onClick={() => setFilter(filter === s ? 'all' : s)}
             >
-              <span className="text-xs text-gray-400 uppercase">{s}</span>
+              <div className={`absolute top-0 left-0 right-0 h-[3px] ${stripeMap[s]}`} />
+              <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-1 block">{s}</span>
               <span className={`text-2xl font-bold ${colorMap[s]}`}>{count}</span>
             </div>
           );

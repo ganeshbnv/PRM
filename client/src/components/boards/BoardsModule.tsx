@@ -337,8 +337,8 @@ export function BoardsModule() {
                   <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-surface-border pt-4">
                     <div>
                       <div className="flex justify-between gap-4 text-label mb-1.5">
-                        <span className="text-gray-600">Sprint time</span>
-                        <span className="text-gray-400 font-semibold">{timeElapsedPct}% elapsed{daysLeft !== null && ` · ${daysLeft}d left`}</span>
+                        <span className="text-brand-500 dark:text-brand-400 font-semibold">Sprint time</span>
+                        <span className="text-brand-500 dark:text-brand-400 font-semibold">{timeElapsedPct}% elapsed{daysLeft !== null && ` · ${daysLeft}d left`}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-surface overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${timeElapsedPct}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
@@ -346,8 +346,8 @@ export function BoardsModule() {
                     </div>
                     <div>
                       <div className="flex justify-between gap-4 text-label mb-1.5">
-                        <span className="text-gray-600">Completion</span>
-                        <span className="text-gray-400 font-semibold">{completionPct}% · {selectedSprint.completed}/{selectedSprint.total} items</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Completion</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{completionPct}% · {selectedSprint.completed}/{selectedSprint.total} items</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-surface overflow-hidden">
                         <div className="h-full rounded-full" style={{ width: `${completionPct}%`, background: 'linear-gradient(90deg,#10b981,#34d399)' }} />
@@ -370,24 +370,24 @@ export function BoardsModule() {
               }}
               className="relative rounded-xl overflow-hidden flex flex-col items-center justify-center py-4 px-2 gap-1 transition-all group cursor-pointer flex-shrink-0 min-w-[110px] flex-1"
               style={{
-                border:     `2px solid ${sel ? tile.color : 'var(--tile-border)'}`,
+                border:     sel ? `2px solid ${tile.color}` : `1px solid ${tile.color}40`,
                 background: sel ? `${tile.color}12` : 'var(--tile-bg)',
                 boxShadow:  sel ? `0 0 16px ${tile.color}28, 0 2px 8px rgba(0,0,0,0.08)` : '0 1px 3px rgba(0,0,0,0.06)',
                 transform:  sel ? 'translateY(-2px)' : undefined,
               }}>
               <div className="absolute top-0 left-0 right-0 h-[3px]"
-                style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.25 }} />
+                style={{ background: `linear-gradient(90deg,${tile.color},${tile.color}66)`, opacity: sel ? 1 : 0.4 }} />
               {/* hover hint */}
               <div className="absolute inset-0 flex items-end justify-center pb-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full"
                   style={{ background: `${tile.color}22`, color: tile.color }}>view tickets</span>
               </div>
               <span className="text-xs uppercase tracking-wide font-semibold mt-1.5"
-                style={{ color: sel ? tile.color : '#64748b' }}>{tile.label}</span>
+                style={{ color: sel ? tile.color : `${tile.color}90` }}>{tile.label}</span>
               <span className="text-2xl font-bold leading-none tabular-nums"
-                style={{ color: sel ? tile.color : '#1e293b' }}>{tile.count}</span>
+                style={{ color: sel ? tile.color : 'var(--tile-text)' }}>{tile.count}</span>
               {pct !== null && (
-                <span className="text-xs font-medium" style={{ color: sel ? tile.color : '#94a3b8' }}>{pct}%</span>
+                <span className="text-xs font-medium" style={{ color: sel ? tile.color : `${tile.color}70` }}>{pct}%</span>
               )}
             </button>
           );
@@ -641,7 +641,7 @@ function PipelineFlowBar({ groups, total, onSegmentClick }: {
 
 function Tag({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`text-label font-bold uppercase tracking-widest text-gray-500 ${className ?? ''}`}>
+    <p className={`text-label font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 ${className ?? ''}`}>
       {children}
     </p>
   );
@@ -654,7 +654,7 @@ function DataBar({ label, value, max, color, onClick }: {
   const pct = max > 0 ? Math.max(Math.round((value / max) * 100), 2) : 2;
   return (
     <button onClick={onClick} className="group flex items-center gap-3 w-full text-left">
-      <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors w-28 truncate flex-shrink-0">{label}</span>
+      <span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors w-28 truncate flex-shrink-0">{label}</span>
       <div className="flex-1 bg-surface rounded-full h-2">
         <div className="h-2 rounded-full transition-all group-hover:brightness-125" style={{ width: `${pct}%`, background: color }} />
       </div>

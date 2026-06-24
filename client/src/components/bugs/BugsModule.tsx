@@ -177,16 +177,16 @@ export function BugsModule() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Open Bugs" value={open.length} color="text-red-400" onClick={() => openModal('Open Bugs', open)} />
-        <StatCard label="Closed Bugs" value={closed.length} color="text-emerald-400" onClick={() => openModal('Closed Bugs', closed)} />
-        <StatCard label="Unassigned" value={unassigned.length} color="text-orange-400" onClick={() => openModal('Unassigned Open Bugs', unassigned)} />
-        <StatCard label="Crit/High Open" value={critHighOpen.length} color="text-red-300" onClick={() => openModal('Critical & High Priority Bugs', critHighOpen)} />
+        <StatCard label="Open Bugs"     value={open.length}       color="text-red-400"     stripe="bg-red-400"     onClick={() => openModal('Open Bugs', open)} />
+        <StatCard label="Closed Bugs"   value={closed.length}     color="text-emerald-400" stripe="bg-emerald-400" onClick={() => openModal('Closed Bugs', closed)} />
+        <StatCard label="Unassigned"    value={unassigned.length} color="text-orange-400"  stripe="bg-orange-400"  onClick={() => openModal('Unassigned Open Bugs', unassigned)} />
+        <StatCard label="Crit/High Open" value={critHighOpen.length} color="text-red-400"  stripe="bg-red-400"     onClick={() => openModal('Critical & High Priority Bugs', critHighOpen)} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Priority pie */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Open Bugs by Priority</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2"><span className="w-1 h-4 rounded-full bg-red-400 inline-block flex-shrink-0" />Open Bugs by Priority</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={priData} dataKey="value" cx="50%" cy="50%" outerRadius={85}
@@ -200,14 +200,14 @@ export function BugsModule() {
                   return <Cell key={entry.name} fill={PRIORITY_COLORS[num] ?? '#6b7280'} />;
                 })}
               </Pie>
-              <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+              <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Severity pie */}
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Open Bugs by Severity</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2"><span className="w-1 h-4 rounded-full bg-red-400 inline-block flex-shrink-0" />Open Bugs by Severity</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={sevData} dataKey="value" cx="50%" cy="50%" outerRadius={85}
@@ -220,7 +220,7 @@ export function BugsModule() {
                   <Cell key={entry.name} fill={SEV_COLORS[entry.name] ?? `hsl(${i * 60}, 60%, 55%)`} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+              <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -229,13 +229,13 @@ export function BugsModule() {
       {/* Assignee bar */}
       {assigneeData.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Open Bugs by Assignee (top 10)</h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2"><span className="w-1 h-4 rounded-full bg-red-400 inline-block flex-shrink-0" />Open Bugs by Assignee (top 10)</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={assigneeData} layout="vertical" margin={{ left: 70, right: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" horizontal={false} />
-              <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} width={100} />
-              <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" horizontal={false} />
+              <XAxis type="number" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} width={100} />
+              <Tooltip contentStyle={{ background: 'var(--tooltip-bg)', border: '1px solid var(--tooltip-border)', borderRadius: 8, color: 'var(--tooltip-text)' }} />
               <Bar dataKey="Bugs" fill="#ef4444" radius={[0, 4, 4, 0]}
                 onClick={(d) => openModal(`Bugs assigned to ${d.name}`, open.filter((b) => (b.fields['System.AssignedTo']?.displayName ?? 'Unassigned') === d.name))}
                 style={{ cursor: 'pointer' }}
@@ -250,9 +250,9 @@ export function BugsModule() {
         <h3 className="text-sm font-semibold text-gray-300 mb-3">Bug Aging (Open Bugs)</h3>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={agingData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d3148" />
-            <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} />
-            <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="name" tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
+            <YAxis tick={{ fill: 'var(--tile-muted)', fontSize: 11 }} />
             <Tooltip contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 8 }} />
             <Bar dataKey="Bugs" fill="#f97316" radius={[4, 4, 0, 0]}
               onClick={(d) => {
