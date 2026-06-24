@@ -529,7 +529,7 @@ function Dashboard({ user }: { user: AuthUser }) {
   const hasProject = !!filters.project;
   const activeItem = NAV_ITEMS.find(n => n.id === tab)!;
   const Icon = activeItem.icon;
-  const nopad = tab === 'wiki';
+  const nopad = tab === 'wiki' || tab === 'boards';
 
   return (
     <div className="h-screen flex overflow-hidden bg-surface">
@@ -742,11 +742,15 @@ function Dashboard({ user }: { user: AuthUser }) {
 
         {showTechStack && <TechStackModal onClose={() => setShowTechStack(false)} />}
 
-        {/* Filter bar — hidden on Wiki (has its own navigation) */}
-        {tab !== 'wiki' && <FilterBar activeTab={tab} />}
+        {/* Filter bar — hidden on Wiki and Boards (boards has its own unified filter bar) */}
+        {tab !== 'wiki' && tab !== 'boards' && <FilterBar activeTab={tab} />}
 
         {/* Content */}
-        {!hasProject ? (
+        {tab === 'boards' ? (
+          <main className="flex-1 overflow-hidden">
+            <BoardsModule />
+          </main>
+        ) : !hasProject ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center max-w-sm">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-600/30 to-violet-600/30 border border-brand-500/20 flex items-center justify-center mx-auto mb-5">
@@ -758,7 +762,6 @@ function Dashboard({ user }: { user: AuthUser }) {
           </div>
         ) : (
           <main className={cn('flex-1 overflow-hidden', !nopad && 'overflow-y-auto p-3 sm:p-6')}>
-            {tab === 'boards'    && <BoardsModule />}
             {tab === 'bugs'      && <BugsModule />}
             {tab === 'engineers' && <EngineersModule />}
             {tab === 'repos'     && <ReposModule />}

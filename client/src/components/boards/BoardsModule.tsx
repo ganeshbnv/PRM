@@ -11,7 +11,7 @@ import { SortableTable } from '../common/SortableTable';
 import type { WorkItem, SprintStats } from '../../types';
 import { format } from 'date-fns';
 import { useState, useEffect, useMemo } from 'react';
-import { CheckDropdown } from '../common/CheckDropdown';
+import { BoardsFilterBar } from './BoardsFilterBar';
 import { KanbanBoard } from './KanbanBoard';
 import { AiInsights, SprintIntelligenceDashboard } from './AiInsights';
 
@@ -120,8 +120,8 @@ export function BoardsModule() {
     ...orderedSprints.filter(s => s.iteration.attributes.timeFrame === 'past').map(s => ({ value: s.iteration.path, label: s.iteration.name, group: 'Past' })),
   ], [orderedSprints]);
 
-  if (li && !items) return <LoadingCard label="Loading sprint data…" />;
-  if (ei) return <ErrorCard error={`Work items: ${ei}`} />;
+  const isLoadingItems = li && !items;
+  const itemsError = ei;
 
   const all   = items ?? [];
   const total = all.length;
@@ -238,112 +238,124 @@ export function BoardsModule() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col h-full overflow-hidden">
 
-      {/* ── Sprint Command Bar ──────────────────────────────────────────────── */}
-      <div className="bg-module-gradient rounded-2xl border border-surface-border overflow-hidden">
+      {/* ── Unified filter bar ──────────────────────────────────────────────── */}
+      <BoardsFilterBar sprintOptions={sprintOptions} sprintsLoading={ls} />
 
-        <div className="flex items-center gap-3 px-6 pt-5 pb-4">
-          {/* Prev / Next sprint */}
-          <div className="flex items-center gap-0.5 flex-shrink-0">
-            <button onClick={() => { if (canPrev) { const p = orderedSprints[currentIdx - 1].iteration.path; setFilter('iterationPath', p); setFilter('selectedSprints', [p]); setActiveTile(null); }}}
-              disabled={!canPrev || ls}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
-            <button onClick={() => { if (canNext) { const p = orderedSprints[currentIdx + 1].iteration.path; setFilter('iterationPath', p); setFilter('selectedSprints', [p]); setActiveTile(null); }}}
-              disabled={!canNext || ls}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
-          </div>
-
-          {/* Sprint identity */}
-          <div className="flex-1 min-w-0">
-            {ls ? (
-              <div className="h-4 w-52 rounded-md bg-surface-elevated animate-pulse" />
-            ) : selectedSprint ? (
-              <>
-                <div className="flex items-center gap-2.5">
-                  <h2 className="text-base font-bold text-gray-900 dark:text-white leading-none truncate">{selectedSprint.iteration.name}</h2>
-                  {sprintTf === 'current' && (
-                    <span className="flex-shrink-0 flex items-center gap-1 text-label font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: '#10b98118', color: '#10b981', border: '1px solid #10b98135' }}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE
-                    </span>
-                  )}
-                  {sprintTf === 'future' && (
-                    <span className="flex-shrink-0 text-label font-semibold px-2 py-0.5 rounded-full text-gray-500 border border-surface-border">UPCOMING</span>
-                  )}
-                  {es && <span className="text-label text-amber-500 flex-shrink-0">· sync error</span>}
-                </div>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  {sprintDateRange}
-                  {sprintTf === 'current' && daysLeft !== null && ` · ${daysLeft === 0 ? 'Last day' : `${daysLeft}d left`}`}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-gray-600">Select a sprint</p>
-            )}
-          </div>
-
-          {/* Sprint picker */}
-          <CheckDropdown
-            label=""
-            options={sprintOptions}
-            selected={filters.selectedSprints}
-            onChange={v => {
-              setFilter('selectedSprints', v);
-              setFilter('iterationPath', v[0] ?? '');
-              setActiveTile(null);
-            }}
-            allLabel="All Sprints"
-            minWidth="min-w-[160px]"
-            disabled={ls}
-          />
-
-          <button onClick={ri} className="text-gray-600 hover:text-gray-300 text-sm transition-colors flex-shrink-0" title="Refresh">↺</button>
-
-          {/* View switcher */}
-          <div className="flex items-center gap-0.5 bg-surface rounded-xl p-1 flex-shrink-0">
-            {([
-              { key: 'dashboard', icon: '⊞', label: 'Dashboard' },
-              { key: 'board',     icon: '⬜', label: 'Board' },
-              { key: 'ai',        icon: '🤖', label: 'AI' },
-            ] as const).map(v => (
-              <button key={v.key} onClick={() => setView(v.key)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{
-                  background: view === v.key ? C.total : 'transparent',
-                  color:      view === v.key ? '#fff'  : '#6b7280',
-                }}>
-                <span>{v.icon}</span>
-                <span className="hidden sm:inline">{v.label}</span>
-              </button>
-            ))}
+      {/* ── No project selected ─────────────────────────────────────────────── */}
+      {!filters.project ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-sm">
+            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⊞</span>
+            </div>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">No project selected</h2>
+            <p className="text-sm text-gray-500">Choose a project from the filter above to load boards and sprint data.</p>
           </div>
         </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
 
-        {/* Dual progress bars */}
-        {selectedSprint && (
-          <div className="px-6 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-surface-border pt-4">
-            <div>
-              <div className="flex justify-between gap-4 text-label mb-1.5">
-                <span className="text-gray-600">Sprint time</span>
-                <span className="text-gray-400 font-semibold">{timeElapsedPct}% elapsed{daysLeft !== null && ` · ${daysLeft}d left`}</span>
+          {isLoadingItems && <div className="p-6"><LoadingCard label="Loading sprint data…" /></div>}
+          {itemsError    && <div className="p-6"><ErrorCard error={`Work items: ${itemsError}`} /></div>}
+
+          {!isLoadingItems && !itemsError && (
+            <div className="flex flex-col gap-5 p-3 sm:p-6">
+
+              {/* ── Sprint Info + Nav ──────────────────────────────────────────── */}
+              <div className="bg-module-gradient rounded-2xl border border-surface-border overflow-hidden">
+                <div className="flex items-center gap-3 px-5 pt-4 pb-3">
+
+                  {/* Prev / Next */}
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <button onClick={() => { if (canPrev) { const p = orderedSprints[currentIdx - 1].iteration.path; setFilter('iterationPath', p); setFilter('selectedSprints', [p]); setActiveTile(null); }}}
+                      disabled={!canPrev || ls}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">‹</button>
+                    <button onClick={() => { if (canNext) { const p = orderedSprints[currentIdx + 1].iteration.path; setFilter('iterationPath', p); setFilter('selectedSprints', [p]); setActiveTile(null); }}}
+                      disabled={!canNext || ls}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-lg text-gray-600 hover:text-gray-900 dark:hover:text-white hover:bg-surface-elevated transition-all disabled:opacity-20">›</button>
+                  </div>
+
+                  {/* Sprint identity */}
+                  <div className="flex-1 min-w-0">
+                    {ls ? (
+                      <div className="h-4 w-52 rounded-md bg-surface-elevated animate-pulse" />
+                    ) : selectedSprint ? (
+                      <>
+                        <div className="flex items-center gap-2.5">
+                          <h2 className="text-base font-bold text-gray-900 dark:text-white leading-none truncate">{selectedSprint.iteration.name}</h2>
+                          {sprintTf === 'current' && (
+                            <span className="flex-shrink-0 flex items-center gap-1 text-label font-bold px-2 py-0.5 rounded-full"
+                              style={{ background: '#10b98118', color: '#10b981', border: '1px solid #10b98135' }}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />LIVE
+                            </span>
+                          )}
+                          {sprintTf === 'future' && (
+                            <span className="flex-shrink-0 text-label font-semibold px-2 py-0.5 rounded-full text-gray-500 border border-surface-border">UPCOMING</span>
+                          )}
+                          {es && <span className="text-label text-amber-500 flex-shrink-0">· sync error</span>}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {sprintDateRange}
+                          {sprintTf === 'current' && daysLeft !== null && ` · ${daysLeft === 0 ? 'Last day' : `${daysLeft}d left`}`}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        {filters.selectedSprints.length > 0
+                          ? `${filters.selectedSprints.length} sprint${filters.selectedSprints.length > 1 ? 's' : ''} selected`
+                          : 'Select a sprint'}
+                      </p>
+                    )}
+                  </div>
+
+                  <button onClick={ri} className="text-gray-500 hover:text-gray-300 text-sm transition-colors flex-shrink-0" title="Refresh">↺</button>
+
+                  {/* View switcher */}
+                  <div className="flex items-center gap-0.5 bg-surface rounded-xl p-1 flex-shrink-0">
+                    {([
+                      { key: 'dashboard', icon: '⊞', label: 'Dashboard' },
+                      { key: 'board',     icon: '⬜', label: 'Board' },
+                      { key: 'ai',        icon: '🤖', label: 'AI' },
+                    ] as const).map(v => (
+                      <button key={v.key} onClick={() => setView(v.key)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                        style={{
+                          background: view === v.key ? C.total : 'transparent',
+                          color:      view === v.key ? '#fff'  : '#6b7280',
+                        }}>
+                        <span>{v.icon}</span>
+                        <span className="hidden sm:inline">{v.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dual progress bars */}
+                {selectedSprint && (
+                  <div className="px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-surface-border pt-4">
+                    <div>
+                      <div className="flex justify-between gap-4 text-label mb-1.5">
+                        <span className="text-gray-600">Sprint time</span>
+                        <span className="text-gray-400 font-semibold">{timeElapsedPct}% elapsed{daysLeft !== null && ` · ${daysLeft}d left`}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-surface overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${timeElapsedPct}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between gap-4 text-label mb-1.5">
+                        <span className="text-gray-600">Completion</span>
+                        <span className="text-gray-400 font-semibold">{completionPct}% · {selectedSprint.completed}/{selectedSprint.total} items</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-surface overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${completionPct}%`, background: 'linear-gradient(90deg,#10b981,#34d399)' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="h-1.5 rounded-full bg-surface overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${timeElapsedPct}%`, background: 'linear-gradient(90deg,#4c6ef5,#818cf8)' }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between gap-4 text-label mb-1.5">
-                <span className="text-gray-600">Completion</span>
-                <span className="text-gray-400 font-semibold">{completionPct}% · {selectedSprint.completed}/{selectedSprint.total} items</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-surface overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${completionPct}%`, background: 'linear-gradient(90deg,#10b981,#34d399)' }} />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* ── KPI Tiles ───────────────────────────────────────────────────────── */}
       <div className="flex gap-3 overflow-x-auto scrollbar-none pb-0.5">
@@ -559,9 +571,14 @@ export function BoardsModule() {
         </div>
       )}
 
-      <Modal open={!!modalItems} onClose={() => setModalItems(null)} title={modalTitle} width="max-w-5xl">
-        <WorkItemTable items={modalItems ?? []} />
-      </Modal>
+              <Modal open={!!modalItems} onClose={() => setModalItems(null)} title={modalTitle} width="max-w-5xl">
+                <WorkItemTable items={modalItems ?? []} />
+              </Modal>
+
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
