@@ -196,7 +196,7 @@ export function FilterBar({ activeTab }: Props) {
       {/* Reset */}
       <button
         onClick={resetFilters}
-        className="self-end mb-0.5 ml-auto px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        className="self-end mb-0.5 ml-auto px-3 py-2 text-xs font-medium text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:text-brand-400 dark:hover:bg-brand-500/10 rounded-lg transition-colors"
       >
         Reset
       </button>

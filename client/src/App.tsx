@@ -30,13 +30,15 @@ const NAV_ITEMS: {
   description: string;
   color: string;
   iconBg: string;
+  activeBg: string;
+  barColor: string;
 }[] = [
-  { id: 'boards',    label: 'Boards',    icon: SquareKanban,  description: 'Sprints & kanban',  color: 'text-violet-400',  iconBg: 'bg-violet-500/10'  },
-  { id: 'bugs',      label: 'Bugs',      icon: CircleDot,     description: 'Issue tracking',    color: 'text-rose-400',    iconBg: 'bg-rose-500/10'    },
-  { id: 'engineers', label: 'Engineers', icon: UserCog,       description: 'Team directory',    color: 'text-sky-400',     iconBg: 'bg-sky-500/10'     },
-  { id: 'repos',     label: 'Repos',     icon: FolderGit2,    description: 'Codebase & PRs',    color: 'text-emerald-400', iconBg: 'bg-emerald-500/10' },
-  { id: 'wiki',      label: 'Wiki',      icon: NotebookPen,   description: 'Docs & knowledge',  color: 'text-amber-400',   iconBg: 'bg-amber-500/10'   },
-  { id: 'risks',     label: 'Risks',     icon: OctagonAlert,  description: 'Risk register',     color: 'text-red-400',     iconBg: 'bg-red-500/10'     },
+  { id: 'boards',    label: 'Boards',    icon: SquareKanban,  description: 'Sprints & kanban',  color: 'text-violet-400',  iconBg: 'bg-violet-500/10',  activeBg: 'bg-violet-500/15',  barColor: 'from-violet-400 to-purple-500'  },
+  { id: 'bugs',      label: 'Bugs',      icon: CircleDot,     description: 'Issue tracking',    color: 'text-rose-400',    iconBg: 'bg-rose-500/10',    activeBg: 'bg-rose-500/15',    barColor: 'from-rose-400 to-red-500'       },
+  { id: 'engineers', label: 'Engineers', icon: UserCog,       description: 'Team directory',    color: 'text-sky-400',     iconBg: 'bg-sky-500/10',     activeBg: 'bg-sky-500/15',     barColor: 'from-sky-400 to-blue-500'       },
+  { id: 'repos',     label: 'Repos',     icon: FolderGit2,    description: 'Codebase & PRs',    color: 'text-emerald-400', iconBg: 'bg-emerald-500/10', activeBg: 'bg-emerald-500/15', barColor: 'from-emerald-400 to-green-500'  },
+  { id: 'wiki',      label: 'Wiki',      icon: NotebookPen,   description: 'Docs & knowledge',  color: 'text-amber-400',   iconBg: 'bg-amber-500/10',   activeBg: 'bg-amber-500/15',   barColor: 'from-amber-400 to-orange-500'   },
+  { id: 'risks',     label: 'Risks',     icon: OctagonAlert,  description: 'Risk register',     color: 'text-red-400',     iconBg: 'bg-red-500/10',     activeBg: 'bg-red-500/15',     barColor: 'from-red-400 to-rose-500'       },
 ];
 
 // ── Tech Stack ────────────────────────────────────────────────────────────────
@@ -597,13 +599,13 @@ function Dashboard({ user }: { user: AuthUser }) {
                     'w-full flex items-center rounded-lg transition-all duration-150 group relative select-none',
                     collapsed ? 'justify-center px-0 py-[9px]' : 'gap-2.5 px-2 py-[9px]',
                     isActive
-                      ? 'bg-brand-50'
+                      ? item.activeBg
                       : 'hover:bg-gray-100',
                   )}
                 >
-                  {/* Active indicator — gradient bar */}
+                  {/* Active indicator — module-coloured gradient bar */}
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[20px] rounded-r-full bg-gradient-to-b from-brand-400 to-violet-500" />
+                    <span className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[22px] rounded-r-full bg-gradient-to-b ${item.barColor}`} />
                   )}
 
                   {/* Icon container */}
@@ -620,7 +622,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                     <>
                       <span className={cn(
                         'flex-1 text-left text-sm font-medium leading-none tracking-[-0.01em]',
-                        isActive ? 'text-gray-900 font-semibold' : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-gray-200',
+                        isActive ? cn(item.color, 'font-semibold') : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-gray-200',
                       )}>
                         {item.label}
                       </span>
@@ -646,7 +648,7 @@ function Dashboard({ user }: { user: AuthUser }) {
             <button
               onClick={() => setCollapsed(p => !p)}
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
             >
               {collapsed ? <PanelLeft size={14} /> : <PanelLeftClose size={14} />}
             </button>
@@ -669,8 +671,10 @@ function Dashboard({ user }: { user: AuthUser }) {
           </button>
 
           <div className="flex items-center gap-2.5 min-w-0">
-            <Icon size={16} className={cn('flex-shrink-0', activeItem.color)} />
-            <h1 className="text-gray-900 font-semibold text-sm truncate">{activeItem.label}</h1>
+            <div className={cn('w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0', activeItem.iconBg)}>
+              <Icon size={13} className={activeItem.color} />
+            </div>
+            <h1 className={cn('font-semibold text-sm truncate', activeItem.color)}>{activeItem.label}</h1>
             <span className="text-gray-400 text-xs hidden sm:block">/ {activeItem.description}</span>
           </div>
 
@@ -680,7 +684,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           {/* Theme toggle */}
           <button
             onClick={toggle}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors"
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
@@ -689,7 +693,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           {/* Settings */}
           <button
             onClick={() => setShowSettings(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors">
             <Settings size={14} />
           </button>
 
@@ -732,8 +736,8 @@ function Dashboard({ user }: { user: AuthUser }) {
             className={cn(
               'w-8 h-8 flex items-center justify-center rounded-lg transition-all',
               showTechStack
-                ? 'bg-brand-600/25 text-brand-300'
-                : 'text-gray-500 hover:text-gray-200 hover:bg-white/8',
+                ? 'bg-brand-500/20 text-brand-400'
+                : 'text-gray-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-500/10',
             )}
           >
             <Layers size={15} />
