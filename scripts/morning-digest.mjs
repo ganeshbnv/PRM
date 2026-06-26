@@ -207,20 +207,37 @@ async function getAI(d) {
   ];
 
   try {
-    const r = await fetch(`${OLLAMA}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: MODEL,
-        prompt: lines.join('\n'),
-        stream: false,
-        think: false,           // disable extended thinking for qwen3.x models (much faster)
-        options: { temperature: 0.7, num_predict: 512 },
-      }),
-      signal: AbortSignal.timeout(600000),
+    const body = (model, prompt) => JSON.stringify({
+      model,
+      prompt,
+      stream: false,
+      options: { temperature: 0.7, num_predict: 350 },
     });
-    const j = await r.json();
-    return (j.response ?? '').trim();
+
+    const fullPrompt = lines.join('\n');
+
+    // Try the configured model first (90s timeout); fall back to gemma if slow
+    let resp;
+    try {
+      const r = await fetch(`${OLLAMA}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body(MODEL, fullPrompt),
+        signal: AbortSignal.timeout(90000),
+      });
+      resp = await r.json();
+    } catch {
+      console.warn(`  ⚠ ${MODEL} timed out (>90s) — falling back to gemma:latest`);
+      const r2 = await fetch(`${OLLAMA}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body('gemma:latest', fullPrompt),
+        signal: AbortSignal.timeout(120000),
+      });
+      resp = await r2.json();
+    }
+
+    return (resp.response ?? '').trim();
   } catch (e) {
     console.warn(`  ⚠ Ollama: ${e.message}`);
     return 'AI analysis is temporarily unavailable. Check that Ollama is running (ollama serve).';
