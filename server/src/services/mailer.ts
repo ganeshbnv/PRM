@@ -17,7 +17,7 @@ export function sendPasswordResetEmail(toEmail: string, toName: string, resetLin
     <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 8px">Reset your password</h2>
     <p style="font-size:14px;color:#475569;line-height:1.7;margin:0 0 24px">Hi ${toName.replace(/'/g, "&#39;")},<br><br>We received a request to reset the password for your account. Click the button below to choose a new password. This link expires in <strong>30 minutes</strong>.</p>
     <div style="text-align:center;margin-bottom:28px">
-      <a href="${resetLink}" style="display:inline-block;background:#4f46e5;color:#ffffff;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;letter-spacing:-.2px">Reset Password</a>
+      <a href="${resetLink}" style="display:inline-block;background:#4f46e5;color:#ffffff;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;letter-spacing:-.2px" target="_blank">Reset Password</a>
     </div>
     <p style="font-size:12px;color:#94a3b8;text-align:center;margin:0 0 12px">Or copy this link into your browser:</p>
     <p style="font-size:11px;color:#6366f1;text-align:center;word-break:break-all;background:#f5f3ff;border-radius:6px;padding:8px 12px;margin:0 0 24px">${resetLink}</p>

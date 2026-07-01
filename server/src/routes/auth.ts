@@ -84,8 +84,8 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
   const user = userStore.findByEmail(email.toLowerCase());
   if (user) {
     const token = resetTokens.create(user.id, user.email);
-    const appUrl = process.env.APP_URL ?? 'http://localhost:5173';
-    const resetLink = `${appUrl}/?reset_token=${token}`;
+    const serverUrl = process.env.SERVER_URL ?? `http://localhost:${process.env.PORT ?? 3001}`;
+    const resetLink = `${serverUrl}/reset-password?token=${token}`;
     try {
       sendPasswordResetEmail(user.email, user.name, resetLink);
     } catch (err) {
