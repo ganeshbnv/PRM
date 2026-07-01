@@ -11,6 +11,18 @@ const OLLAMA_HOST  = process.env.OLLAMA_HOST  ?? 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
 const DEFAULT_PROJECT = process.env.ADO_PROJECT ?? 'Patient Engagment Platform';
 
+// 120 s — must survive queued background AI insight requests ahead of it
+const OLLAMA_TIMEOUT_MS = 120_000;
+// 8 s max per ADO data fetch — use cache hits; don't block Ollama window
+const DATA_FETCH_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    p,
+    new Promise<null>(resolve => setTimeout(() => resolve(null), ms)),
+  ]);
+}
+
 async function ollamaChat(prompt: string): Promise<string> {
   const res = await fetch(`${OLLAMA_HOST}/api/chat`, {
     method: 'POST',
@@ -20,11 +32,11 @@ async function ollamaChat(prompt: string): Promise<string> {
       messages: [{ role: 'user', content: prompt }],
       stream: false,
       think: false,
-      options: { temperature: 0.65, num_predict: 900 },
+      options: { temperature: 0.55, num_predict: 500 },
     }),
-    signal: AbortSignal.timeout(45000),
+    signal: AbortSignal.timeout(OLLAMA_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`Ollama ${res.status}`);
+  if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
   const json = await res.json() as { message?: { content?: string } };
   const text = json.message?.content?.trim() ?? '';
   if (!text) throw new Error('empty response');
@@ -46,93 +58,85 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
   const lines: string[] = [];
   const sources: string[] = [];
 
-  // ── Fetch context data per section ───────────────────────────────────────────
-  try {
-    const isBoards = section === 'boards' || section === 'bugs' || section === 'general';
-    const isEngineers = section === 'engineers' || section === 'general';
-    const isRepos = section === 'repos' || section === 'general';
-    const isRisks = section === 'risks' || section === 'general';
+  // ── Fetch context with a hard deadline so ADO latency doesn't eat Ollama time ─
+  const isBoards    = section === 'boards' || section === 'bugs' || section === 'general';
+  const isEngineers = section === 'engineers' || section === 'general';
+  const isRepos     = section === 'repos'     || section === 'general';
+  const isRisks     = section === 'risks'     || section === 'general';
 
-    const fetches = await Promise.allSettled([
-      isBoards ? boardsSvc.getWorkItems({ project }) : Promise.resolve(null),
-      isEngineers ? engineersSvc.getEngineerActivity(project) : Promise.resolve(null),
-      isRepos ? reposSvc.getRepositories(project) : Promise.resolve(null),
-      isRisks ? risksSvc.getRisks(project) : Promise.resolve(null),
-    ]);
+  const [workItems, engineers, repos, risks] = await Promise.all([
+    isBoards    ? withTimeout(boardsSvc.getWorkItems({ project }), DATA_FETCH_TIMEOUT_MS)           : Promise.resolve(null),
+    isEngineers ? withTimeout(engineersSvc.getEngineerActivity(project), DATA_FETCH_TIMEOUT_MS)     : Promise.resolve(null),
+    isRepos     ? withTimeout(reposSvc.getRepositories(project), DATA_FETCH_TIMEOUT_MS)             : Promise.resolve(null),
+    isRisks     ? withTimeout(risksSvc.getRisks(project), DATA_FETCH_TIMEOUT_MS)                    : Promise.resolve(null),
+  ]);
 
-    // Work items
-    if (isBoards && fetches[0].status === 'fulfilled' && fetches[0].value) {
-      const items = fetches[0].value as Awaited<ReturnType<typeof boardsSvc.getWorkItems>>;
-      const bugs = items.filter(i => i.fields['System.WorkItemType'] === 'Bug');
-      const active = items.filter(i => ['Active', 'In Progress', 'Committed'].includes(i.fields['System.State']));
-      const done = items.filter(i => ['Resolved', 'Closed', 'Done'].includes(i.fields['System.State']));
-      lines.push(`WORK ITEMS: ${items.length} total | ${active.length} active | ${done.length} done | ${bugs.length} bugs`);
-      const sample = items.slice(0, 25).map(i =>
-        `  [${i.id}] (${i.fields['System.WorkItemType']}) ${i.fields['System.Title']} — ${i.fields['System.State']} — ${i.fields['System.AssignedTo']?.displayName ?? 'unassigned'}`
-      ).join('\n');
-      lines.push(`ITEM DETAILS:\n${sample}`);
-      sources.push('ADO Work Items');
-    }
-
-    // Engineers
-    if (isEngineers && fetches[1].status === 'fulfilled' && fetches[1].value) {
-      const engineers = fetches[1].value as Awaited<ReturnType<typeof engineersSvc.getEngineerActivity>>;
-      const top = engineers.slice(0, 12).map(e =>
-        `  ${e.displayName}: ${e.commits.length} commits, ${e.prsOpened?.length ?? 0} PRs opened, ${e.prsReviewed?.length ?? 0} reviewed`
-      ).join('\n');
-      lines.push(`TEAM ACTIVITY (${engineers.length} contributors):\n${top}`);
-      sources.push('Team Activity');
-    }
-
-    // Repositories
-    if (isRepos && fetches[2].status === 'fulfilled' && fetches[2].value) {
-      const repos = fetches[2].value as Awaited<ReturnType<typeof reposSvc.getRepositories>>;
-      lines.push(`REPOSITORIES (${repos.length}): ${repos.map(r => r.name).join(', ')}`);
-      sources.push('Repositories');
-    }
-
-    // Risks
-    if (isRisks && fetches[3].status === 'fulfilled' && fetches[3].value) {
-      const risks = fetches[3].value as Awaited<ReturnType<typeof risksSvc.getRisks>>;
-      const critical = risks.filter(r => r.severity === 'critical');
-      const high = risks.filter(r => r.severity === 'high');
-      lines.push(`RISKS: ${risks.length} total | ${critical.length} critical | ${high.length} high`);
-      const topRisks = risks.slice(0, 8).map(r => `  [${r.severity.toUpperCase()}] ${r.title}`).join('\n');
-      if (topRisks) lines.push(`TOP RISKS:\n${topRisks}`);
-      sources.push('Risk Register');
-    }
-  } catch (err) {
-    console.warn('[AI Chat] Data fetch error:', (err as Error).message);
+  // Work items — top 10 only to keep prompt lean
+  if (workItems) {
+    const bugs   = workItems.filter(i => i.fields['System.WorkItemType'] === 'Bug');
+    const active = workItems.filter(i => ['Active', 'In Progress', 'Committed'].includes(i.fields['System.State']));
+    const done   = workItems.filter(i => ['Resolved', 'Closed', 'Done'].includes(i.fields['System.State']));
+    lines.push(`WORK ITEMS: ${workItems.length} total | ${active.length} active | ${done.length} done | ${bugs.length} bugs`);
+    const top10 = active.slice(0, 10).map(i =>
+      `  [${i.id}] ${i.fields['System.WorkItemType']} | ${i.fields['System.Title'].slice(0, 60)} | ${i.fields['System.AssignedTo']?.displayName ?? 'unassigned'}`
+    ).join('\n');
+    if (top10) lines.push(`ACTIVE ITEMS:\n${top10}`);
+    sources.push('ADO Work Items');
   }
 
-  const contextBlock = lines.length > 0 ? lines.join('\n\n') : 'No connector data available at this time.';
-  const sectionLabel = {
+  // Engineers — top 8
+  if (engineers?.length) {
+    const top = engineers.slice(0, 8).map(e =>
+      `  ${e.displayName}: ${e.commits.length} commits, ${e.prsOpened?.length ?? 0} PRs`
+    ).join('\n');
+    lines.push(`TEAM (${engineers.length} contributors):\n${top}`);
+    sources.push('Team Activity');
+  }
+
+  // Repos
+  if (repos?.length) {
+    lines.push(`REPOS (${repos.length}): ${repos.map(r => r.name).join(', ')}`);
+    sources.push('Repositories');
+  }
+
+  // Risks — top 6
+  if (risks?.length) {
+    const hi = risks.filter(r => r.severity === 'critical' || r.severity === 'high');
+    lines.push(`RISKS: ${risks.length} total | ${hi.length} critical/high`);
+    const topRisks = risks.slice(0, 6).map(r => `  [${r.severity.toUpperCase()}] ${r.title}`).join('\n');
+    if (topRisks) lines.push(topRisks);
+    sources.push('Risk Register');
+  }
+
+  const contextBlock = lines.length > 0 ? lines.join('\n\n') : 'No connector data available.';
+
+  const sectionLabel = ({
     boards: 'Sprint Boards', bugs: 'Bug Tracker', engineers: 'Team Engineers',
     repos: 'Repositories', wiki: 'Wiki', risks: 'Risk Register', general: 'full project',
-  }[section] ?? section;
+  } as Record<string, string>)[section] ?? section;
 
-  const prompt = `You are Healix AI, an intelligent assistant embedded in the Healix Engage PRM dashboard for Global HealthX (Patient Relationship Management system).
+  const prompt =
+`You are Healix AI inside the Healix Engage PRM dashboard (Global HealthX).
+Section: ${sectionLabel}
+Question: "${question}"
 
-The user is currently in the **${sectionLabel}** section and asks:
-"${question}"
-
-LIVE DATA FROM CONNECTED SYSTEMS:
+DATA:
 ${contextBlock}
 
-Response guidelines:
-- Answer directly based on the data above. Name specific items, people, and numbers when available.
-- If the data doesn't answer the question, say so and suggest what they should look for.
-- Keep response under 350 words. Be concise and actionable.
-- Format with short paragraphs. Use simple bullet points (- item) for lists, not markdown headers.
-- Speak as a knowledgeable, direct healthcare project management assistant.
-- Do not repeat the question back. Start with the answer immediately.`;
+Rules: answer directly, name specific people/numbers, under 250 words, use bullet points for lists, no markdown headers.`;
 
   let answer = '';
   try {
     answer = await ollamaChat(prompt);
   } catch (err) {
-    console.warn('[AI Chat] Ollama error:', (err as Error).message);
-    answer = "I'm having trouble reaching the AI service right now. Make sure Ollama is running (`ollama serve`) and try again.";
+    const msg = (err as Error).message ?? '';
+    console.warn('[AI Chat] Ollama error:', msg);
+    // Return something useful even without Ollama
+    if (lines.length > 0) {
+      answer = `Ollama is busy right now, but here's the raw data:\n\n${contextBlock}`;
+    } else {
+      answer = 'The AI service is currently unavailable. Please try again in a moment.';
+    }
   }
 
   res.json({ answer, section, sources });
