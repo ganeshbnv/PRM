@@ -66,102 +66,102 @@ function BrandPanel() {
       style={{
         width: '52%', flexShrink: 0, position: 'relative',
         background: '#04091C', overflow: 'hidden',
+        WebkitFontSmoothing: 'antialiased',
       }}
     >
-      {/* Animated colour orbs */}
-      <div className="prm-orb-a" style={{ position:'absolute', top:'-120px', right:'-80px', width:480, height:480, borderRadius:'50%', background:'radial-gradient(circle,rgba(76,110,245,0.38) 0%,transparent 70%)', filter:'blur(2px)', pointerEvents:'none' }} />
-      <div className="prm-orb-b" style={{ position:'absolute', bottom:'-140px', left:'-100px', width:520, height:520, borderRadius:'50%', background:'radial-gradient(circle,rgba(13,148,136,0.32) 0%,transparent 70%)', filter:'blur(2px)', pointerEvents:'none' }} />
-      <div className="prm-orb-c" style={{ position:'absolute', top:'38%', left:'30%', width:340, height:340, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.28) 0%,transparent 70%)', filter:'blur(2px)', pointerEvents:'none' }} />
+      {/* Animated colour orbs — no blur for crispness */}
+      <div className="prm-orb-a" style={{ position:'absolute', top:'-120px', right:'-80px', width:480, height:480, borderRadius:'50%', background:'radial-gradient(circle,rgba(76,110,245,0.44) 0%,transparent 68%)', pointerEvents:'none' }} />
+      <div className="prm-orb-b" style={{ position:'absolute', bottom:'-140px', left:'-100px', width:520, height:520, borderRadius:'50%', background:'radial-gradient(circle,rgba(13,148,136,0.38) 0%,transparent 68%)', pointerEvents:'none' }} />
+      <div className="prm-orb-c" style={{ position:'absolute', top:'38%', left:'30%', width:340, height:340, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.34) 0%,transparent 68%)', pointerEvents:'none' }} />
 
       {/* Dot-grid overlay */}
       <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.07) 1px,transparent 1px)', backgroundSize:'28px 28px', pointerEvents:'none' }} />
 
-      {/* Subtle top edge glow */}
-      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,rgba(76,110,245,0.6),rgba(13,148,136,0.5),transparent)', pointerEvents:'none' }} />
+      {/* Top edge glow */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,rgba(76,110,245,0.75),rgba(13,148,136,0.6),transparent)', pointerEvents:'none' }} />
 
-      {/* Content */}
-      <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', height:'100%', padding:'40px 48px' }}>
+      {/* Content — 3 sections distributed via space-between */}
+      <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', height:'100%', padding:'36px 44px', justifyContent:'space-between' }}>
 
-        {/* Logo */}
+        {/* ── SECTION 1: Logo ── */}
         <div className="prm-f1" style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <div style={{ width:44, height:44, borderRadius:13, background:'linear-gradient(135deg,#4c6ef5,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 24px rgba(76,110,245,0.45)' }}>
-            <span style={{ color:'#fff', fontWeight:900, fontSize:22, letterSpacing:-1 }}>H</span>
+          <div style={{ width:42, height:42, borderRadius:12, background:'linear-gradient(135deg,#4c6ef5,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 28px rgba(76,110,245,0.55)', flexShrink:0 }}>
+            <span style={{ color:'#fff', fontWeight:900, fontSize:21, letterSpacing:-1 }}>H</span>
           </div>
           <div>
-            <div style={{ color:'#ffffff', fontWeight:800, fontSize:17, letterSpacing:-0.3, lineHeight:1.1 }}>Healix Engage</div>
-            <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
-              <span className="prm-live-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block' }} />
-              <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11, letterSpacing:0.5 }}>Global HealthX · Live</span>
+            <div style={{ color:'#ffffff', fontWeight:800, fontSize:16, letterSpacing:-0.2, lineHeight:1.1 }}>Healix Engage</div>
+            <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:3 }}>
+              <span className="prm-live-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block', flexShrink:0 }} />
+              <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11, letterSpacing:0.4 }}>Global HealthX · Live</span>
             </div>
           </div>
         </div>
 
-        {/* Hero headline */}
-        <div style={{ marginTop:'auto', marginBottom: 0, paddingBottom: 16 }}>
-          <div className="prm-f2" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(76,110,245,0.18)', border:'1px solid rgba(76,110,245,0.35)', borderRadius:100, padding:'5px 14px', marginBottom:20 }}>
-            <Stethoscope size={13} style={{ color:'#818cf8' }} />
-            <span style={{ color:'#a5b4fc', fontSize:11, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase' }}>Patient Relationship Management</span>
+        {/* ── SECTION 2: Hero headline + ECG ── */}
+        <div>
+          <div className="prm-f2" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(76,110,245,0.18)', border:'1px solid rgba(76,110,245,0.4)', borderRadius:100, padding:'5px 14px', marginBottom:16 }}>
+            <Stethoscope size={12} style={{ color:'#818cf8' }} />
+            <span style={{ color:'#a5b4fc', fontSize:10.5, fontWeight:700, letterSpacing:1.3, textTransform:'uppercase' }}>Patient Relationship Management</span>
           </div>
 
           <div className="prm-f3">
-            <h1 style={{ color:'#ffffff', fontSize:48, fontWeight:900, lineHeight:1.08, letterSpacing:-1.5, margin:0 }}>
+            <h1 style={{ color:'#ffffff', fontSize:36, fontWeight:900, lineHeight:1.1, letterSpacing:-1.2, margin:0 }}>
               Infinite Care.
               <br />
-              <span style={{ background:'linear-gradient(135deg,#818cf8 0%,#38bdf8 50%,#34d399 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+              <span style={{ background:'linear-gradient(135deg,#818cf8 0%,#38bdf8 45%,#34d399 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
                 Every Patient.
               </span>
               <br />
               Every Moment.
             </h1>
-            <p style={{ color:'rgba(255,255,255,0.52)', fontSize:15, lineHeight:1.7, marginTop:18, maxWidth:400, fontWeight:400 }}>
-              A complete platform for seamless patient communication, care coordination,
-              and real-time insights — built for the future of healthcare.
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:13, lineHeight:1.65, margin:'14px 0 0', fontWeight:400, maxWidth:380 }}>
+              Seamless patient communication, care coordination, and real-time insights — built for the future of healthcare.
             </p>
           </div>
 
           {/* ECG line */}
-          <div className="prm-f4" style={{ marginTop:28, marginBottom:28 }}>
-            <svg viewBox="0 0 500 60" style={{ width:'100%', maxWidth:440, height:40, overflow:'visible' }}>
+          <div className="prm-f4" style={{ marginTop:20 }}>
+            <svg viewBox="0 0 500 60" style={{ width:'100%', maxWidth:420, height:30, overflow:'visible', display:'block' }}>
               <path
                 className="prm-ecg-line"
                 d="M 0,30 L 70,30 L 90,30 L 100,4 L 113,56 L 122,4 L 132,56 L 142,30 L 180,30 L 195,30 L 205,14 L 214,46 L 222,30 L 340,30 L 355,30 L 362,18 L 370,42 L 376,30 L 500,30"
                 fill="none"
-                stroke="rgba(76,110,245,0.7)"
-                strokeWidth="2"
+                stroke="rgba(76,110,245,0.85)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-              {/* Live dot at end */}
-              <circle cx="500" cy="30" r="3.5" fill="#4c6ef5" opacity="0.9" />
+              <circle cx="500" cy="30" r="3" fill="#4c6ef5" opacity="0.95" />
             </svg>
           </div>
+        </div>
 
-          {/* Feature cards */}
-          <div className="prm-f5" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:32 }}>
+        {/* ── SECTION 3: Feature cards + quote ── */}
+        <div>
+          <div className="prm-f5" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:16 }}>
             {[
-              { icon: <Activity size={17} />, color:'#818cf8', bg:'rgba(76,110,245,0.15)', border:'rgba(76,110,245,0.3)', title:'Care Teams', desc:'5 active teams in sync' },
-              { icon: <Zap size={17} />,      color:'#34d399', bg:'rgba(13,148,136,0.15)', border:'rgba(13,148,136,0.3)', title:'Real-time', desc:'Instant data updates' },
-              { icon: <Heart size={17} />,    color:'#f472b6', bg:'rgba(236,72,153,0.15)', border:'rgba(236,72,153,0.3)', title:'Patient-First', desc:'277+ active work items' },
+              { icon: <Activity size={15} />, color:'#818cf8', bg:'rgba(76,110,245,0.14)', border:'rgba(76,110,245,0.32)', title:'Care Teams', desc:'5 teams in sync' },
+              { icon: <Zap size={15} />,      color:'#34d399', bg:'rgba(13,148,136,0.14)', border:'rgba(13,148,136,0.32)', title:'Real-time', desc:'Instant updates' },
+              { icon: <Heart size={15} />,    color:'#f472b6', bg:'rgba(236,72,153,0.14)', border:'rgba(236,72,153,0.32)', title:'Patient-First', desc:'277+ work items' },
             ].map(f => (
-              <div key={f.title} style={{ background:'rgba(255,255,255,0.04)', border:`1px solid rgba(255,255,255,0.08)`, borderRadius:12, padding:'14px 14px' }}>
-                <div style={{ width:34, height:34, borderRadius:9, background:f.bg, border:`1px solid ${f.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:f.color, marginBottom:10 }}>
+              <div key={f.title} style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, padding:'12px' }}>
+                <div style={{ width:30, height:30, borderRadius:8, background:f.bg, border:`1px solid ${f.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:f.color, marginBottom:8 }}>
                   {f.icon}
                 </div>
-                <div style={{ color:'#ffffff', fontSize:13, fontWeight:700, lineHeight:1.2 }}>{f.title}</div>
-                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, marginTop:3, lineHeight:1.4 }}>{f.desc}</div>
+                <div style={{ color:'#ffffff', fontSize:12.5, fontWeight:700, lineHeight:1.2 }}>{f.title}</div>
+                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:10.5, marginTop:2, lineHeight:1.4 }}>{f.desc}</div>
               </div>
             ))}
           </div>
 
-          {/* Bottom quote */}
-          <div style={{ borderLeft:'2px solid rgba(76,110,245,0.5)', paddingLeft:16 }}>
-            <p style={{ color:'rgba(255,255,255,0.38)', fontSize:12.5, lineHeight:1.65, margin:0, fontStyle:'italic' }}>
-              "Healthcare is not just about treating illness — it's about building
-              relationships that last a lifetime."
+          <div style={{ borderLeft:'2px solid rgba(76,110,245,0.55)', paddingLeft:14 }}>
+            <p style={{ color:'rgba(255,255,255,0.36)', fontSize:11.5, lineHeight:1.6, margin:0, fontStyle:'italic' }}>
+              "Healthcare is not just about treating illness — it's about building relationships that last a lifetime."
             </p>
-            <p style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:5 }}>Global HealthX · Patient Engagement Platform</p>
+            <p style={{ color:'rgba(255,255,255,0.22)', fontSize:10.5, margin:'4px 0 0' }}>Global HealthX · Patient Engagement Platform</p>
           </div>
         </div>
+
       </div>
     </div>
   );

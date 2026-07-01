@@ -13,7 +13,7 @@ import { ensureSuperAdmin } from './services/users';
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // Ensure ganesh.bandi@globalhealthx.co always has admin role
