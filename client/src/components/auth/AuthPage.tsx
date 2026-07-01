@@ -91,7 +91,7 @@ function BrandPanel() {
             <div style={{ color:'#ffffff', fontWeight:800, fontSize:17, letterSpacing:-0.3, lineHeight:1.1 }}>Healix Engage</div>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
               <span className="prm-live-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block' }} />
-              <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11, letterSpacing:0.5 }}>GlobalHealthX · Live</span>
+              <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11, letterSpacing:0.5 }}>Global HealthX · Live</span>
             </div>
           </div>
         </div>
@@ -159,7 +159,7 @@ function BrandPanel() {
               "Healthcare is not just about treating illness — it's about building
               relationships that last a lifetime."
             </p>
-            <p style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:5 }}>GlobalHealthX · Patient Engagement Platform</p>
+            <p style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:5 }}>Global HealthX · Patient Engagement Platform</p>
           </div>
         </div>
       </div>
@@ -470,7 +470,7 @@ export function AuthPage() {
             {mode === 'login' ? 'Welcome back' : 'Create your account'}
           </h2>
           <p style={{ fontSize:14, color:'#6b7280', margin:0 }}>
-            {mode === 'login' ? 'Sign in to your GlobalHealthX workspace.' : 'Join your GlobalHealthX care team.'}
+            {mode === 'login' ? 'Sign in to your Global HealthX workspace.' : 'Join your Global HealthX care team.'}
           </p>
         </div>
 

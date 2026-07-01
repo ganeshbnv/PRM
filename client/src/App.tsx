@@ -202,7 +202,7 @@ const TECH_STACK = [
         color: '#0078d4',
         dot: 'bg-blue-500',
         tagline: 'Where your real project data comes from',
-        plain: 'Azure DevOps is Microsoft\'s project management platform used by GlobalHealthX. This app connects to it via a secure API (like a digital handshake) to pull in live sprints, work items, bugs, pull requests, and team data — so everything you see is always up to date from the source of truth.',
+        plain: 'Azure DevOps is Microsoft\'s project management platform used by Global HealthX. This app connects to it via a secure API (like a digital handshake) to pull in live sprints, work items, bugs, pull requests, and team data — so everything you see is always up to date from the source of truth.',
         detail: 'Microsoft\'s DevOps platform. The Healix Engage server authenticates with a Personal Access Token (PAT), calling the ADO REST API to fetch organisations, projects, sprints, work items, repositories, and team members.',
       },
       {
@@ -304,7 +304,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
               All systems live
             </span>
             <span className="text-label bg-white/5 border border-white/8 text-gray-500 rounded-full px-2.5 py-1">
-              GlobalHealthX · Internal
+              Global HealthX · Internal
             </span>
           </div>
 
