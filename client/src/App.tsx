@@ -20,6 +20,7 @@ import { useAuthStore } from './store/auth';
 import type { AuthUser } from './store/auth';
 import { useThemeStore } from './store/theme';
 import { cn } from './utils/cn';
+import { AIChatPanel } from './components/common/AIChatPanel';
 
 type Tab = 'boards' | 'bugs' | 'engineers' | 'repos' | 'wiki' | 'risks';
 
@@ -774,6 +775,7 @@ function Dashboard({ user }: { user: AuthUser }) {
           </main>
         )}
       </div>
+      <AIChatPanel activeSection={tab} />
     </div>
   );
 }

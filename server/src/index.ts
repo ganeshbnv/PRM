@@ -6,6 +6,7 @@ import cors from 'cors';
 import router from './routes/index';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
+import aiChatRouter from './routes/aiChat';
 import { requireAuth } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { ensureSuperAdmin } from './services/users';
@@ -20,7 +21,8 @@ app.use(express.json());
 ensureSuperAdmin();
 
 app.use('/api/auth', authRouter);
-app.use('/api/users', usersRouter);   // auth + admin checks inside the router
+app.use('/api/users', usersRouter);
+app.use('/api/ai/chat', aiChatRouter);
 app.use('/api', requireAuth, router);
 
 // ── Password reset page (server-rendered, no Vite dependency) ─────────────────
