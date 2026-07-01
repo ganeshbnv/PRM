@@ -1,17 +1,343 @@
 import { useState, useLayoutEffect, useRef, FormEvent, useEffect } from 'react';
 import axios from 'axios';
+import { Mail, Lock, User, Stethoscope, Activity, Heart, ArrowRight, Zap } from 'lucide-react';
 import { useAuthStore, AuthUser } from '../../store/auth';
 
 const DOMAIN = 'globalhealthx.co';
 
-interface AuthResponse {
-  token: string;
-  user: AuthUser;
-}
-
+interface AuthResponse { token: string; user: AuthUser; }
 type Mode = 'login' | 'register' | 'forgot' | 'reset';
 
+// ── Keyframes injected once — scoped to avoid polluting global CSS ─────────────
+const AUTH_CSS = `
+@keyframes prm-orb-a {
+  0%,100%{transform:translate(0,0) scale(1);}
+  33%{transform:translate(70px,-55px) scale(1.1);}
+  66%{transform:translate(-45px,45px) scale(0.92);}
+}
+@keyframes prm-orb-b {
+  0%,100%{transform:translate(0,0) scale(1);}
+  50%{transform:translate(-85px,55px) scale(1.14);}
+}
+@keyframes prm-orb-c {
+  0%,100%{transform:translate(0,0) scale(1);}
+  40%{transform:translate(55px,65px) scale(0.89);}
+  80%{transform:translate(-35px,-48px) scale(1.07);}
+}
+@keyframes prm-ecg {
+  from{stroke-dashoffset:900;}
+  to{stroke-dashoffset:0;}
+}
+@keyframes prm-fade-up {
+  from{opacity:0;transform:translateY(22px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes prm-dot-pulse {
+  0%,100%{opacity:0.4;transform:scale(1);}
+  50%{opacity:1;transform:scale(1.25);}
+}
+.prm-orb-a{animation:prm-orb-a 20s ease-in-out infinite;}
+.prm-orb-b{animation:prm-orb-b 25s ease-in-out infinite;}
+.prm-orb-c{animation:prm-orb-c 17s ease-in-out infinite;}
+.prm-ecg-line{stroke-dasharray:900;animation:prm-ecg 2.8s cubic-bezier(0.4,0,0.2,1) 0.4s both;}
+.prm-f1{animation:prm-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.05s both;}
+.prm-f2{animation:prm-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.18s both;}
+.prm-f3{animation:prm-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.31s both;}
+.prm-f4{animation:prm-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.44s both;}
+.prm-f5{animation:prm-fade-up 0.55s cubic-bezier(0.16,1,0.3,1) 0.57s both;}
+.prm-live-dot{animation:prm-dot-pulse 2s ease-in-out infinite;}
+`;
+
+function useInjectCSS() {
+  useEffect(() => {
+    const el = document.createElement('style');
+    el.id = 'prm-auth-css';
+    el.textContent = AUTH_CSS;
+    document.head.appendChild(el);
+    return () => document.getElementById('prm-auth-css')?.remove();
+  }, []);
+}
+
+// ── Brand Panel (left) ─────────────────────────────────────────────────────────
+function BrandPanel() {
+  return (
+    <div
+      className="hidden lg:flex flex-col"
+      style={{
+        width: '52%', flexShrink: 0, position: 'relative',
+        background: '#04091C', overflow: 'hidden',
+      }}
+    >
+      {/* Animated colour orbs */}
+      <div className="prm-orb-a" style={{ position:'absolute', top:'-120px', right:'-80px', width:480, height:480, borderRadius:'50%', background:'radial-gradient(circle,rgba(76,110,245,0.38) 0%,transparent 70%)', filter:'blur(2px)', pointerEvents:'none' }} />
+      <div className="prm-orb-b" style={{ position:'absolute', bottom:'-140px', left:'-100px', width:520, height:520, borderRadius:'50%', background:'radial-gradient(circle,rgba(13,148,136,0.32) 0%,transparent 70%)', filter:'blur(2px)', pointerEvents:'none' }} />
+      <div className="prm-orb-c" style={{ position:'absolute', top:'38%', left:'30%', width:340, height:340, borderRadius:'50%', background:'radial-gradient(circle,rgba(124,58,237,0.28) 0%,transparent 70%)', filter:'blur(2px)', pointerEvents:'none' }} />
+
+      {/* Dot-grid overlay */}
+      <div style={{ position:'absolute', inset:0, backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.07) 1px,transparent 1px)', backgroundSize:'28px 28px', pointerEvents:'none' }} />
+
+      {/* Subtle top edge glow */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,rgba(76,110,245,0.6),rgba(13,148,136,0.5),transparent)', pointerEvents:'none' }} />
+
+      {/* Content */}
+      <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', height:'100%', padding:'40px 48px' }}>
+
+        {/* Logo */}
+        <div className="prm-f1" style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <div style={{ width:44, height:44, borderRadius:13, background:'linear-gradient(135deg,#4c6ef5,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 24px rgba(76,110,245,0.45)' }}>
+            <span style={{ color:'#fff', fontWeight:900, fontSize:22, letterSpacing:-1 }}>H</span>
+          </div>
+          <div>
+            <div style={{ color:'#ffffff', fontWeight:800, fontSize:17, letterSpacing:-0.3, lineHeight:1.1 }}>Healix Engage</div>
+            <div style={{ display:'flex', alignItems:'center', gap:5, marginTop:2 }}>
+              <span className="prm-live-dot" style={{ width:6, height:6, borderRadius:'50%', background:'#4ade80', display:'inline-block' }} />
+              <span style={{ color:'rgba(255,255,255,0.45)', fontSize:11, letterSpacing:0.5 }}>GlobalHealthX · Live</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hero headline */}
+        <div style={{ marginTop:'auto', marginBottom: 0, paddingBottom: 16 }}>
+          <div className="prm-f2" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(76,110,245,0.18)', border:'1px solid rgba(76,110,245,0.35)', borderRadius:100, padding:'5px 14px', marginBottom:20 }}>
+            <Stethoscope size={13} style={{ color:'#818cf8' }} />
+            <span style={{ color:'#a5b4fc', fontSize:11, fontWeight:700, letterSpacing:1.2, textTransform:'uppercase' }}>Patient Relationship Management</span>
+          </div>
+
+          <div className="prm-f3">
+            <h1 style={{ color:'#ffffff', fontSize:48, fontWeight:900, lineHeight:1.08, letterSpacing:-1.5, margin:0 }}>
+              Infinite Care.
+              <br />
+              <span style={{ background:'linear-gradient(135deg,#818cf8 0%,#38bdf8 50%,#34d399 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+                Every Patient.
+              </span>
+              <br />
+              Every Moment.
+            </h1>
+            <p style={{ color:'rgba(255,255,255,0.52)', fontSize:15, lineHeight:1.7, marginTop:18, maxWidth:400, fontWeight:400 }}>
+              A complete platform for seamless patient communication, care coordination,
+              and real-time insights — built for the future of healthcare.
+            </p>
+          </div>
+
+          {/* ECG line */}
+          <div className="prm-f4" style={{ marginTop:28, marginBottom:28 }}>
+            <svg viewBox="0 0 500 60" style={{ width:'100%', maxWidth:440, height:40, overflow:'visible' }}>
+              <path
+                className="prm-ecg-line"
+                d="M 0,30 L 70,30 L 90,30 L 100,4 L 113,56 L 122,4 L 132,56 L 142,30 L 180,30 L 195,30 L 205,14 L 214,46 L 222,30 L 340,30 L 355,30 L 362,18 L 370,42 L 376,30 L 500,30"
+                fill="none"
+                stroke="rgba(76,110,245,0.7)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Live dot at end */}
+              <circle cx="500" cy="30" r="3.5" fill="#4c6ef5" opacity="0.9" />
+            </svg>
+          </div>
+
+          {/* Feature cards */}
+          <div className="prm-f5" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:32 }}>
+            {[
+              { icon: <Activity size={17} />, color:'#818cf8', bg:'rgba(76,110,245,0.15)', border:'rgba(76,110,245,0.3)', title:'Care Teams', desc:'5 active teams in sync' },
+              { icon: <Zap size={17} />,      color:'#34d399', bg:'rgba(13,148,136,0.15)', border:'rgba(13,148,136,0.3)', title:'Real-time', desc:'Instant data updates' },
+              { icon: <Heart size={17} />,    color:'#f472b6', bg:'rgba(236,72,153,0.15)', border:'rgba(236,72,153,0.3)', title:'Patient-First', desc:'277+ active work items' },
+            ].map(f => (
+              <div key={f.title} style={{ background:'rgba(255,255,255,0.04)', border:`1px solid rgba(255,255,255,0.08)`, borderRadius:12, padding:'14px 14px' }}>
+                <div style={{ width:34, height:34, borderRadius:9, background:f.bg, border:`1px solid ${f.border}`, display:'flex', alignItems:'center', justifyContent:'center', color:f.color, marginBottom:10 }}>
+                  {f.icon}
+                </div>
+                <div style={{ color:'#ffffff', fontSize:13, fontWeight:700, lineHeight:1.2 }}>{f.title}</div>
+                <div style={{ color:'rgba(255,255,255,0.4)', fontSize:11, marginTop:3, lineHeight:1.4 }}>{f.desc}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom quote */}
+          <div style={{ borderLeft:'2px solid rgba(76,110,245,0.5)', paddingLeft:16 }}>
+            <p style={{ color:'rgba(255,255,255,0.38)', fontSize:12.5, lineHeight:1.65, margin:0, fontStyle:'italic' }}>
+              "Healthcare is not just about treating illness — it's about building
+              relationships that last a lifetime."
+            </p>
+            <p style={{ color:'rgba(255,255,255,0.25)', fontSize:11, marginTop:5 }}>GlobalHealthX · Patient Engagement Platform</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Shared form input with icon ───────────────────────────────────────────────
+function IconInput({ icon, error, ...props }: { icon: React.ReactNode; error?: boolean } & React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ position:'relative' }}>
+      <div style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color: focused ? '#4c6ef5' : '#9ca3af', transition:'color 0.15s', pointerEvents:'none' }}>
+        {icon}
+      </div>
+      <input
+        {...props}
+        onFocus={e => { setFocused(true); props.onFocus?.(e); }}
+        onBlur={e => { setFocused(false); props.onBlur?.(e); }}
+        style={{
+          width:'100%', padding:'12px 14px 12px 44px',
+          background:'#f9fafb', border:`1.5px solid ${error ? '#fca5a5' : focused ? '#4c6ef5' : '#e5e7eb'}`,
+          borderRadius:11, fontSize:14, color:'#111827', outline:'none',
+          transition:'border-color 0.15s, box-shadow 0.15s',
+          boxShadow: focused ? '0 0 0 3px rgba(76,110,245,0.12)' : 'none',
+        }}
+      />
+    </div>
+  );
+}
+
+// ── Domain input with icon ─────────────────────────────────────────────────────
+function DomainInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const mirrorRef = useRef<HTMLSpanElement>(null);
+  const [inputWidth, setInputWidth] = useState(72);
+  const [focused, setFocused] = useState(false);
+
+  useLayoutEffect(() => {
+    if (mirrorRef.current) setInputWidth(mirrorRef.current.offsetWidth + 4);
+  }, [value]);
+
+  return (
+    <div
+      style={{
+        display:'flex', alignItems:'center',
+        padding:'12px 14px 12px 44px',
+        background:'#f9fafb', border:`1.5px solid ${focused ? '#4c6ef5' : '#e5e7eb'}`,
+        borderRadius:11, transition:'border-color 0.15s, box-shadow 0.15s',
+        boxShadow: focused ? '0 0 0 3px rgba(76,110,245,0.12)' : 'none',
+        position:'relative', overflow:'hidden',
+      }}
+    >
+      {/* Icon */}
+      <div style={{ position:'absolute', left:14, top:'50%', transform:'translateY(-50%)', color: focused ? '#4c6ef5' : '#9ca3af', transition:'color 0.15s', pointerEvents:'none' }}>
+        <Mail size={16} />
+      </div>
+      {/* Mirror */}
+      <span ref={mirrorRef} aria-hidden style={{ position:'absolute', opacity:0, pointerEvents:'none', whiteSpace:'pre', fontSize:14, fontFamily:'inherit' }}>
+        {value || 'yourname'}
+      </span>
+      <input
+        type="text"
+        value={value}
+        onChange={e => { const v = e.target.value; onChange(v.includes('@') ? v.split('@')[0] : v.replace(/\s/g, '')); }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        required
+        placeholder="yourname"
+        style={{ width:inputWidth, minWidth:4, background:'transparent', fontSize:14, color:'#111827', outline:'none', border:'none', padding:0, flexShrink:0 }}
+      />
+      <span style={{ fontSize:14, color: value ? '#374151' : '#9ca3af', whiteSpace:'nowrap' }}>@{DOMAIN}</span>
+    </div>
+  );
+}
+
+// ── Submit button ──────────────────────────────────────────────────────────────
+function SubmitButton({ loading, label }: { loading: boolean; label: string }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="submit"
+      disabled={loading}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width:'100%', padding:'13px 0', border:'none', borderRadius:12, cursor: loading ? 'not-allowed' : 'pointer',
+        background: loading ? '#c7d2fe' : 'linear-gradient(135deg, #4c6ef5 0%, #7c3aed 100%)',
+        color:'#ffffff', fontSize:15, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+        boxShadow: loading ? 'none' : hovered ? '0 6px 24px rgba(76,110,245,0.5)' : '0 4px 14px rgba(76,110,245,0.35)',
+        transform: hovered && !loading ? 'translateY(-1px)' : 'translateY(0)',
+        transition:'all 0.2s',
+      }}
+    >
+      {loading ? 'Please wait…' : <>{label}<ArrowRight size={16}/></>}
+    </button>
+  );
+}
+
+// ── Error box ──────────────────────────────────────────────────────────────────
+function ErrorBox({ msg }: { msg: string }) {
+  if (!msg) return null;
+  return (
+    <div style={{ padding:'11px 14px', background:'#fef2f2', border:'1px solid #fecaca', borderRadius:10, color:'#b91c1c', fontSize:13, lineHeight:1.5 }}>
+      {msg}
+    </div>
+  );
+}
+
+// ── Info box ───────────────────────────────────────────────────────────────────
+function InfoBox({ msg }: { msg: string }) {
+  if (!msg) return null;
+  return (
+    <div style={{ padding:'11px 14px', background:'#f0fdf4', border:'1px solid #bbf7d0', borderRadius:10, color:'#15803d', fontSize:13, lineHeight:1.5 }}>
+      {msg}
+    </div>
+  );
+}
+
+// ── Right-side wrapper ────────────────────────────────────────────────────────
+function FormPanel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#ffffff', overflowY:'auto', padding:'40px 24px' }}>
+      {/* Mobile-only logo */}
+      <div className="lg:hidden" style={{ textAlign:'center', marginBottom:28 }}>
+        <div style={{ width:48, height:48, borderRadius:14, background:'linear-gradient(135deg,#4c6ef5,#7c3aed)', display:'inline-flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 20px rgba(76,110,245,0.3)', marginBottom:10 }}>
+          <span style={{ color:'#fff', fontWeight:900, fontSize:24 }}>H</span>
+        </div>
+        <div style={{ fontSize:20, fontWeight:800, color:'#111827' }}>Healix Engage</div>
+      </div>
+      <div style={{ width:'100%', maxWidth:380 }}>
+        {children}
+      </div>
+      {/* Bottom note */}
+      <p style={{ marginTop:32, fontSize:12, color:'#9ca3af', textAlign:'center' }}>
+        Access restricted to <strong style={{ color:'#6b7280' }}>@{DOMAIN}</strong> accounts only.
+      </p>
+    </div>
+  );
+}
+
+// ── Auth tab switcher ──────────────────────────────────────────────────────────
+function TabSwitcher({ mode, onSwitch }: { mode: 'login' | 'register'; onSwitch: (m: 'login' | 'register') => void }) {
+  return (
+    <div style={{ display:'flex', background:'#f3f4f6', borderRadius:12, padding:4, marginBottom:28 }}>
+      {(['login', 'register'] as const).map(m => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => onSwitch(m)}
+          style={{
+            flex:1, padding:'9px 0', borderRadius:9, fontSize:14, fontWeight:600,
+            background: mode === m ? '#4c6ef5' : 'transparent',
+            color: mode === m ? '#ffffff' : '#6b7280',
+            border:'none', cursor:'pointer', transition:'all 0.18s',
+            boxShadow: mode === m ? '0 2px 8px rgba(76,110,245,0.3)' : 'none',
+          }}
+        >
+          {m === 'login' ? 'Sign In' : 'Register'}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Form section label ─────────────────────────────────────────────────────────
+function FieldLabel({ children, right }: { children: React.ReactNode; right?: React.ReactNode }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:7 }}>
+      <label style={{ fontSize:13, fontWeight:600, color:'#374151' }}>{children}</label>
+      {right}
+    </div>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export function AuthPage() {
+  useInjectCSS();
+
   const [mode, setMode] = useState<Mode>('login');
   const [username, setUsername] = useState('');
   const [name, setName] = useState('');
@@ -22,333 +348,188 @@ export function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [resetToken, setResetToken] = useState('');
 
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setAuth = useAuthStore(s => s.setAuth);
 
-  // Check for ?reset_token=... on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tok = params.get('reset_token');
     if (tok) {
       setResetToken(tok);
       setMode('reset');
-      // Clean the token from the URL without reloading
-      const clean = window.location.pathname + window.location.hash;
-      window.history.replaceState({}, '', clean);
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     }
   }, []);
 
   function switchMode(m: 'login' | 'register') {
-    setMode(m);
-    setError('');
-    setInfo('');
+    setMode(m); setError(''); setInfo('');
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError('');
-    setInfo('');
-    setLoading(true);
+    setError(''); setInfo(''); setLoading(true);
 
     try {
       if (mode === 'forgot') {
-        const email = `${username.trim()}@${DOMAIN}`;
-        await axios.post('/api/auth/forgot-password', { email });
+        await axios.post('/api/auth/forgot-password', { email: `${username.trim()}@${DOMAIN}` });
         setInfo('Check your inbox — a reset link has been sent if that address is registered.');
         setUsername('');
-        setLoading(false);
         return;
       }
 
       if (mode === 'reset') {
-        if (password !== confirmPassword) {
-          setError('Passwords do not match.');
-          setLoading(false);
-          return;
-        }
-        const { data } = await axios.post<AuthResponse>('/api/auth/reset-password', {
-          token: resetToken,
-          password,
-        });
+        if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
+        const { data } = await axios.post<AuthResponse>('/api/auth/reset-password', { token: resetToken, password });
         setAuth(data.token, data.user);
         return;
       }
 
       const email = `${username.trim()}@${DOMAIN}`;
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-      const payload = mode === 'login' ? { email, password } : { email, name, password };
+      const payload  = mode === 'login' ? { email, password } : { email, name, password };
       const { data } = await axios.post<AuthResponse>(endpoint, payload);
       setAuth(data.token, data.user);
     } catch (err: unknown) {
-      const msg =
-        axios.isAxiosError(err)
-          ? (err.response?.data as { error?: string })?.error ?? err.message
-          : 'Something went wrong. Please try again.';
-      setError(msg);
+      setError(axios.isAxiosError(err)
+        ? (err.response?.data as { error?: string })?.error ?? err.message
+        : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  // ── Reset password view ────────────────────────────────────────────────────
+  // ── Reset mode ───────────────────────────────────────────────────────────────
   if (mode === 'reset') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
-        <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 mb-4">
-            <span className="text-3xl font-bold text-brand-400">H</span>
+      <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+        <BrandPanel />
+        <FormPanel>
+          <div style={{ marginBottom:28 }}>
+            <h2 style={{ fontSize:26, fontWeight:800, color:'#111827', letterSpacing:-0.5, margin:'0 0 6px' }}>Set a new password</h2>
+            <p style={{ fontSize:14, color:'#6b7280', lineHeight:1.6, margin:0 }}>Must be at least 8 characters.</p>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Healix Engage</h1>
-        </div>
-
-        <div className="w-full max-w-sm bg-surface-card border border-surface-border rounded-2xl p-8 shadow-xl">
-          <h2 className="text-lg font-bold text-white mb-1">Choose a new password</h2>
-          <p className="text-xs text-gray-400 mb-6">Must be at least 8 characters.</p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">New Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                placeholder="Min. 8 characters"
-                className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
-              />
+              <FieldLabel>New Password</FieldLabel>
+              <IconInput icon={<Lock size={16}/>} type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} placeholder="Min. 8 characters" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-                placeholder="Repeat new password"
-                className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
-              />
+              <FieldLabel>Confirm Password</FieldLabel>
+              <IconInput icon={<Lock size={16}/>} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={8} placeholder="Repeat new password" />
             </div>
-
-            {error && (
-              <div className="px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Updating…' : 'Set New Password'}
-            </button>
+            <ErrorBox msg={error} />
+            <SubmitButton loading={loading} label="Set New Password" />
           </form>
-
-          <button
-            onClick={() => { setMode('login'); setError(''); setPassword(''); setConfirmPassword(''); }}
-            className="mt-4 w-full text-center text-xs text-gray-500 hover:text-gray-300 transition-colors"
-          >
+          <button type="button" onClick={() => { setMode('login'); setError(''); setPassword(''); setConfirmPassword(''); }}
+            style={{ marginTop:20, display:'block', width:'100%', textAlign:'center', background:'none', border:'none', color:'#9ca3af', fontSize:13, cursor:'pointer', padding:'6px 0' }}>
             ← Back to Sign In
           </button>
-        </div>
+        </FormPanel>
       </div>
     );
   }
 
-  // ── Forgot password view ────────────────────────────────────────────────────
+  // ── Forgot mode ───────────────────────────────────────────────────────────────
   if (mode === 'forgot') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
-        <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 mb-4">
-            <span className="text-3xl font-bold text-brand-400">H</span>
+      <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+        <BrandPanel />
+        <FormPanel>
+          <div style={{ marginBottom:28 }}>
+            <h2 style={{ fontSize:26, fontWeight:800, color:'#111827', letterSpacing:-0.5, margin:'0 0 6px' }}>Forgot your password?</h2>
+            <p style={{ fontSize:14, color:'#6b7280', lineHeight:1.6, margin:0 }}>Enter your email and we'll send a reset link to your inbox.</p>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Healix Engage</h1>
-        </div>
-
-        <div className="w-full max-w-sm bg-surface-card border border-surface-border rounded-2xl p-8 shadow-xl">
-          <h2 className="text-lg font-bold text-white mb-1">Forgot your password?</h2>
-          <p className="text-xs text-gray-400 mb-6">
-            Enter your email and we'll send a reset link to your inbox.
-          </p>
-
           {info ? (
-            <div className="px-4 py-4 rounded-lg bg-emerald-900/30 border border-emerald-500/30 text-emerald-300 text-sm leading-relaxed">
-              {info}
-            </div>
+            <InfoBox msg={info} />
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:14 }}>
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+                <FieldLabel>Email</FieldLabel>
                 <DomainInput value={username} onChange={setUsername} />
               </div>
-
-              {error && (
-                <div className="px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Sending…' : 'Send Reset Link'}
-              </button>
+              <ErrorBox msg={error} />
+              <SubmitButton loading={loading} label="Send Reset Link" />
             </form>
           )}
-
-          <button
-            onClick={() => { setMode('login'); setError(''); setInfo(''); setUsername(''); }}
-            className="mt-4 w-full text-center text-xs text-gray-500 hover:text-gray-300 transition-colors"
-          >
+          <button type="button" onClick={() => { setMode('login'); setError(''); setInfo(''); setUsername(''); }}
+            style={{ marginTop:20, display:'block', width:'100%', textAlign:'center', background:'none', border:'none', color:'#9ca3af', fontSize:13, cursor:'pointer', padding:'6px 0' }}>
             ← Back to Sign In
           </button>
-        </div>
+        </FormPanel>
       </div>
     );
   }
 
-  // ── Login / Register view ───────────────────────────────────────────────────
+  // ── Login / Register ──────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
-      <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-500/20 border border-brand-500/30 mb-4">
-          <span className="text-3xl font-bold text-brand-400">H</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Healix Engage</h1>
-      </div>
-
-      <div className="w-full max-w-sm bg-surface-card border border-surface-border rounded-2xl p-8 shadow-xl">
-        <div className="flex rounded-lg bg-surface-elevated p-1 mb-6">
-          {(['login', 'register'] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => switchMode(m)}
-              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                mode === m ? 'bg-brand-500 text-white shadow' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {m === 'login' ? 'Sign In' : 'Register'}
-            </button>
-          ))}
+    <div style={{ display:'flex', height:'100vh', overflow:'hidden' }}>
+      <BrandPanel />
+      <FormPanel>
+        {/* Heading */}
+        <div style={{ marginBottom:28 }}>
+          <h2 style={{ fontSize:26, fontWeight:800, color:'#111827', letterSpacing:-0.5, margin:'0 0 4px' }}>
+            {mode === 'login' ? 'Welcome back' : 'Create your account'}
+          </h2>
+          <p style={{ fontSize:14, color:'#6b7280', margin:0 }}>
+            {mode === 'login' ? 'Sign in to your GlobalHealthX workspace.' : 'Join your GlobalHealthX care team.'}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Tab switcher */}
+        <TabSwitcher mode={mode as 'login' | 'register'} onSwitch={switchMode} />
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
           {mode === 'register' && (
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Jane Smith"
-                className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
-              />
+              <FieldLabel>Full Name</FieldLabel>
+              <IconInput icon={<User size={16}/>} type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Jane Smith" />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">Email</label>
+            <FieldLabel>Email</FieldLabel>
             <DomainInput value={username} onChange={setUsername} />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium text-gray-400">Password</label>
-              {mode === 'login' && (
-                <button
-                  type="button"
-                  onClick={() => { setMode('forgot'); setError(''); setInfo(''); }}
-                  className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-                >
-                  Forgot password?
-                </button>
-              )}
-            </div>
-            <input
+            <FieldLabel
+              right={
+                mode === 'login' ? (
+                  <button type="button" onClick={() => { setMode('forgot'); setError(''); setInfo(''); }}
+                    style={{ fontSize:12.5, fontWeight:600, color:'#4c6ef5', background:'none', border:'none', cursor:'pointer', padding:0 }}>
+                    Forgot password?
+                  </button>
+                ) : undefined
+              }
+            >
+              Password
+            </FieldLabel>
+            <IconInput
+              icon={<Lock size={16}/>}
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               minLength={8}
               placeholder={mode === 'register' ? 'Min. 8 characters' : '••••••••'}
-              className="w-full px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 text-sm"
             />
           </div>
 
-          {error && (
-            <div className="px-3 py-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
+          <ErrorBox msg={error} />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
+          <SubmitButton loading={loading} label={mode === 'login' ? 'Sign In' : 'Create Account'} />
         </form>
 
-        <p className="mt-5 text-center text-xs text-gray-500">
-          Access restricted to{' '}
-          <span className="text-gray-400 font-medium">@{DOMAIN}</span> accounts only.
+        {/* Switch mode hint */}
+        <p style={{ marginTop:20, textAlign:'center', fontSize:13, color:'#9ca3af' }}>
+          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+          <button type="button" onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+            style={{ color:'#4c6ef5', fontWeight:600, background:'none', border:'none', cursor:'pointer', padding:0, fontSize:13 }}>
+            {mode === 'login' ? 'Register' : 'Sign In'}
+          </button>
         </p>
-      </div>
-    </div>
-  );
-}
-
-// ── Domain input — suffix tracks typed text ───────────────────────────────────
-
-function DomainInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const mirrorRef = useRef<HTMLSpanElement>(null);
-  const [inputWidth, setInputWidth] = useState(72);
-
-  useLayoutEffect(() => {
-    if (mirrorRef.current) {
-      setInputWidth(mirrorRef.current.offsetWidth + 4);
-    }
-  }, [value]);
-
-  return (
-    <div className="flex items-center px-3 py-2.5 rounded-lg bg-surface-elevated border border-surface-border focus-within:border-brand-500 transition-colors overflow-hidden relative">
-      <span
-        ref={mirrorRef}
-        aria-hidden
-        style={{
-          position: 'absolute',
-          opacity: 0,
-          pointerEvents: 'none',
-          whiteSpace: 'pre',
-          fontSize: '0.875rem',
-          fontFamily: 'inherit',
-        }}
-      >
-        {value || 'yourname'}
-      </span>
-
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => {
-          const val = e.target.value;
-          onChange(val.includes('@') ? val.split('@')[0] : val.replace(/\s/g, ''));
-        }}
-        required
-        placeholder="yourname"
-        style={{ width: inputWidth, minWidth: 4 }}
-        className="bg-transparent text-white text-sm outline-none placeholder-gray-500 shrink-0"
-      />
-
-      <span className={`text-sm whitespace-nowrap transition-colors ${value ? 'text-white' : 'text-gray-500'}`}>
-        @{DOMAIN}
-      </span>
+      </FormPanel>
     </div>
   );
 }
