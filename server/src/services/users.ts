@@ -51,6 +51,15 @@ export function create(data: Omit<StoredUser, 'id' | 'createdAt'>): StoredUser {
   return user;
 }
 
+export function updatePassword(id: string, passwordHash: string): StoredUser | undefined {
+  const users = read();
+  const idx = users.findIndex(u => u.id === id);
+  if (idx === -1) return undefined;
+  users[idx] = { ...users[idx], passwordHash };
+  write(users);
+  return users[idx];
+}
+
 export function update(id: string, data: Partial<Pick<StoredUser, 'name' | 'role'>>): StoredUser | undefined {
   const users = read();
   const idx = users.findIndex(u => u.id === id);

@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as userStore from '../services/users';
+import * as resetTokens from '../services/resetTokens';
+import { sendPasswordResetEmail } from '../services/mailer';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -71,6 +73,44 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 
   const token = issueToken(user.id);
   res.json({ token, user: safeUser(user) });
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req: Request, res: Response): Promise<void> => {
+  const { email } = req.body as { email?: string };
+  if (!email) { res.status(400).json({ error: 'Email is required.' }); return; }
+
+  // Always return 200 — don't reveal whether the email exists
+  const user = userStore.findByEmail(email.toLowerCase());
+  if (user) {
+    const token = resetTokens.create(user.id, user.email);
+    const appUrl = process.env.APP_URL ?? 'http://localhost:5173';
+    const resetLink = `${appUrl}/?reset_token=${token}`;
+    try {
+      sendPasswordResetEmail(user.email, user.name, resetLink);
+    } catch (err) {
+      console.error('Failed to send reset email:', (err as Error).message);
+    }
+  }
+
+  res.json({ message: 'If that email is registered, a reset link has been sent.' });
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+  const { token, password } = req.body as { token?: string; password?: string };
+  if (!token || !password) { res.status(400).json({ error: 'Token and password are required.' }); return; }
+  if (password.length < 8) { res.status(400).json({ error: 'Password must be at least 8 characters.' }); return; }
+
+  const entry = resetTokens.consume(token);
+  if (!entry) { res.status(400).json({ error: 'This reset link is invalid or has expired.' }); return; }
+
+  const hash = await bcrypt.hash(password, 12);
+  const updated = userStore.updatePassword(entry.userId, hash);
+  if (!updated) { res.status(404).json({ error: 'User not found.' }); return; }
+
+  const newToken = issueToken(updated.id);
+  res.json({ token: newToken, user: safeUser(updated) });
 });
 
 // GET /api/auth/me
