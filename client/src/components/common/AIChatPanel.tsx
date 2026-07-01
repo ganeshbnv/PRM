@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import apiClient from '../../api/client';
 import { Sparkles, X, Send, Bot, User } from 'lucide-react';
 
 interface Message {
@@ -97,7 +98,7 @@ export function AIChatPanel({ activeSection }: { activeSection: string }) {
     setMessages(prev => [...prev, userMsg, loadingMsg]);
 
     try {
-      const { data } = await axios.post<{ answer: string }>('/api/ai/chat', { question: text, section });
+      const { data } = await apiClient.post<{ answer: string }>('/ai/chat', { question: text, section });
       setMessages(prev => prev.map(m => m.loading ? { ...m, content: data.answer, loading: false } : m));
     } catch (err) {
       const msg = axios.isAxiosError(err)
