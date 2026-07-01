@@ -1,4 +1,9 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+
+const DATA_DIR = path.resolve(__dirname, '../../data');
+const TOKENS_FILE = path.join(DATA_DIR, 'reset-tokens.json');
 
 interface TokenEntry {
   userId: string;
@@ -6,29 +11,51 @@ interface TokenEntry {
   expires: number;
 }
 
-// In-memory store — tokens are short-lived (30 min) and don't need to survive restarts
-const store = new Map<string, TokenEntry>();
-
 const TTL_MS = 30 * 60 * 1000;
 
+function read(): Record<string, TokenEntry> {
+  if (!fs.existsSync(TOKENS_FILE)) return {};
+  try { return JSON.parse(fs.readFileSync(TOKENS_FILE, 'utf-8')); }
+  catch { return {}; }
+}
+
+function write(tokens: Record<string, TokenEntry>): void {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
+}
+
+function purgeExpired(tokens: Record<string, TokenEntry>): Record<string, TokenEntry> {
+  const now = Date.now();
+  const clean: Record<string, TokenEntry> = {};
+  for (const [tok, val] of Object.entries(tokens)) {
+    if (val.expires > now) clean[tok] = val;
+  }
+  return clean;
+}
+
 export function create(userId: string, email: string): string {
+  let tokens = purgeExpired(read());
   // Invalidate any existing token for this user
-  for (const [tok, val] of store.entries()) {
-    if (val.userId === userId) store.delete(tok);
+  for (const [tok, val] of Object.entries(tokens)) {
+    if (val.userId === userId) delete tokens[tok];
   }
   const token = crypto.randomBytes(32).toString('hex');
-  store.set(token, { userId, email, expires: Date.now() + TTL_MS });
+  tokens[token] = { userId, email, expires: Date.now() + TTL_MS };
+  write(tokens);
   return token;
 }
 
-/** Validates and consumes (one-time use) the token. Returns null if invalid or expired. */
+/** One-time use — deletes token on success. Returns null if invalid or expired. */
 export function consume(token: string): { userId: string; email: string } | null {
-  const entry = store.get(token);
+  const tokens = read();
+  const entry = tokens[token];
   if (!entry) return null;
   if (Date.now() > entry.expires) {
-    store.delete(token);
+    delete tokens[token];
+    write(tokens);
     return null;
   }
-  store.delete(token);
+  delete tokens[token];
+  write(tokens);
   return { userId: entry.userId, email: entry.email };
 }
