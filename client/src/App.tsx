@@ -391,7 +391,7 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full sm:w-[92vw] sm:max-w-6xl h-[92vh] bg-[#0d1117] border border-white/10 sm:rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
+      <div className="prm-dark-modal relative w-full sm:w-[92vw] sm:max-w-6xl h-[92vh] bg-[#0d1117] border border-white/10 sm:rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
 
         {/* ── Header ── */}
         <div className="flex-shrink-0 relative overflow-hidden">

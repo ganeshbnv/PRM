@@ -134,6 +134,41 @@ html:not(.dark) .text-gray-500 { color: #4b5468; }
 html:not(.dark) .text-gray-600 { color: #374151; }
 html:not(.dark) .text-gray-700 { color: #1f2937; }
 
+/* Dark-background modals/panels: restore true colours regardless of theme    */
+html:not(.dark) .prm-dark-modal .text-white     { color: #ffffff; }
+html:not(.dark) .prm-dark-modal .text-gray-50   { color: #f8fafc; }
+html:not(.dark) .prm-dark-modal .text-gray-100  { color: #f1f5f9; }
+html:not(.dark) .prm-dark-modal .text-gray-200  { color: #e2e8f0; }
+html:not(.dark) .prm-dark-modal .text-gray-300  { color: #cbd5e1; }
+html:not(.dark) .prm-dark-modal .text-gray-400  { color: #94a3b8; }
+html:not(.dark) .prm-dark-modal .text-gray-500  { color: #64748b; }
+html:not(.dark) .prm-dark-modal .text-gray-600  { color: #475569; }
+html:not(.dark) .prm-dark-modal .text-gray-700  { color: #334155; }
+html:not(.dark) .prm-dark-modal .hover\:text-white:hover  { color: #ffffff; }
+html:not(.dark) .prm-dark-modal .hover\:text-gray-300:hover { color: #cbd5e1; }
+html:not(.dark) .prm-dark-modal .text-brand-300 { color: #93c5fd; }
+html:not(.dark) .prm-dark-modal .text-brand-400 { color: #818cf8; }
+html:not(.dark) .prm-dark-modal .text-emerald-400 { color: #34d399; }
+html:not(.dark) .prm-dark-modal .text-emerald-600 { color: #059669; }
+html:not(.dark) .prm-dark-modal .text-blue-400  { color: #60a5fa; }
+html:not(.dark) .prm-dark-modal .text-blue-500  { color: #3b82f6; }
+/* bg-white/* overlays → keep as true semi-transparent whites inside dark modal */
+html:not(.dark) .prm-dark-modal .bg-white\/\[0\.02\]  { background-color: rgb(255 255 255 / 0.02); }
+html:not(.dark) .prm-dark-modal .bg-white\/\[0\.035\] { background-color: rgb(255 255 255 / 0.035); }
+html:not(.dark) .prm-dark-modal .bg-white\/\[0\.04\]  { background-color: rgb(255 255 255 / 0.04); }
+html:not(.dark) .prm-dark-modal .bg-white\/4    { background-color: rgb(255 255 255 / 0.04); }
+html:not(.dark) .prm-dark-modal .bg-white\/6    { background-color: rgb(255 255 255 / 0.06); }
+html:not(.dark) .prm-dark-modal .bg-white\/8    { background-color: rgb(255 255 255 / 0.08); }
+html:not(.dark) .prm-dark-modal .hover\:bg-white\/4:hover  { background-color: rgb(255 255 255 / 0.04); }
+html:not(.dark) .prm-dark-modal .hover\:bg-white\/8:hover  { background-color: rgb(255 255 255 / 0.08); }
+/* border-white/* → keep as true transparent whites */
+html:not(.dark) .prm-dark-modal .border-white\/5   { border-color: rgb(255 255 255 / 0.05); }
+html:not(.dark) .prm-dark-modal .border-white\/6   { border-color: rgb(255 255 255 / 0.06); }
+html:not(.dark) .prm-dark-modal .border-white\/7   { border-color: rgb(255 255 255 / 0.07); }
+html:not(.dark) .prm-dark-modal .border-white\/10  { border-color: rgb(255 255 255 / 0.10); }
+html:not(.dark) .prm-dark-modal .border-white\/12  { border-color: rgb(255 255 255 / 0.12); }
+html:not(.dark) .prm-dark-modal .border-white\/15  { border-color: rgb(255 255 255 / 0.15); }
+
 /* Exceptions: text-white on coloured backgrounds must stay white */
 html:not(.dark) .bg-brand-600.text-white,
 html:not(.dark) .bg-brand-500.text-white,
