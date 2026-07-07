@@ -213,11 +213,11 @@ const TECH_STACK = [
       },
       {
         name: 'Prisma ORM',
-        badge: 'v5',
+        badge: 'Wiki + pm-tracker only',
         color: '#5a67d8',
-        tagline: 'Type-safe bridge between code and database',
-        plain: 'Instead of writing raw SQL queries, developers write plain TypeScript like "get all wiki pages in this space". Prisma translates that into the correct database instruction automatically — and TypeScript catches any mistakes before the code even runs.',
-        detail: 'Generates a fully-typed query client from schema.prisma. Handles schema migrations with version history. Used in both the Wiki server (wiki/server/prisma) and pm-tracker. Schema supports multi-tenant spaces, page versioning, and comment threads.',
+        tagline: 'Type-safe database access — Wiki & pm-tracker, NOT this app',
+        plain: 'Prisma is used by the Wiki server and the pm-tracker to talk to their PostgreSQL databases. This app (Healix Engage PRM) does not use Prisma — it stores users in a flat JSON file and reads all project data live from Azure DevOps. No local relational database here.',
+        detail: 'Used in wiki/server/prisma (Wiki pages, spaces, version history) and pm-tracker (users, projects). NOT present in the Healix Engage PRM server — which uses server/data/users.json + server/data/reset-tokens.json for persistence and ADO REST API as its source of truth.',
       },
       {
         name: 'Redis',
