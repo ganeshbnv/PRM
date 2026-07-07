@@ -388,155 +388,146 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
   const cat = activeCat >= 0 ? TECH_STACK[activeCat] : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="prm-dark-modal relative w-full sm:w-[92vw] sm:max-w-6xl h-[92vh] bg-[#0d1117] border border-white/10 sm:rounded-2xl shadow-[0_40px_100px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden">
+      {/* Modal — full white, fills most of the screen */}
+      <div className="relative w-full max-w-[98vw] h-[96vh] bg-white border border-gray-200 rounded-2xl shadow-[0_32px_80px_rgba(0,0,0,0.22)] flex flex-col overflow-hidden">
 
         {/* ── Header ── */}
-        <div className="flex-shrink-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1f35] via-[#0d1117] to-[#0d1117]" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/60 to-transparent" />
-          <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-brand-500/8 blur-3xl pointer-events-none" />
-          <div className="absolute -top-8 right-32 w-48 h-48 rounded-full bg-violet-500/8 blur-3xl pointer-events-none" />
-
-          <div className="relative flex items-center gap-4 px-6 py-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-lg shadow-brand-500/30 flex-shrink-0">
-              <Layers size={18} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-white font-bold text-base leading-tight tracking-tight">Healix Engage · Tech Stack</h2>
-              <p className="text-gray-500 text-xs mt-0.5">{totalTech} technologies across {TECH_STACK.length} layers · Global HealthX</p>
-            </div>
-
-            {/* Stats pills */}
-            <div className="hidden md:flex items-center gap-2 ml-4">
-              {[
-                { label: 'Frontend', color: '#61dafb' },
-                { label: 'AI Local', color: '#818cf8' },
-                { label: 'ADO Live', color: '#0078d4' },
-              ].map(s => (
-                <span key={s.label} className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full border"
-                  style={{ background: `${s.color}12`, borderColor: `${s.color}30`, color: s.color }}>
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: s.color }} />
-                  {s.label}
-                </span>
-              ))}
-            </div>
-
-            <button onClick={onClose} className="ml-auto w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/8 transition-colors flex-shrink-0">
-              <X size={16} />
-            </button>
+        <div className="flex-shrink-0 flex items-center gap-4 px-7 py-4 border-b border-gray-200 bg-white">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center shadow-md flex-shrink-0">
+            <Layers size={18} style={{ color: '#fff' }} />
           </div>
+          <div>
+            <h2 style={{ color: '#0f172a', fontWeight: 800, fontSize: 16, letterSpacing: -0.3, lineHeight: 1.2 }}>Healix Engage · Tech Stack</h2>
+            <p style={{ color: '#64748b', fontSize: 12, marginTop: 2 }}>{totalTech} technologies across {TECH_STACK.length} layers · Global HealthX</p>
+          </div>
+
+          <div className="hidden md:flex items-center gap-2 ml-4">
+            {[
+              { label: 'Frontend live', color: '#2563eb' },
+              { label: 'AI local', color: '#7c3aed' },
+              { label: 'ADO connected', color: '#0369a1' },
+            ].map(s => (
+              <span key={s.label} className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border"
+                style={{ background: `${s.color}0f`, borderColor: `${s.color}30`, color: s.color }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: s.color }} />
+                {s.label}
+              </span>
+            ))}
+          </div>
+
+          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-gray-100" style={{ color: '#475569' }}>
+            <X size={16} />
+          </button>
         </div>
 
         {/* ── Body ── */}
         <div className="flex flex-1 overflow-hidden">
 
           {/* Left sidebar */}
-          <nav className="flex-shrink-0 w-52 border-r border-white/6 flex flex-col bg-[#090d14] py-3 overflow-y-auto">
+          <nav className="flex-shrink-0 w-56 border-r border-gray-200 flex flex-col bg-gray-50 py-3 overflow-y-auto">
+
             {/* Overview */}
             <button
               onClick={() => { setActiveCat(-1); setActiveItem(null); }}
-              className={cn(
-                'w-full text-left flex items-center gap-3 px-4 py-2.5 transition-all relative',
-                activeCat === -1 ? 'bg-white/6 text-white' : 'text-gray-500 hover:bg-white/4 hover:text-gray-300',
-              )}
+              className="w-full text-left flex items-center gap-3 px-4 py-2.5 transition-all relative"
+              style={{
+                background: activeCat === -1 ? '#eff6ff' : 'transparent',
+                color: activeCat === -1 ? '#1d4ed8' : '#475569',
+              }}
             >
-              {activeCat === -1 && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full bg-gradient-to-b from-brand-400 to-violet-500" />}
+              {activeCat === -1 && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full bg-brand-500" />}
               <span className="text-base leading-none flex-shrink-0">🗺️</span>
               <div>
-                <div className="text-xs font-semibold leading-snug">Architecture</div>
-                <div className="text-[10px] text-gray-600 mt-0.5">Full system overview</div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.2 }}>Architecture</div>
+                <div style={{ fontSize: 10.5, color: '#94a3b8', marginTop: 2 }}>Full system overview</div>
               </div>
             </button>
 
-            <div className="mx-4 my-2 border-t border-white/5" />
-            <p className="px-4 mb-1.5 text-[9px] text-gray-600 uppercase tracking-widest font-semibold">Layers</p>
+            <div className="mx-4 my-2 border-t border-gray-200" />
+            <p className="px-4 mb-1.5" style={{ fontSize: 9.5, color: '#94a3b8', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Layers</p>
 
             {TECH_STACK.map((c, i) => (
               <button
                 key={c.category}
                 onClick={() => { setActiveCat(i); setActiveItem(null); }}
-                className={cn(
-                  'w-full text-left flex items-center gap-3 px-4 py-2.5 transition-all relative',
-                  activeCat === i ? 'bg-white/6 text-white' : 'text-gray-500 hover:bg-white/4 hover:text-gray-300',
-                )}
+                className="w-full text-left flex items-center gap-3 px-4 py-2.5 transition-all relative"
+                style={{
+                  background: activeCat === i ? `${c.color}12` : 'transparent',
+                  color: activeCat === i ? '#0f172a' : '#475569',
+                }}
               >
-                {activeCat === i && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full" style={{ background: `linear-gradient(to bottom, ${c.color}, ${c.color}88)` }} />}
+                {activeCat === i && <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-7 rounded-r-full" style={{ background: c.color }} />}
                 <span className="text-base leading-none flex-shrink-0">{c.emoji}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-semibold leading-snug truncate">{c.category}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.2 }}>{c.category}</div>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] text-gray-600">{c.items.length} tools</span>
-                    <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: c.color, opacity: 0.7 }} />
-                    <span className="text-[10px] truncate" style={{ color: c.color, opacity: 0.7 }}>{c.port}</span>
+                    <span style={{ fontSize: 10.5, color: '#94a3b8' }}>{c.items.length} tools</span>
+                    <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: c.color }} />
+                    <span style={{ fontSize: 10.5, color: c.color, opacity: 0.85 }}>{c.port}</span>
                   </div>
                 </div>
               </button>
             ))}
 
-            <div className="mt-auto mx-4 pt-3 pb-2 border-t border-white/5">
-              <p className="text-[10px] text-gray-700 leading-relaxed">🔒 All AI runs locally<br />No patient data leaves org</p>
+            <div className="mt-auto mx-4 pt-3 pb-2 border-t border-gray-200">
+              <p style={{ fontSize: 10.5, color: '#94a3b8', lineHeight: 1.6 }}>🔒 All AI runs locally<br />No patient data leaves org</p>
             </div>
           </nav>
 
           {/* Right: content */}
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-hidden flex flex-col bg-white">
 
             {/* ── Overview tab ── */}
             {activeCat === -1 && (
-              <div className="flex-1 overflow-y-auto p-6">
-                {/* Architecture flow */}
-                <div className="mb-6">
-                  <h3 className="text-white font-bold text-sm mb-1">System Architecture</h3>
-                  <p className="text-gray-500 text-xs mb-4">How all the pieces connect end-to-end</p>
-                  <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex-1 overflow-y-auto p-7">
+                <div className="mb-8">
+                  <h3 style={{ color: '#0f172a', fontWeight: 800, fontSize: 15, marginBottom: 4 }}>System Architecture</h3>
+                  <p style={{ color: '#64748b', fontSize: 12, marginBottom: 20 }}>How all the pieces connect end-to-end</p>
+                  <div className="flex items-center gap-3 flex-wrap">
                     {ARCH_FLOW.map((node, i) => (
-                      <div key={node.label} className="flex items-center gap-2">
-                        <div className="rounded-xl p-3 text-center min-w-[100px] border"
-                          style={{ background: `${node.color}0e`, borderColor: `${node.color}28` }}>
-                          <div className="text-xl mb-1">{node.icon}</div>
-                          <div className="text-xs font-bold text-white leading-tight">{node.label}</div>
-                          <div className="text-[10px] mt-0.5" style={{ color: node.color }}>{node.sub}</div>
+                      <div key={node.label} className="flex items-center gap-3">
+                        <div className="rounded-xl p-4 text-center border" style={{ minWidth: 110, background: `${node.color}0a`, borderColor: `${node.color}30` }}>
+                          <div style={{ fontSize: 22, marginBottom: 6 }}>{node.icon}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>{node.label}</div>
+                          <div style={{ fontSize: 10.5, marginTop: 3, color: node.color, fontWeight: 600 }}>{node.sub}</div>
                         </div>
                         {i < ARCH_FLOW.length - 1 && (
-                          <div className="flex flex-col items-center gap-0.5">
-                            <div className="w-6 h-px bg-gradient-to-r from-white/10 to-white/20" />
-                            <div className="text-[9px] text-gray-700">→</div>
-                          </div>
+                          <div style={{ color: '#cbd5e1', fontSize: 18, fontWeight: 300 }}>→</div>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* All categories summary grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {TECH_STACK.map((c, i) => (
                     <button
                       key={c.category}
                       onClick={() => setActiveCat(i)}
-                      className="text-left rounded-xl p-4 border border-white/7 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/12 transition-all group"
+                      className="text-left rounded-xl p-5 border transition-all group hover:shadow-md"
+                      style={{ borderColor: '#e2e8f0', background: '#fafafa' }}
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="text-2xl">{c.emoji}</span>
+                        <span style={{ fontSize: 22 }}>{c.emoji}</span>
                         <div>
-                          <div className="text-sm font-bold text-white group-hover:text-brand-300 transition-colors">{c.category}</div>
-                          <div className="text-[10px] mt-0.5" style={{ color: c.color }}>{c.port}</div>
+                          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0f172a' }}>{c.category}</div>
+                          <div style={{ fontSize: 10.5, marginTop: 2, color: c.color, fontWeight: 600 }}>{c.port}</div>
                         </div>
-                        <span className="ml-auto text-[10px] font-mono px-2 py-0.5 rounded-full border" style={{ color: c.color, borderColor: `${c.color}35`, background: `${c.color}10` }}>
+                        <span className="ml-auto text-[11px] font-bold px-2 py-0.5 rounded-full border" style={{ color: c.color, borderColor: `${c.color}40`, background: `${c.color}10` }}>
                           {c.items.length}
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">{c.summary}</p>
-                      <div className="flex flex-wrap gap-1 mt-3">
+                      <p style={{ fontSize: 11.5, color: '#64748b', lineHeight: 1.65 }} className="line-clamp-2">{c.summary}</p>
+                      <div className="flex flex-wrap gap-1.5 mt-3">
                         {c.items.slice(0, 4).map(it => (
-                          <span key={it.name} className="text-[10px] px-1.5 py-0.5 rounded bg-white/4 text-gray-400 border border-white/6">
+                          <span key={it.name} style={{ fontSize: 10.5, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#334155', border: '1px solid #e2e8f0', fontWeight: 600 }}>
                             {it.name}
                           </span>
                         ))}
-                        {c.items.length > 4 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/4 text-gray-500">+{c.items.length - 4}</span>}
+                        {c.items.length > 4 && <span style={{ fontSize: 10.5, padding: '2px 8px', borderRadius: 6, background: '#f1f5f9', color: '#94a3b8', border: '1px solid #e2e8f0' }}>+{c.items.length - 4}</span>}
                       </div>
                     </button>
                   ))}
@@ -548,77 +539,79 @@ function TechStackModal({ onClose }: { onClose: () => void }) {
             {cat && (
               <>
                 {/* Category header */}
-                <div className="flex-shrink-0 px-6 pt-4 pb-3 border-b border-white/5" style={{ borderLeftColor: cat.color }}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{cat.emoji}</span>
+                <div className="flex-shrink-0 px-7 pt-5 pb-4 border-b border-gray-200" style={{ borderTopWidth: 3, borderTopColor: cat.color }}>
+                  <div className="flex items-center gap-4">
+                    <span style={{ fontSize: 32 }}>{cat.emoji}</span>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-white font-bold text-sm">{cat.category}</h3>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full border font-mono"
-                          style={{ color: cat.color, borderColor: `${cat.color}35`, background: `${cat.color}10` }}>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h3 style={{ color: '#0f172a', fontWeight: 800, fontSize: 16 }}>{cat.category}</h3>
+                        <span className="text-[11px] px-2.5 py-1 rounded-full border font-semibold"
+                          style={{ color: cat.color, borderColor: `${cat.color}40`, background: `${cat.color}0f` }}>
                           {cat.port}
                         </span>
                       </div>
-                      <p className="text-gray-500 text-xs mt-0.5 leading-relaxed max-w-2xl">{cat.summary}</p>
+                      <p style={{ color: '#64748b', fontSize: 12.5, marginTop: 4, lineHeight: 1.65, maxWidth: '72ch' }}>{cat.summary}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Cards */}
-                <div className="flex-1 overflow-y-auto p-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {cat.items.map((item) => {
                       const isOpen = activeItem === item.name;
                       return (
                         <div
                           key={item.name}
-                          className={cn(
-                            'rounded-xl border transition-all duration-200 overflow-hidden',
-                            isOpen ? 'md:col-span-2 border-white/15 bg-white/[0.035]' : 'border-white/7 bg-white/[0.02] hover:border-white/12 hover:bg-white/[0.035]',
-                          )}
-                          style={isOpen ? { borderTopColor: item.color } : {}}
+                          className={cn('rounded-xl border transition-all duration-200 overflow-hidden', isOpen && 'md:col-span-2')}
+                          style={{
+                            borderColor: isOpen ? item.color : '#e2e8f0',
+                            background: isOpen ? '#fafffe' : '#ffffff',
+                            boxShadow: isOpen ? `0 0 0 1px ${item.color}30, 0 4px 16px rgba(0,0,0,0.06)` : '0 1px 3px rgba(0,0,0,0.04)',
+                            borderTopWidth: isOpen ? 3 : 1,
+                            borderTopColor: isOpen ? item.color : '#e2e8f0',
+                          }}
                         >
                           <button
                             onClick={() => setActiveItem(isOpen ? null : item.name)}
-                            className="w-full text-left flex items-center gap-3 p-4"
+                            className="w-full text-left flex items-center gap-3.5 p-5 hover:bg-gray-50 transition-colors"
                           >
-                            {/* Color swatch with letter */}
-                            <div className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-sm font-black"
-                              style={{ background: `${item.color}15`, border: `1.5px solid ${item.color}35`, color: item.color }}>
+                            <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center text-base font-black"
+                              style={{ background: `${item.color}15`, border: `2px solid ${item.color}35`, color: item.color }}>
                               {item.name[0]}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold text-gray-100">{item.name}</span>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{item.name}</span>
                                 {item.badge && (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-mono leading-none"
-                                    style={{ background: `${item.color}15`, color: item.color, border: `1px solid ${item.color}30` }}>
+                                  <span className="text-[10.5px] px-2 py-0.5 rounded-md font-semibold"
+                                    style={{ background: `${item.color}12`, color: item.color, border: `1px solid ${item.color}35` }}>
                                     {item.badge}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{item.tagline}</p>
+                              <p style={{ fontSize: 12, color: '#64748b', marginTop: 3, lineHeight: 1.45 }}>{item.tagline}</p>
                             </div>
-                            <ChevronDown size={13} className={cn('text-gray-600 flex-shrink-0 transition-transform duration-200', isOpen && 'rotate-180')} />
+                            <ChevronDown size={15} style={{ color: '#94a3b8', flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                           </button>
 
                           {isOpen && (
-                            <div className="px-4 pb-4 pt-1 space-y-2.5 border-t border-white/6">
-                              <div className="rounded-lg p-3.5" style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)' }}>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-sm">💬</span>
-                                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Plain English</span>
-                                  <span className="ml-auto text-[10px] text-emerald-600 bg-emerald-900/30 border border-emerald-800/40 rounded-full px-2 py-0.5">Anyone</span>
+                            <div className="px-5 pb-5 pt-1 space-y-3" style={{ borderTop: '1px solid #f1f5f9' }}>
+                              <div className="rounded-xl p-4" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                                <div className="flex items-center gap-2 mb-2.5">
+                                  <span style={{ fontSize: 14 }}>💬</span>
+                                  <span style={{ fontSize: 10.5, fontWeight: 800, color: '#166534', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Plain English</span>
+                                  <span className="ml-auto" style={{ fontSize: 10.5, color: '#15803d', background: '#dcfce7', border: '1px solid #86efac', borderRadius: 99, padding: '2px 10px', fontWeight: 600 }}>Anyone</span>
                                 </div>
-                                <p className="text-xs text-gray-300 leading-[1.75]">{item.plain}</p>
+                                <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.75 }}>{item.plain}</p>
                               </div>
-                              <div className="rounded-lg p-3.5" style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.18)' }}>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-sm">🔬</span>
-                                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Technical Detail</span>
-                                  <span className="ml-auto text-[10px] text-blue-500 bg-blue-900/30 border border-blue-800/40 rounded-full px-2 py-0.5">Engineers</span>
+                              <div className="rounded-xl p-4" style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+                                <div className="flex items-center gap-2 mb-2.5">
+                                  <span style={{ fontSize: 14 }}>🔬</span>
+                                  <span style={{ fontSize: 10.5, fontWeight: 800, color: '#1e40af', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Technical Detail</span>
+                                  <span className="ml-auto" style={{ fontSize: 10.5, color: '#1d4ed8', background: '#dbeafe', border: '1px solid #93c5fd', borderRadius: 99, padding: '2px 10px', fontWeight: 600 }}>Engineers</span>
                                 </div>
-                                <p className="text-[11px] text-gray-400 leading-[1.75] font-mono">{item.detail}</p>
+                                <p style={{ fontSize: 12, color: '#1e3a8a', lineHeight: 1.75, fontFamily: 'ui-monospace, monospace' }}>{item.detail}</p>
                               </div>
                             </div>
                           )}
