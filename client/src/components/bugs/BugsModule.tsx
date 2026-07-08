@@ -9,6 +9,7 @@ import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
 import type { WorkItem } from '../../types';
 import { differenceInDays } from 'date-fns';
+import { AiSummaryStrip } from '../common/AiSummaryStrip';
 
 const PRIORITY_COLORS: Record<number, string> = { 1: '#ef4444', 2: '#f97316', 3: '#eab308', 4: '#6b7280' };
 const SEV_COLORS: Record<string, string> = { '1 - Critical': '#ef4444', '2 - High': '#f97316', '3 - Medium': '#eab308', '4 - Low': '#6b7280' };
@@ -123,6 +124,8 @@ export function BugsModule() {
 
   return (
     <div className="flex flex-col gap-5">
+
+      <AiSummaryStrip section="bugs" />
 
       {/* ── Sprint picker ─────────────────────────────────────────────────────── */}
       <div className="bg-module-gradient rounded-2xl border border-surface-border overflow-hidden">

@@ -116,14 +116,18 @@ router.post('/', requireAuth, async (req: AuthRequest, res: Response): Promise<v
   } as Record<string, string>)[section] ?? section;
 
   const prompt =
-`You are Healix AI inside the Healix Engage PRM dashboard (Global HealthX).
-Section: ${sectionLabel}
-Question: "${question}"
+`You are a sharp engineering PM assistant inside the Healix Engage PRM dashboard (Global HealthX).
+The user is asking about: ${sectionLabel}
+Their question: "${question}"
 
-DATA:
+LIVE DATA:
 ${contextBlock}
 
-Rules: answer directly, name specific people/numbers, under 250 words, use bullet points for lists, no markdown headers.`;
+Your job is to INTERPRET and ANALYSE — not restate the numbers. Be opinionated, direct, and specific.
+- Name specific people, item IDs, and quantities when relevant
+- Call out risks, bottlenecks, or anomalies you see in the data
+- If the data is healthy, say so and why — don't hedge
+- Keep response under 220 words. Use bullet points for lists. No markdown headers or bold.`;
 
   let answer = '';
   try {

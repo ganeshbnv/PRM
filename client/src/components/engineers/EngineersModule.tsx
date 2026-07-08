@@ -8,6 +8,7 @@ import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
 import type { EngineerActivity, BranchSummary } from '../../types';
 import { format, differenceInDays, subDays, addDays } from 'date-fns';
+import { AiSummaryStrip } from '../common/AiSummaryStrip';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -246,6 +247,8 @@ export function EngineersModule() {
 
   return (
     <div className="flex flex-col gap-6">
+
+      <AiSummaryStrip section="engineers" />
 
       {/* ── Data coverage strip ───────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2 px-1 text-xs text-gray-500">

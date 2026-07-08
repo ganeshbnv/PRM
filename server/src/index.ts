@@ -7,6 +7,7 @@ import router from './routes/index';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import aiChatRouter from './routes/aiChat';
+import aiAnalyzeRouter from './routes/aiAnalyze';
 import { requireAuth } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { ensureSuperAdmin } from './services/users';
@@ -23,6 +24,7 @@ ensureSuperAdmin();
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/ai/chat', aiChatRouter);
+app.use('/api/ai/analyze', aiAnalyzeRouter);
 app.use('/api', requireAuth, router);
 
 // ── Password reset page (server-rendered, no Vite dependency) ─────────────────

@@ -8,6 +8,7 @@ import { Modal } from '../common/Modal';
 import { SortableTable } from '../common/SortableTable';
 import type { GitPullRequest } from '../../types';
 import { format, differenceInDays, parseISO } from 'date-fns';
+import { AiSummaryStrip } from '../common/AiSummaryStrip';
 
 export function ReposModule() {
   const { filters } = useFilterStore();
@@ -59,6 +60,7 @@ export function ReposModule() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AiSummaryStrip section="repos" />
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card"><span className="text-xs text-gray-400 uppercase">Repositories</span><span className="text-3xl font-bold">{repos?.length ?? 0}</span></div>

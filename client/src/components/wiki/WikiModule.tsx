@@ -46,6 +46,7 @@ import {
   type WVersion, type WVersionDetail, type WAttachment,
 } from './wikiApi';
 import { useAuthStore } from '../../store/auth';
+import { AiSummaryStrip } from '../common/AiSummaryStrip';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -2971,6 +2972,7 @@ export function WikiModule() {
         )}
         {view === 'spaces' && (
           <div className="overflow-y-auto h-full p-6">
+            <AiSummaryStrip section="wiki" />
             <SpaceList spaces={spaces} loading={spacesLoading}
               onSelect={s => { setActiveSpace(s); setView('space'); }}
               onCreate={s => { setSpaces(prev => [s, ...prev]); setActiveSpace(s); setView('space'); }}

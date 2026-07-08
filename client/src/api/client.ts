@@ -73,9 +73,15 @@ export const api = {
   getBranchSummaries: (project: string) =>
     client.get<BranchSummary[]>('/repos/branches/summaries', { params: { project } }).then((r) => r.data),
 
-  // AI Insights
+  // AI Insights (sprint boards)
   getAiInsights: (project: string, team: string, iterationPath?: string) =>
     client.get('/boards/ai-insights', { params: { project, team, iterationPath } }).then((r) => r.data),
+
+  // AI Section Analysis (bugs / engineers / repos / risks / wiki)
+  getAiAnalysis: (section: string, project: string) =>
+    client.get<{ section: string; summary: string; keyFindings: string[]; recommendations: string[]; generatedAt: string; fromCache?: boolean }>(
+      '/ai/analyze', { params: { section, project } }
+    ).then((r) => r.data),
 
   // Risks
   getRisks: (project: string, thresholds: Record<string, number> = {}) =>

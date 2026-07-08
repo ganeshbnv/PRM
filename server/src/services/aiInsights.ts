@@ -313,9 +313,10 @@ RECOMMENDED ACTIONS — <three concrete prioritised actions the PM should take t
         model: OLLAMA_MODEL,
         messages: [{ role: 'user', content: prompt }],
         stream: false,
-        options: { temperature: 0.4, num_predict: 600 },
+        think: false,
+        options: { temperature: 0.4, num_predict: 700 },
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(90_000),
     });
     if (!res.ok) throw new Error(`Ollama ${res.status}`);
     const json = await res.json() as { message?: { content?: string }; error?: string };
