@@ -8,12 +8,12 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: {
-    port: 5175,
+    port: 5179,
     host: true,
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3007',
         changeOrigin: true,
       },
       '/wiki-api': {

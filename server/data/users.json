@@ -6,5 +6,13 @@
     "id": "mqg6wc7s9jipa",
     "createdAt": "2026-06-16T05:16:36.184Z",
     "role": "admin"
+  },
+  {
+    "email": "sai.abhilash@globalhealthx.co",
+    "name": "Sai Abhilash",
+    "passwordHash": "$2a$12$EJh.wxERpUdcd1PBzG7.Vez6MoegalEw.jJwfVOQz/Di85r/z53qS",
+    "role": "user",
+    "id": "mrbl2df4sej5h",
+    "createdAt": "2026-07-08T04:34:03.760Z"
   }
 ]

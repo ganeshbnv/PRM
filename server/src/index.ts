@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
 import path from 'path';
+
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
+
 import express from 'express';
 import cors from 'cors';
 import router from './routes/index';
@@ -16,6 +19,11 @@ import { ensureSuperAdmin } from './services/users';
 
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
+const OLLAMA_HOST = process.env.OLLAMA_HOST ?? 'http://localhost:11434';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
+
+console.log(`[startup] Ollama host: ${OLLAMA_HOST}`);
+console.log(`[startup] Ollama model: ${OLLAMA_MODEL}`);
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
