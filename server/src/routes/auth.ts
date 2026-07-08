@@ -5,6 +5,7 @@ import * as userStore from '../services/users';
 import * as resetTokens from '../services/resetTokens';
 import { sendPasswordResetEmail } from '../services/mailer';
 import { requireAuth, AuthRequest } from '../middleware/auth';
+import * as audit from '../services/audit';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET ?? 'change-me-in-production';
@@ -59,18 +60,29 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? '';
+  const ua = req.headers['user-agent'] ?? '';
+
   const user = userStore.findByEmail(email.toLowerCase());
   if (!user) {
+    audit.append({ userId: '', userEmail: email.toLowerCase(), userName: '', action: 'LOGIN_FAILED',
+      section: 'Auth', resource: '/api/auth/login', ip, userAgent: ua, status: 401,
+      detail: 'Unknown email' });
     res.status(401).json({ error: 'Invalid email or password.' });
     return;
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    audit.append({ userId: user.id, userEmail: user.email, userName: user.name, action: 'LOGIN_FAILED',
+      section: 'Auth', resource: '/api/auth/login', ip, userAgent: ua, status: 401,
+      detail: 'Wrong password' });
     res.status(401).json({ error: 'Invalid email or password.' });
     return;
   }
 
+  audit.append({ userId: user.id, userEmail: user.email, userName: user.name, action: 'LOGIN_SUCCESS',
+    section: 'Auth', resource: '/api/auth/login', ip, userAgent: ua, status: 200 });
   const token = issueToken(user.id);
   res.json({ token, user: safeUser(user) });
 });
@@ -80,9 +92,14 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
   const { email } = req.body as { email?: string };
   if (!email) { res.status(400).json({ error: 'Email is required.' }); return; }
 
+  const ip2 = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? '';
+  const ua2 = req.headers['user-agent'] ?? '';
   // Always return 200 — don't reveal whether the email exists
   const user = userStore.findByEmail(email.toLowerCase());
   if (user) {
+    audit.append({ userId: user.id, userEmail: user.email, userName: user.name,
+      action: 'PASSWORD_RESET_REQUESTED', section: 'Auth', resource: '/api/auth/forgot-password',
+      ip: ip2, userAgent: ua2, status: 200 });
     const token = resetTokens.create(user.id, user.email);
     const serverUrl = process.env.SERVER_URL ?? `http://localhost:${process.env.PORT ?? 3001}`;
     const resetLink = `${serverUrl}/reset-password?token=${token}`;
@@ -109,6 +126,11 @@ router.post('/reset-password', async (req: Request, res: Response): Promise<void
   const updated = userStore.updatePassword(entry.userId, hash);
   if (!updated) { res.status(404).json({ error: 'User not found.' }); return; }
 
+  const ip3 = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? '';
+  const ua3 = req.headers['user-agent'] ?? '';
+  audit.append({ userId: updated.id, userEmail: updated.email, userName: updated.name,
+    action: 'PASSWORD_RESET_COMPLETED', section: 'Auth', resource: '/api/auth/reset-password',
+    ip: ip3, userAgent: ua3, status: 200 });
   const newToken = issueToken(updated.id);
   res.json({ token: newToken, user: safeUser(updated) });
 });

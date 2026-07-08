@@ -87,6 +87,13 @@ export const api = {
   getRisks: (project: string, thresholds: Record<string, number> = {}) =>
     client.get<Risk[]>('/risks', { params: { project, ...thresholds } }).then((r) => r.data),
 
+  // Audit log (admin only)
+  getAuditLog: (params: {
+    limit?: number; offset?: number; userId?: string; action?: string;
+    section?: string; fromTs?: string; toTs?: string; search?: string;
+  }) => client.get<{ entries: AuditEntry[]; total: number }>('/audit', { params }).then((r) => r.data),
+  getAuditStats: () => client.get<AuditStats>('/audit/stats').then((r) => r.data),
+
   // Auth
   getMe: () => client.get<{ id: string; email: string; name: string; role: 'user' | 'admin'; createdAt: string }>('/auth/me').then((r) => r.data),
 
@@ -106,4 +113,30 @@ export interface ManagedUser {
   name: string;
   role: 'user' | 'admin';
   createdAt: string;
+}
+
+export interface AuditEntry {
+  id: string;
+  ts: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  action: string;
+  section: string;
+  resource: string;
+  ip: string;
+  userAgent: string;
+  status: number;
+  detail?: string;
+}
+
+export interface AuditStats {
+  total: number;
+  todayCount: number;
+  activeUsers: number;
+  loginsFailed: number;
+  loginsToday: number;
+  sectionCounts: Record<string, number>;
+  topUsers: { email: string; name: string; count: number; lastSeen: string }[];
+  lastEntry: string | null;
 }

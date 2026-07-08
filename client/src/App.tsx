@@ -3,7 +3,7 @@ import {
   SquareKanban, CircleDot, UserCog, FolderGit2, NotebookPen, OctagonAlert,
   PanelLeftClose, PanelLeft, Menu,
   Settings, Layers, X, ChevronDown, LayoutDashboard,
-  Sun, Moon,
+  Sun, Moon, Shield,
 } from 'lucide-react';
 import { FilterBar } from './components/common/FilterBar';
 import { WikiModule } from './components/wiki/WikiModule';
@@ -14,6 +14,7 @@ import { ReposModule } from './components/repos/ReposModule';
 import { RisksModule } from './components/risks/RisksModule';
 import { AuthPage } from './components/auth/AuthPage';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { AuditLogModal } from './components/settings/AuditLogModal';
 import { api } from './api/client';
 import { useFilterStore } from './store/filters';
 import { useAuthStore } from './store/auth';
@@ -669,6 +670,7 @@ function Dashboard({ user }: { user: AuthUser }) {
   const [collapsed, setCollapsed] = useState(false);
   const [showTechStack, setShowTechStack] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAuditLog, setShowAuditLog] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -860,6 +862,22 @@ function Dashboard({ user }: { user: AuthUser }) {
           <div className="flex-1" />
 
 
+          {/* Audit Log — admin only */}
+          {user.role === 'admin' && (
+            <button
+              onClick={() => setShowAuditLog(true)}
+              title="Audit Log"
+              className={cn(
+                'w-8 h-8 flex items-center justify-center rounded-lg transition-all',
+                showAuditLog
+                  ? 'bg-red-100 text-red-500'
+                  : 'text-gray-400 hover:text-red-500 hover:bg-red-50',
+              )}
+            >
+              <Shield size={14} />
+            </button>
+          )}
+
           {/* Theme toggle */}
           <button
             onClick={toggle}
@@ -923,7 +941,8 @@ function Dashboard({ user }: { user: AuthUser }) {
           </button>
         </header>
 
-        {showTechStack && <TechStackModal onClose={() => setShowTechStack(false)} />}
+        {showTechStack  && <TechStackModal  onClose={() => setShowTechStack(false)} />}
+        {showAuditLog   && <AuditLogModal   onClose={() => setShowAuditLog(false)} />}
 
         {/* Filter bar — hidden on Wiki and Boards (boards has its own unified filter bar) */}
         {tab !== 'wiki' && tab !== 'boards' && <FilterBar activeTab={tab} />}

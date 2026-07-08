@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import * as userStore from '../services/users';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
+import * as audit from '../services/audit';
 
 const router = Router();
 const ALLOWED_DOMAIN = 'globalhealthx.co';
@@ -49,6 +50,11 @@ router.post('/invite', requireAuth, requireAdmin, async (req: AuthRequest, res: 
     role: 'user',
   });
 
+  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? '';
+  audit.append({ userId: req.user!.id, userEmail: req.user!.email, userName: req.user!.name,
+    action: 'USER_INVITED', section: 'User Management', resource: '/api/users/invite',
+    ip, userAgent: req.headers['user-agent'] ?? '', status: 201,
+    detail: `Invited ${email.toLowerCase()} as ${name.trim()}` });
   res.status(201).json({ user: safeUser(user), tempPassword });
 });
 
@@ -72,6 +78,11 @@ router.patch('/:id/role', requireAuth, requireAdmin, (req: AuthRequest, res: Res
   const updated = userStore.update(req.params.id, { role });
   if (!updated) { res.status(404).json({ error: 'User not found.' }); return; }
 
+  const ip2 = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? '';
+  audit.append({ userId: req.user!.id, userEmail: req.user!.email, userName: req.user!.name,
+    action: 'USER_ROLE_CHANGED', section: 'User Management', resource: `/api/users/${req.params.id}/role`,
+    ip: ip2, userAgent: req.headers['user-agent'] ?? '', status: 200,
+    detail: `Changed ${target.email} role to ${role}` });
   res.json(safeUser(updated));
 });
 
@@ -90,6 +101,11 @@ router.delete('/:id', requireAuth, requireAdmin, (req: AuthRequest, res: Respons
     return;
   }
 
+  const ip3 = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.socket?.remoteAddress ?? '';
+  audit.append({ userId: req.user!.id, userEmail: req.user!.email, userName: req.user!.name,
+    action: 'USER_DELETED', section: 'User Management', resource: `/api/users/${req.params.id}`,
+    ip: ip3, userAgent: req.headers['user-agent'] ?? '', status: 200,
+    detail: `Deleted ${target.email}` });
   userStore.remove(req.params.id);
   res.json({ ok: true });
 });
