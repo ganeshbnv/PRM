@@ -279,12 +279,13 @@ async function buildRisksPrompt(project: string): Promise<{ prompt: string; fall
 
 async function buildWikiPrompt(project: string): Promise<{ prompt: string; fallback: AnalysisResult }> {
   const wikis = await withTimeout(wikiSvc.getWikis(project), DATA_FETCH_TIMEOUT) ?? [];
-  const statsRaw = await withTimeout(wikiSvc.getWikiStats(project), DATA_FETCH_TIMEOUT) as Record<string,unknown> | null;
-  const stats = statsRaw ?? {};
+  const statsRaw = await withTimeout(wikiSvc.getWikiStats(project), DATA_FETCH_TIMEOUT) as {
+    totalPages: number; stalePages: unknown[]; recentlyUpdated: unknown[]; byAuthor: Record<string,number>
+  } | null;
 
-  const pageCount   = (stats.totalPages as number) ?? 0;
-  const recentEdits = (stats.recentEdits as number) ?? 0;
-  const stalePages  = (stats.stalePages as number) ?? 0;
+  const pageCount   = statsRaw?.totalPages ?? 0;
+  const recentEdits = statsRaw?.recentlyUpdated?.length ?? 0;
+  const stalePages  = statsRaw?.stalePages?.length ?? 0;
 
   const dataBlock = [
     `WIKIS: ${wikis.length} | TOTAL PAGES: ${pageCount} | RECENT EDITS (7d): ${recentEdits} | STALE PAGES: ${stalePages}`,
