@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, Check } from 'lucide-react';
 import { useFilterStore } from '../../store/filters';
 import { api } from '../../api/client';
@@ -33,23 +34,71 @@ interface DropdownProps {
 
 function Dropdown({ label, value, options, onChange, placeholder = 'Select…', minWidth = 'min-w-[160px]' }: DropdownProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
 
   const selected = options.find(o => o.value === value);
 
+  // Measure button position whenever opening
+  useLayoutEffect(() => {
+    if (open && btnRef.current) {
+      setRect(btnRef.current.getBoundingClientRect());
+    }
+  }, [open]);
+
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (
+        wrapRef.current && !wrapRef.current.contains(e.target as Node) &&
+        btnRef.current  && !btnRef.current.contains(e.target as Node)
+      ) setOpen(false);
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
+  const dropdownMenu = open && rect ? createPortal(
+    <div
+      ref={wrapRef}
+      style={{
+        position: 'fixed',
+        top:      rect.bottom + 4,
+        left:     rect.left,
+        minWidth: rect.width,
+        zIndex:   9999,
+        maxHeight: 320,
+        overflowY: 'auto',
+      }}
+      className="bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-xl shadow-xl dark:shadow-black/40 py-1"
+    >
+      {options.map(opt => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => { onChange(opt.value); setOpen(false); }}
+          className={`
+            w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors
+            ${opt.value === value
+              ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 font-medium'
+              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-surface-card'}
+          `}
+        >
+          <span>{opt.label}</span>
+          {opt.value === value && <Check size={13} className="flex-shrink-0 text-brand-500" />}
+        </button>
+      ))}
+    </div>,
+    document.body
+  ) : null;
+
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <p className={LABEL}>{label}</p>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(p => !p)}
         className={`
@@ -61,32 +110,9 @@ function Dropdown({ label, value, options, onChange, placeholder = 'Select…', 
         `}
       >
         <span className="truncate">{selected?.label ?? <span className="text-gray-400 font-normal">{placeholder}</span>}</span>
-        <ChevronDown
-          size={14}
-          className={`flex-shrink-0 text-gray-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
-        />
+        <ChevronDown size={14} className={`flex-shrink-0 text-gray-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
-
-      {open && (
-        <div className="absolute top-[calc(100%+4px)] left-0 z-50 min-w-full bg-white dark:bg-surface-elevated border border-gray-200 dark:border-surface-border rounded-xl shadow-lg dark:shadow-black/40 py-1 animate-pop-up">
-          {options.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`
-                w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left transition-colors
-                ${opt.value === value
-                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 font-medium'
-                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-surface-card'}
-              `}
-            >
-              <span>{opt.label}</span>
-              {opt.value === value && <Check size={13} className="flex-shrink-0 text-brand-500" />}
-            </button>
-          ))}
-        </div>
-      )}
+      {dropdownMenu}
     </div>
   );
 }
