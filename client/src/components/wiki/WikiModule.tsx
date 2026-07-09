@@ -24,6 +24,7 @@ import Superscript from '@tiptap/extension-superscript';
 import CharacterCount from '@tiptap/extension-character-count';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight, common } from 'lowlight';
+import JSZip from 'jszip';
 import {
   Plus, ChevronRight, ChevronDown, Bold, Italic, Underline as UnderlineIcon,
   Link as LinkIcon, ArrowLeft, Trash2, MessageSquare,
@@ -35,6 +36,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Image as ImageIcon, Eraser,
   Folder, FolderOpen, FileText, GripVertical, BookOpen,
+  PackageOpen,
 } from 'lucide-react';
 
 const lowlight = createLowlight(common);
@@ -52,6 +54,107 @@ import { AiSummaryStrip } from '../common/AiSummaryStrip';
 
 function cn(...cls: (string | false | undefined | null)[]) {
   return cls.filter(Boolean).join(' ');
+}
+
+// ─── Export utilities ─────────────────────────────────────────────────────────
+
+function htmlToMarkdown(html: string): string {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+
+  function walk(node: Node): string {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return (node.textContent ?? '').replace(/\n/g, ' ');
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+    const el = node as HTMLElement;
+    const tag = el.tagName.toLowerCase();
+    const children = Array.from(el.childNodes).map(walk).join('');
+
+    switch (tag) {
+      case 'h1': return `# ${children}\n\n`;
+      case 'h2': return `## ${children}\n\n`;
+      case 'h3': return `### ${children}\n\n`;
+      case 'h4': return `#### ${children}\n\n`;
+      case 'p':  return children.trim() ? `${children}\n\n` : '';
+      case 'strong': case 'b': return `**${children}**`;
+      case 'em':     case 'i': return `_${children}_`;
+      case 's':  return `~~${children}~~`;
+      case 'u':  return `__${children}__`;
+      case 'mark': return `==${children}==`;
+      case 'a':  return `[${children}](${el.getAttribute('href') ?? ''})`;
+      case 'img': return `![${el.getAttribute('alt') ?? 'image'}](${el.getAttribute('src') ?? ''})`;
+      case 'br': return '\n';
+      case 'hr': return '---\n\n';
+      case 'code':
+        return el.closest('pre') ? el.textContent ?? '' : `\`${children}\``;
+      case 'pre':
+        return `\`\`\`\n${el.textContent ?? ''}\n\`\`\`\n\n`;
+      case 'blockquote':
+        return children.split('\n').filter(Boolean).map(l => `> ${l}`).join('\n') + '\n\n';
+      case 'ul': {
+        return Array.from(el.children).map(li => `- ${walk(li).replace(/\n+$/, '')}`).join('\n') + '\n\n';
+      }
+      case 'ol': {
+        return Array.from(el.children).map((li, i) => `${i + 1}. ${walk(li).replace(/\n+$/, '')}`).join('\n') + '\n\n';
+      }
+      case 'li': return children;
+      case 'table': {
+        const rows = Array.from(el.querySelectorAll('tr'));
+        if (!rows.length) return '';
+        const lines: string[] = [];
+        rows.forEach((row, ri) => {
+          const cells = Array.from(row.querySelectorAll('th,td'))
+            .map(c => walk(c).replace(/\n+/g, ' ').trim());
+          lines.push('| ' + cells.join(' | ') + ' |');
+          if (ri === 0) lines.push('| ' + cells.map(() => '---').join(' | ') + ' |');
+        });
+        return lines.join('\n') + '\n\n';
+      }
+      default: return children;
+    }
+  }
+
+  return walk(div).replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function triggerDownload(content: string, filename: string, mime = 'text/plain;charset=utf-8') {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function flattenPageIds(nodes: WPageNode[]): { id: string; title: string; emoji: string }[] {
+  const result: { id: string; title: string; emoji: string }[] = [];
+  function visit(ns: WPageNode[]) {
+    for (const n of ns) {
+      if (!n.isFolder) result.push({ id: n.id, title: n.title || 'Untitled', emoji: n.emoji || '📄' });
+      visit(n.children);
+    }
+  }
+  visit(nodes);
+  return result;
+}
+
+async function exportNodesToZip(nodes: WPageNode[], zipName: string) {
+  const ids = flattenPageIds(nodes);
+  if (!ids.length) { alert('No pages to export'); return; }
+  const zip = new JSZip();
+  await Promise.all(ids.map(async p => {
+    try {
+      const page = await wikiPages.get(p.id);
+      const md = `# ${p.emoji} ${p.title}\n\n${htmlToMarkdown(page.content || '')}\n`;
+      const safe = p.title.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || p.id;
+      zip.file(`${safe}.md`, md);
+    } catch { /* skip if fetch fails */ }
+  }));
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${zipName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'wiki-export'}.zip`; a.click();
+  URL.revokeObjectURL(url);
 }
 
 function Ago({ date }: { date: string }) {
@@ -1000,6 +1103,23 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
             Manage access
           </button>
 
+          <button
+            onClick={async () => {
+              setMenuOpen(false); setMenuPos(null);
+              try {
+                const tree = await wikiPages.tree(space.key);
+                await exportNodesToZip(tree, space.name);
+              } catch { alert('Could not fetch space pages for export'); }
+            }}
+            className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:bg-white/6 hover:text-white transition-colors"
+          >
+            <PackageOpen size={12} className="text-emerald-400 flex-shrink-0" />
+            <div>
+              <div>Export space (ZIP)</div>
+              <div className="text-label text-gray-600 mt-0.5">All pages as Markdown</div>
+            </div>
+          </button>
+
           <div className="h-px bg-white/5 my-1 mx-2" />
 
           <button
@@ -1279,6 +1399,29 @@ function PageTreeItem({ node, depth, activeId, onSelect, onAdd, drag, onRenamed,
       >
         <Edit2 size={12} className="text-gray-500 flex-shrink-0" />
         <span>Rename</span>
+      </button>
+
+      {/* Export */}
+      <button
+        onClick={async () => {
+          setMenuOpen(false); setMenuPos(null);
+          if (node.isFolder) {
+            await exportNodesToZip(node.children, node.title || 'folder-export');
+          } else {
+            try {
+              const page = await wikiPages.get(node.id);
+              const md = `# ${page.emoji} ${page.title}\n\n${htmlToMarkdown(page.content || '')}\n`;
+              triggerDownload(md, `${(page.title || 'page').replace(/[^a-zA-Z0-9_\- ]/g,'').trim()}.md`);
+            } catch { alert('Could not fetch page for export'); }
+          }
+        }}
+        className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:bg-white/6 hover:text-white transition-colors"
+      >
+        <FileDown size={12} className="text-emerald-400 flex-shrink-0" />
+        <div>
+          <div>{node.isFolder ? 'Export folder (ZIP)' : 'Export as Markdown'}</div>
+          <div className="text-label text-gray-600 mt-0.5">{node.isFolder ? 'All pages as .zip' : 'Download .md file'}</div>
+        </div>
       </button>
 
       <div className="h-px bg-white/5 my-1 mx-2" />
@@ -2428,6 +2571,16 @@ ${contentRef.current}
             <button onClick={onToggleFullWidth} title={fullWidth ? 'Narrow width' : 'Full width'}
               className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-surface-elevated transition-colors">
               {fullWidth ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+            </button>
+            <button
+              onClick={() => {
+                const md = `# ${page.emoji} ${titleRef.current}\n\n${htmlToMarkdown(contentRef.current || '')}\n`;
+                triggerDownload(md, `${(titleRef.current || 'page').replace(/[^a-zA-Z0-9_\- ]/g,'').trim() || 'page'}.md`);
+              }}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-surface-elevated transition-colors flex-shrink-0"
+              title="Export page as Markdown"
+            >
+              <FileDown size={13} />
             </button>
             {canManage && (
               <button onClick={handleDelete} className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-surface-elevated transition-colors flex-shrink-0" title="Delete page">

@@ -33,14 +33,15 @@ const NAV_ITEMS: {
   color: string;
   iconBg: string;
   activeBg: string;
+  hoverBg: string;
   barColor: string;
 }[] = [
-  { id: 'boards',    label: 'Boards',    icon: SquareKanban,  description: 'Sprints & kanban',  color: 'text-violet-400',  iconBg: 'bg-violet-500/10',  activeBg: 'bg-violet-500/15',  barColor: 'from-violet-400 to-purple-500'  },
-  { id: 'bugs',      label: 'Bugs',      icon: CircleDot,     description: 'Issue tracking',    color: 'text-rose-400',    iconBg: 'bg-rose-500/10',    activeBg: 'bg-rose-500/15',    barColor: 'from-rose-400 to-red-500'       },
-  { id: 'engineers', label: 'Engineers', icon: UserCog,       description: 'Team directory',    color: 'text-sky-400',     iconBg: 'bg-sky-500/10',     activeBg: 'bg-sky-500/15',     barColor: 'from-sky-400 to-blue-500'       },
-  { id: 'repos',     label: 'Repos',     icon: FolderGit2,    description: 'Codebase & PRs',    color: 'text-emerald-400', iconBg: 'bg-emerald-500/10', activeBg: 'bg-emerald-500/15', barColor: 'from-emerald-400 to-green-500'  },
-  { id: 'wiki',      label: 'Wiki',      icon: NotebookPen,   description: 'Docs & knowledge',  color: 'text-amber-400',   iconBg: 'bg-amber-500/10',   activeBg: 'bg-amber-500/15',   barColor: 'from-amber-400 to-orange-500'   },
-  { id: 'risks',     label: 'Risks',     icon: OctagonAlert,  description: 'Risk register',     color: 'text-red-400',     iconBg: 'bg-red-500/10',     activeBg: 'bg-red-500/15',     barColor: 'from-red-400 to-rose-500'       },
+  { id: 'boards',    label: 'Boards',    icon: SquareKanban,  description: 'Sprints & kanban',  color: 'text-violet-600',  iconBg: 'bg-violet-100',   activeBg: 'bg-violet-100',   hoverBg: 'hover:bg-violet-50',   barColor: 'from-violet-500 to-purple-600'  },
+  { id: 'bugs',      label: 'Bugs',      icon: CircleDot,     description: 'Issue tracking',    color: 'text-rose-600',    iconBg: 'bg-rose-100',     activeBg: 'bg-rose-100',     hoverBg: 'hover:bg-rose-50',     barColor: 'from-rose-500 to-red-600'       },
+  { id: 'engineers', label: 'Engineers', icon: UserCog,       description: 'Team directory',    color: 'text-sky-600',     iconBg: 'bg-sky-100',      activeBg: 'bg-sky-100',      hoverBg: 'hover:bg-sky-50',      barColor: 'from-sky-500 to-blue-600'       },
+  { id: 'repos',     label: 'Repos',     icon: FolderGit2,    description: 'Codebase & PRs',    color: 'text-emerald-600', iconBg: 'bg-emerald-100',  activeBg: 'bg-emerald-100',  hoverBg: 'hover:bg-emerald-50',  barColor: 'from-emerald-500 to-green-600'  },
+  { id: 'wiki',      label: 'Wiki',      icon: NotebookPen,   description: 'Docs & knowledge',  color: 'text-amber-600',   iconBg: 'bg-amber-100',    activeBg: 'bg-amber-100',    hoverBg: 'hover:bg-amber-50',    barColor: 'from-amber-500 to-orange-600'   },
+  { id: 'risks',     label: 'Risks',     icon: OctagonAlert,  description: 'Risk register',     color: 'text-red-600',     iconBg: 'bg-red-100',      activeBg: 'bg-red-100',      hoverBg: 'hover:bg-red-50',      barColor: 'from-red-500 to-rose-600'       },
 ];
 
 // ── Tech Stack ────────────────────────────────────────────────────────────────
@@ -781,7 +782,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                     collapsed ? 'justify-center px-0 py-[9px]' : 'gap-2.5 px-2 py-[9px]',
                     isActive
                       ? item.activeBg
-                      : 'hover:bg-gray-100',
+                      : item.hoverBg,
                   )}
                 >
                   {/* Active indicator — module-coloured gradient bar */}
@@ -792,9 +793,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                   {/* Icon container */}
                   <div className={cn(
                     'w-[28px] h-[28px] flex items-center justify-center rounded-[7px] flex-shrink-0 transition-all duration-150',
-                    isActive
-                      ? cn(item.iconBg, item.color)
-                      : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300',
+                    cn(item.iconBg, item.color, !isActive && 'opacity-60 group-hover:opacity-100'),
                   )}>
                     <ItemIcon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
                   </div>
@@ -803,7 +802,7 @@ function Dashboard({ user }: { user: AuthUser }) {
                     <>
                       <span className={cn(
                         'flex-1 text-left text-sm font-medium leading-none tracking-[-0.01em]',
-                        isActive ? cn(item.color, 'font-semibold') : 'text-gray-500 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-gray-200',
+                        isActive ? cn(item.color, 'font-semibold') : cn(item.color, 'opacity-60 group-hover:opacity-100 font-medium'),
                       )}>
                         {item.label}
                       </span>

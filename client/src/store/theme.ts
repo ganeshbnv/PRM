@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 type Theme = 'light' | 'dark';
 
@@ -9,29 +8,19 @@ interface ThemeState {
   toggle: () => void;
 }
 
-export const useThemeStore = create<ThemeState>()(
-  persist(
-    (set, get) => ({
-      theme: 'light',
-      setTheme: (t) => {
-        set({ theme: t });
-        document.documentElement.classList.toggle('dark', t === 'dark');
-      },
-      toggle: () => {
-        const next = get().theme === 'light' ? 'dark' : 'light';
-        get().setTheme(next);
-      },
-    }),
-    { name: 'prm-theme' }
-  )
-);
+export const useThemeStore = create<ThemeState>()((set, get) => ({
+  theme: 'light',
+  setTheme: (t) => {
+    set({ theme: t });
+    document.documentElement.classList.toggle('dark', t === 'dark');
+  },
+  toggle: () => {
+    const next = get().theme === 'light' ? 'dark' : 'light';
+    get().setTheme(next);
+  },
+}));
 
 export function applyStoredTheme() {
-  try {
-    const raw = localStorage.getItem('prm-theme');
-    if (raw) {
-      const { state } = JSON.parse(raw);
-      document.documentElement.classList.toggle('dark', state?.theme === 'dark');
-    }
-  } catch {}
+  // Always start in light mode on page load
+  document.documentElement.classList.remove('dark');
 }

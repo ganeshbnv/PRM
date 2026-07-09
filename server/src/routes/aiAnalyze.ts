@@ -14,6 +14,8 @@ const OLLAMA_TIMEOUT_MS  = 90_000;
 const DATA_FETCH_TIMEOUT = 8_000;
 const CACHE_TTL = 600_000; // 10 min
 
+export interface ChartPoint { name: string; value: number; color?: string; }
+
 export interface AnalysisResult {
   section: string;
   summary: string;
@@ -21,6 +23,12 @@ export interface AnalysisResult {
   recommendations: string[];
   generatedAt: string;
   fromCache?: boolean;
+  metrics?: {
+    distribution?: ChartPoint[];
+    bars?: ChartPoint[];
+    healthScore?: number;
+    healthLabel?: string;
+  };
 }
 
 const resultCache = new Map<string, { data: AnalysisResult; ts: number }>();
@@ -116,6 +124,12 @@ async function buildBugsPrompt(project: string): Promise<{ prompt: string; fallb
 
   const prompt = `You are a senior engineering PM. Analyse the bug health for project: ${project}\n\n${dataBlock}${PROMPT_SUFFIX}`;
 
+  const p3open = open.filter(b => b.fields['Microsoft.VSTS.Common.Priority'] === 3);
+  const p4open = open.filter(b => b.fields['Microsoft.VSTS.Common.Priority'] === 4);
+  const healthRaw = Math.max(0, 100 - p1open.length * 18 - p2open.length * 6 - stale.length * 3 - unassign.length * 2);
+  const healthScore = Math.min(100, healthRaw);
+  const healthLabel = healthScore >= 75 ? 'Healthy' : healthScore >= 45 ? 'Warning' : 'Critical';
+
   const fallback: AnalysisResult = {
     section: 'bugs',
     summary: `${open.length} open bugs: ${p1open.length} P1, ${p2open.length} P2. ${stale.length > 0 ? `${stale.length} have gone stale (no update in 3+ days).` : 'No stale bugs.'} ${unassign.length > 0 ? `${unassign.length} are unassigned.` : ''}`,
@@ -130,6 +144,22 @@ async function buildBugsPrompt(project: string): Promise<{ prompt: string; fallb
       unassign.length > 0 ? `Assign ${unassign.length} unowned bugs before next standup` : 'All bugs are assigned — good hygiene',
     ],
     generatedAt: new Date().toISOString(),
+    metrics: {
+      distribution: [
+        { name: 'P1 Critical', value: p1open.length, color: '#ef4444' },
+        { name: 'P2 High',     value: p2open.length, color: '#f97316' },
+        { name: 'P3 Medium',   value: p3open.length, color: '#eab308' },
+        { name: 'P4 Low',      value: p4open.length, color: '#22c55e' },
+      ].filter(d => d.value > 0),
+      bars: [
+        { name: 'Total Open',  value: open.length,     color: '#6366f1' },
+        { name: 'Stale (3d+)', value: stale.length,    color: '#f97316' },
+        { name: 'Unassigned',  value: unassign.length, color: '#ef4444' },
+        { name: 'In Testing',  value: inTest.length,   color: '#0ea5e9' },
+      ],
+      healthScore,
+      healthLabel,
+    },
   };
 
   return { prompt, fallback };
@@ -163,13 +193,20 @@ async function buildEngineersPrompt(project: string): Promise<{ prompt: string; 
   const prompt = `You are a senior engineering PM. Analyse team productivity and workload balance for project: ${project}\n\n${dataBlock}${PROMPT_SUFFIX}`;
 
   const heaviest = sorted[0];
+  const inactiveCount = engs.filter(e => e.commits.length === 0).length;
+  const avgCommits = engs.length > 0 ? totalCommits / engs.length : 0;
+  const maxCommits = heaviest?.commits.length ?? 0;
+  const concentration = maxCommits > 0 && avgCommits > 0 ? maxCommits / avgCommits : 1;
+  const engHealthScore = Math.min(100, Math.max(0, 80 - inactiveCount * 12 - Math.max(0, concentration - 2.5) * 8));
+  const engHealthLabel = engHealthScore >= 70 ? 'Healthy' : engHealthScore >= 40 ? 'Warning' : 'Critical';
+
   const fallback: AnalysisResult = {
     section: 'engineers',
-    summary: `Team of ${engs.length} with ${totalCommits} total commits and ${totalPRs} PRs. ${heaviest ? `${heaviest.displayName.split(' ')[0]} leads with ${heaviest.commits.length} commits.` : ''} ${inactive ? `${engs.filter(e=>e.commits.length===0).length} engineers show no recent commit activity.` : ''}`,
+    summary: `Team of ${engs.length} with ${totalCommits} total commits and ${totalPRs} PRs. ${heaviest ? `${heaviest.displayName.split(' ')[0]} leads with ${heaviest.commits.length} commits.` : ''} ${inactive ? `${inactiveCount} engineers show no recent commit activity.` : ''}`,
     keyFindings: [
       heaviest ? `${heaviest.displayName} is carrying the most work: ${heaviest.commits.length} commits, ${heaviest.prsOpened?.length ?? 0} PRs` : 'No commit data available',
       inactive ? `${inactive} show zero commits — possible blockers or context-switching` : 'Good distribution across the team',
-      `Average ${engs.length > 0 ? Math.round(totalCommits/engs.length) : 0} commits per engineer`,
+      `Average ${Math.round(avgCommits)} commits per engineer`,
     ],
     recommendations: [
       inactive ? `Check in with ${inactive} — zero commits may indicate blockers` : 'All engineers are active, maintain cadence',
@@ -177,6 +214,19 @@ async function buildEngineersPrompt(project: string): Promise<{ prompt: string; 
       'Ensure PRs have reviewers assigned to avoid merge bottlenecks',
     ],
     generatedAt: new Date().toISOString(),
+    metrics: {
+      bars: sorted.slice(0, 8).map((e, i) => ({
+        name: e.displayName.split(' ')[0],
+        value: e.commits.length,
+        color: i === 0 ? '#8b5cf6' : '#a78bfa',
+      })),
+      distribution: [
+        { name: 'Active',   value: engs.filter(e => e.commits.length > 0).length, color: '#22c55e' },
+        { name: 'Inactive', value: inactiveCount, color: '#ef4444' },
+      ].filter(d => d.value > 0),
+      healthScore: engHealthScore,
+      healthLabel: engHealthLabel,
+    },
   };
 
   return { prompt, fallback };
@@ -212,6 +262,11 @@ async function buildReposPrompt(project: string): Promise<{ prompt: string; fall
 
   const prompt = `You are a senior engineering PM. Analyse repository and code delivery health for project: ${project}\n\n${dataBlock}${PROMPT_SUFFIX}`;
 
+  const repoHealthScore = Math.min(100, Math.max(0, 85 - stalePRs.length * 8 - noReviewer.length * 10));
+  const repoHealthLabel = repoHealthScore >= 70 ? 'Healthy' : repoHealthScore >= 40 ? 'Warning' : 'Critical';
+  const topRepoBars = Object.entries(commitsByRepo).sort((a,b)=>b[1]-a[1]).slice(0,6)
+    .map(([n,v], i) => ({ name: n.length > 10 ? n.slice(0,10)+'…' : n, value: v, color: i === 0 ? '#0ea5e9' : '#38bdf8' }));
+
   const fallback: AnalysisResult = {
     section: 'repos',
     summary: `${allRepos.length} repos, ${allCommits.length} commits in period. ${activePRs.length} active PRs — ${stalePRs.length} stale (5d+), ${noReviewer.length} without reviewers.`,
@@ -226,6 +281,16 @@ async function buildReposPrompt(project: string): Promise<{ prompt: string; fall
       'Check repos with zero commits this period for abandoned branches',
     ],
     generatedAt: new Date().toISOString(),
+    metrics: {
+      bars: topRepoBars.length > 0 ? topRepoBars : [{ name: 'No data', value: 0 }],
+      distribution: [
+        { name: 'Active PRs',     value: activePRs.length - stalePRs.length, color: '#22c55e' },
+        { name: 'Stale PRs',      value: stalePRs.length,                     color: '#f97316' },
+        { name: 'No Reviewer',    value: noReviewer.length,                   color: '#ef4444' },
+      ].filter(d => d.value > 0),
+      healthScore: repoHealthScore,
+      healthLabel: repoHealthLabel,
+    },
   };
 
   return { prompt, fallback };
@@ -255,6 +320,9 @@ async function buildRisksPrompt(project: string): Promise<{ prompt: string; fall
 
   const prompt = `You are a senior engineering PM. Analyse the project risk register for project: ${project}\n\n${dataBlock}${PROMPT_SUFFIX}`;
 
+  const riskHealthScore = Math.min(100, Math.max(0, 100 - critical.length * 20 - high.length * 8 - medium.length * 2));
+  const riskHealthLabel = riskHealthScore >= 75 ? 'Healthy' : riskHealthScore >= 45 ? 'Warning' : 'Critical';
+
   const fallback: AnalysisResult = {
     section: 'risks',
     summary: `${risks.length} tracked risks: ${critical.length} critical, ${high.length} high, ${medium.length} medium, ${low.length} low. ${critical.length > 0 ? `Immediate attention needed on ${critical.length} critical item${critical.length > 1?'s':''}.` : 'No critical risks at this time.'}`,
@@ -269,6 +337,18 @@ async function buildRisksPrompt(project: string): Promise<{ prompt: string; fall
       'Update risk register with latest mitigation status before next sprint review',
     ],
     generatedAt: new Date().toISOString(),
+    metrics: {
+      distribution: [
+        { name: 'Critical', value: critical.length, color: '#ef4444' },
+        { name: 'High',     value: high.length,     color: '#f97316' },
+        { name: 'Medium',   value: medium.length,   color: '#eab308' },
+        { name: 'Low',      value: low.length,      color: '#22c55e' },
+      ].filter(d => d.value > 0),
+      bars: Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,6)
+        .map(([n,v], i) => ({ name: n, value: v, color: i === 0 ? '#f97316' : '#fb923c' })),
+      healthScore: riskHealthScore,
+      healthLabel: riskHealthLabel,
+    },
   };
 
   return { prompt, fallback };
@@ -293,6 +373,11 @@ async function buildWikiPrompt(project: string): Promise<{ prompt: string; fallb
 
   const prompt = `You are a senior engineering PM. Analyse the knowledge base health for project: ${project}\n\n${dataBlock}${PROMPT_SUFFIX}`;
 
+  const wikiHealthScore = Math.min(100, Math.max(0,
+    pageCount === 0 ? 0 : 70 + (recentEdits > 0 ? 15 : -10) - (stalePages > 0 ? Math.min(25, stalePages * 3) : 0)
+  ));
+  const wikiHealthLabel = wikiHealthScore >= 70 ? 'Healthy' : wikiHealthScore >= 40 ? 'Warning' : 'Critical';
+
   const fallback: AnalysisResult = {
     section: 'wiki',
     summary: `${wikis.length} wiki${wikis.length!==1?'s':''} with ${pageCount} pages total. ${recentEdits} edits in the last 7 days. ${stalePages > 0 ? `${stalePages} pages may be out of date.` : ''}`,
@@ -307,6 +392,19 @@ async function buildWikiPrompt(project: string): Promise<{ prompt: string; fallb
       'Ensure sprint retrospectives, runbooks, and onboarding guides are up to date',
     ],
     generatedAt: new Date().toISOString(),
+    metrics: {
+      bars: [
+        { name: 'Total Pages',   value: pageCount,    color: '#10b981' },
+        { name: 'Recent Edits',  value: recentEdits,  color: '#0ea5e9' },
+        { name: 'Stale Pages',   value: stalePages,   color: '#f97316' },
+      ],
+      distribution: [
+        { name: 'Fresh',  value: Math.max(0, pageCount - stalePages), color: '#22c55e' },
+        { name: 'Stale',  value: stalePages,                          color: '#f97316' },
+      ].filter(d => d.value > 0),
+      healthScore: wikiHealthScore,
+      healthLabel: wikiHealthLabel,
+    },
   };
 
   return { prompt, fallback };
@@ -349,6 +447,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<vo
       section,
       ...parsed,
       generatedAt: new Date().toISOString(),
+      metrics: promptData.fallback.metrics,
     };
   } catch (err) {
     console.warn('[aiAnalyze] Ollama error:', (err as Error).message);
