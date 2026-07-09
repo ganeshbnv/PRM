@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import * as userStore from '../services/users';
 import * as resetTokens from '../services/resetTokens';
-import { sendPasswordResetEmail } from '../services/mailer';
+import { sendPasswordResetEmail, sendNewUserNotification } from '../services/mailer';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import * as audit from '../services/audit';
 
@@ -47,6 +47,12 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
   const passwordHash = await bcrypt.hash(password, 12);
   const user = userStore.create({ email: email.toLowerCase(), name: name.trim(), passwordHash, role: 'user' });
   const token = issueToken(user.id);
+
+  // Notify admin — fire-and-forget, never block registration
+  setImmediate(() => {
+    try { sendNewUserNotification(user.name, user.email); }
+    catch (err) { console.warn('[mailer] new-user notification failed:', (err as Error).message); }
+  });
 
   res.status(201).json({ token, user: safeUser(user) });
 });
