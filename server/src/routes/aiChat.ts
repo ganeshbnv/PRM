@@ -144,7 +144,80 @@ Your job is to INTERPRET and ANALYSE — not restate the numbers. Be opinionated
     }
   }
 
-  res.json({ answer, section, sources });
+  // Compute section metrics for inline charts in the chat panel
+  interface ChartPoint { name: string; value: number; color: string; }
+  interface ChatMetrics {
+    distribution?: ChartPoint[];
+    bars?: ChartPoint[];
+    healthScore?: number;
+    healthLabel?: string;
+  }
+  const RESOLVED_STATES = ['Resolved', 'Closed', 'Done'];
+  const ACTIVE_STATES   = ['Active', 'In Progress', 'Committed'];
+  let metrics: ChatMetrics | undefined;
+
+  if (section === 'bugs' && workItems) {
+    const bugItems = workItems.filter(i => i.fields['System.WorkItemType'] === 'Bug');
+    const open = bugItems.filter(b => !RESOLVED_STATES.includes(b.fields['System.State']));
+    const p1 = open.filter(b => b.fields['Microsoft.VSTS.Common.Priority'] === 1).length;
+    const p2 = open.filter(b => b.fields['Microsoft.VSTS.Common.Priority'] === 2).length;
+    const p3 = open.filter(b => b.fields['Microsoft.VSTS.Common.Priority'] === 3).length;
+    const p4 = open.filter(b => b.fields['Microsoft.VSTS.Common.Priority'] === 4).length;
+    const score = Math.min(100, Math.max(0, Math.round(100 - p1 * 18 - p2 * 6 - open.length * 0.5)));
+    metrics = {
+      distribution: ([
+        { name: 'P1', value: p1, color: '#ef4444' },
+        { name: 'P2', value: p2, color: '#f97316' },
+        { name: 'P3', value: p3, color: '#eab308' },
+        { name: 'P4', value: p4, color: '#22c55e' },
+      ] as ChartPoint[]).filter(d => d.value > 0),
+      healthScore: score,
+      healthLabel: score >= 75 ? 'Healthy' : score >= 45 ? 'Warning' : 'Critical',
+    };
+  } else if ((section === 'boards' || section === 'general') && workItems) {
+    const active = workItems.filter(i => ACTIVE_STATES.includes(i.fields['System.State'])).length;
+    const done   = workItems.filter(i => RESOLVED_STATES.includes(i.fields['System.State'])).length;
+    const other  = workItems.length - active - done;
+    const score  = Math.min(100, Math.max(0, Math.round(50 + (done / (workItems.length || 1)) * 50 - (active > 20 ? 10 : 0))));
+    metrics = {
+      distribution: ([
+        { name: 'Active', value: active, color: '#6366f1' },
+        { name: 'Done',   value: done,   color: '#22c55e' },
+        { name: 'Other',  value: other,  color: '#94a3b8' },
+      ] as ChartPoint[]).filter(d => d.value > 0),
+      healthScore: score,
+      healthLabel: score >= 75 ? 'Healthy' : score >= 45 ? 'Warning' : 'Critical',
+    };
+  }
+  if (section === 'engineers' && engineers?.length) {
+    const sorted = [...engineers].sort((a, b) => b.commits.length - a.commits.length);
+    metrics = {
+      bars: sorted.slice(0, 7).map((e, i) => ({
+        name: e.displayName.split(' ')[0],
+        value: e.commits.length,
+        color: i === 0 ? '#8b5cf6' : i === 1 ? '#6366f1' : '#a78bfa',
+      })),
+    };
+  }
+  if (section === 'risks' && risks?.length) {
+    const critical = risks.filter(r => r.severity === 'critical').length;
+    const high     = risks.filter(r => r.severity === 'high').length;
+    const medium   = risks.filter(r => r.severity === 'medium').length;
+    const low      = risks.filter(r => r.severity === 'low').length;
+    const score    = Math.min(100, Math.max(0, Math.round(100 - critical * 22 - high * 9 - medium * 2)));
+    metrics = {
+      distribution: ([
+        { name: 'Critical', value: critical, color: '#ef4444' },
+        { name: 'High',     value: high,     color: '#f97316' },
+        { name: 'Medium',   value: medium,   color: '#eab308' },
+        { name: 'Low',      value: low,      color: '#22c55e' },
+      ] as ChartPoint[]).filter(d => d.value > 0),
+      healthScore: score,
+      healthLabel: score >= 75 ? 'Healthy' : score >= 45 ? 'Warning' : 'Critical',
+    };
+  }
+
+  res.json({ answer, section, sources, ...(metrics ? { metrics } : {}) });
 });
 
 export default router;

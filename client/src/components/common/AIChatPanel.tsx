@@ -3,12 +3,64 @@ import axios from 'axios';
 import apiClient from '../../api/client';
 import { Sparkles, X, Send, Bot, User, Copy, Check, Download, Trash2 } from 'lucide-react';
 
+interface ChartPoint { name: string; value: number; color: string; }
+interface ChatMetrics {
+  distribution?: ChartPoint[];
+  bars?: ChartPoint[];
+  healthScore?: number;
+  healthLabel?: string;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   loading?: boolean;
   ts: number;
+  metrics?: ChatMetrics;
+}
+
+function InlineMiniChart({ metrics }: { metrics: ChatMetrics }) {
+  const data = metrics.bars ?? metrics.distribution ?? [];
+  if (!data.length && metrics.healthScore === undefined) return null;
+  const maxVal = Math.max(1, ...data.map(d => d.value));
+  const healthColor = metrics.healthScore !== undefined
+    ? metrics.healthScore >= 75 ? '#22c55e' : metrics.healthScore >= 45 ? '#f59e0b' : '#ef4444'
+    : '#6366f1';
+  return (
+    <div style={{
+      marginTop: 7, padding: '9px 12px',
+      background: 'rgba(255,255,255,0.04)',
+      border: '1px solid rgba(255,255,255,0.07)',
+      borderRadius: 10,
+    }}>
+      {metrics.healthScore !== undefined && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: data.length ? 9 : 0 }}>
+          <div style={{ width: 7, height: 7, borderRadius: '50%', background: healthColor, boxShadow: `0 0 5px ${healthColor}80`, flexShrink: 0 }} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: healthColor }}>{metrics.healthLabel}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', marginLeft: 'auto' }}>
+            {metrics.healthScore}/100
+          </span>
+        </div>
+      )}
+      {data.map((d, i) => {
+        const pct = (d.value / maxVal) * 100;
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: i < data.length - 1 ? 5 : 0 }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', width: 52, textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {d.name}
+            </span>
+            <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: d.color ?? '#6366f1', borderRadius: 3, transition: 'width 0.55s cubic-bezier(0.16,1,0.3,1)' }} />
+            </div>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', width: 20, textAlign: 'right', flexShrink: 0 }}>
+              {d.value}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 type Section = 'boards' | 'bugs' | 'engineers' | 'repos' | 'wiki' | 'risks' | 'general';
@@ -198,8 +250,8 @@ export function AIChatPanel({ activeSection }: { activeSection: string }) {
     setMessages(prev => [...prev, userMsg, loadingMsg]);
 
     try {
-      const { data } = await apiClient.post<{ answer: string }>('/ai/chat', { question: text, section });
-      setMessages(prev => prev.map(m => m.loading ? { ...m, content: data.answer, loading: false, ts: Date.now() } : m));
+      const { data } = await apiClient.post<{ answer: string; metrics?: ChatMetrics }>('/ai/chat', { question: text, section });
+      setMessages(prev => prev.map(m => m.loading ? { ...m, content: data.answer, loading: false, ts: Date.now(), metrics: data.metrics } : m));
     } catch (err) {
       const msg = axios.isAxiosError(err)
         ? (err.response?.data as { error?: string })?.error ?? err.message
@@ -393,6 +445,9 @@ export function AIChatPanel({ activeSection }: { activeSection: string }) {
                       <span style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</span>
                     )}
                   </div>
+                  {!msg.loading && msg.role === 'assistant' && msg.metrics && (
+                    <InlineMiniChart metrics={msg.metrics} />
+                  )}
                   {!msg.loading && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>{formatTime(msg.ts)}</span>

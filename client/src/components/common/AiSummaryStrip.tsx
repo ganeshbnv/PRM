@@ -231,21 +231,19 @@ export function AiSummaryStrip({ section }: Props) {
 
   if (loading) {
     return (
-      <div className="rounded-xl border mb-5 overflow-hidden" style={{ borderColor: outerBorder, background: outerBg }}>
-        <div className="flex items-center gap-2.5 px-4 py-3">
-          <div className="w-5 h-5 rounded-md animate-pulse" style={{ background: colors.accent + '30' }} />
-          <div className="h-3 w-24 rounded animate-pulse" style={{ background: isDark ? '#2a2c46' : '#e2e8f0' }} />
-          <div className="ml-auto h-2 w-16 rounded animate-pulse" style={{ background: isDark ? '#2a2c46' : '#e2e8f0' }} />
+      <div className="rounded-xl border mb-4 px-4 py-2.5 flex items-center gap-3"
+        style={{ borderColor: outerBorder, background: outerBg }}>
+        <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 animate-pulse"
+          style={{ background: colors.accent + '20' }}>
+          <Sparkles size={11} style={{ color: colors.accent }} />
         </div>
-        <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-          {[1,2,3].map(i => (
-            <div key={i} className="rounded-lg p-3 space-y-2" style={{ background: cardBg }}>
-              <div className="h-2.5 w-20 rounded animate-pulse" style={{ background: isDark ? '#2a2c46' : '#e2e8f0' }} />
-              <div className="h-2 w-full rounded animate-pulse"  style={{ background: isDark ? '#2a2c46' : '#e2e8f0' }} />
-              <div className="h-2 w-4/5 rounded animate-pulse"  style={{ background: isDark ? '#2a2c46' : '#e2e8f0' }} />
-            </div>
-          ))}
+        <span style={{ fontSize: 12, fontWeight: 600, color: titleColor }}>{label}</span>
+        <div className="flex-1 h-1.5 rounded-full overflow-hidden mx-2"
+          style={{ background: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' }}>
+          <div className="h-full rounded-full animate-pulse"
+            style={{ width: '55%', background: `linear-gradient(90deg, ${colors.accent}50, ${colors.accent}90)` }} />
         </div>
+        <span style={{ fontSize: 11, color: metaColor }}>Analyzing…</span>
       </div>
     );
   }
