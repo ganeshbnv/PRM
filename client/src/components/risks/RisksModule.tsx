@@ -1,32 +1,32 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   AlertTriangle, RefreshCw, Plus, ChevronDown, ChevronRight,
   Edit2, Trash2, X, Bot, User, Shield, Flame, TrendingUp, CheckCircle,
-  Save, Link2,
+  Save, Link2, RotateCcw, CheckSquare,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { useFilterStore } from '../../store/filters';
 import type { RegisteredRisk, RiskSeverity, RiskStatus, RiskCategory } from '../../types';
 import { AiSummaryStrip } from '../common/AiSummaryStrip';
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const SEV_ORDER: RiskSeverity[] = ['critical', 'high', 'medium', 'low'];
 
 const SEV_STYLE: Record<RiskSeverity, { pill: string; dot: string; label: string }> = {
-  critical: { pill: 'bg-red-100 text-red-700 border border-red-200',      dot: 'bg-red-500',    label: 'Critical' },
-  high:     { pill: 'bg-orange-100 text-orange-700 border border-orange-200', dot: 'bg-orange-500', label: 'High'     },
-  medium:   { pill: 'bg-yellow-100 text-yellow-700 border border-yellow-200', dot: 'bg-yellow-500', label: 'Medium'   },
-  low:      { pill: 'bg-sky-100 text-sky-700 border border-sky-200',       dot: 'bg-sky-400',    label: 'Low'      },
+  critical: { pill: 'bg-red-100 text-red-700 border border-red-200',          dot: 'bg-red-500',    label: 'Critical' },
+  high:     { pill: 'bg-orange-100 text-orange-700 border border-orange-200',  dot: 'bg-orange-500', label: 'High'     },
+  medium:   { pill: 'bg-yellow-100 text-yellow-700 border border-yellow-200',  dot: 'bg-yellow-500', label: 'Medium'   },
+  low:      { pill: 'bg-sky-100 text-sky-700 border border-sky-200',           dot: 'bg-sky-400',    label: 'Low'      },
 };
 
 const STATUS_FLOW: RiskStatus[] = ['open', 'mitigating', 'accepted', 'resolved'];
 
 const STATUS_STYLE: Record<RiskStatus, { pill: string; icon: React.ReactNode; label: string }> = {
-  open:       { pill: 'bg-red-50 text-red-600 border border-red-200',        icon: <Flame size={10} />,       label: 'Open'       },
-  mitigating: { pill: 'bg-amber-50 text-amber-700 border border-amber-200',  icon: <TrendingUp size={10} />,  label: 'Mitigating' },
-  accepted:   { pill: 'bg-slate-100 text-slate-600 border border-slate-200', icon: <Shield size={10} />,      label: 'Accepted'   },
-  resolved:   { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-200', icon: <CheckCircle size={10} />, label: 'Resolved' },
+  open:       { pill: 'bg-red-50 text-red-600 border border-red-200',              icon: <Flame size={10} />,        label: 'Open'       },
+  mitigating: { pill: 'bg-amber-50 text-amber-700 border border-amber-200',        icon: <TrendingUp size={10} />,   label: 'Mitigating' },
+  accepted:   { pill: 'bg-slate-100 text-slate-600 border border-slate-200',       icon: <Shield size={10} />,       label: 'Accepted'   },
+  resolved:   { pill: 'bg-emerald-50 text-emerald-700 border border-emerald-200',  icon: <CheckCircle size={10} />,  label: 'Resolved'   },
 };
 
 const CATEGORIES: { value: RiskCategory; label: string }[] = [
@@ -50,7 +50,7 @@ function fmtDate(iso?: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ── Risk Form (Add / Edit) ────────────────────────────────────────────────────
+// ── Risk Form ─────────────────────────────────────────────────────────────────
 
 interface FormFields {
   title: string; description: string;
@@ -90,26 +90,20 @@ function RiskFormModal({ initial, heading, isEdit, onSave, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.6)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
           <h2 className="text-base font-semibold text-slate-800">{heading}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={18} /></button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
         </div>
 
-        {/* Body */}
         <form onSubmit={submit} className="overflow-y-auto px-6 py-5 space-y-4 flex-1">
-          {err && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{err}</div>
-          )}
+          {err && <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2 rounded-lg">{err}</div>}
 
-          {/* Title */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Risk Title <span className="text-red-500">*</span></label>
             <input value={f.title} onChange={set('title')} placeholder="e.g. Key engineer leaving before release"
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50" />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Description <span className="text-red-500">*</span></label>
             <textarea value={f.description} onChange={set('description')} rows={3}
@@ -117,7 +111,6 @@ function RiskFormModal({ initial, heading, isEdit, onSave, onClose }: {
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 resize-none" />
           </div>
 
-          {/* Severity + Category */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1.5">Severity</label>
@@ -135,7 +128,6 @@ function RiskFormModal({ initial, heading, isEdit, onSave, onClose }: {
             </div>
           </div>
 
-          {/* Status (edit only) + Owner + Due Date */}
           <div className="grid grid-cols-3 gap-3">
             {isEdit && (
               <div>
@@ -158,7 +150,6 @@ function RiskFormModal({ initial, heading, isEdit, onSave, onClose }: {
             </div>
           </div>
 
-          {/* Impact */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Impact</label>
             <textarea value={f.impact} onChange={set('impact')} rows={2}
@@ -166,7 +157,6 @@ function RiskFormModal({ initial, heading, isEdit, onSave, onClose }: {
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 resize-none" />
           </div>
 
-          {/* Mitigation */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1.5">Mitigation Plan</label>
             <textarea value={f.mitigation} onChange={set('mitigation')} rows={2}
@@ -175,12 +165,9 @@ function RiskFormModal({ initial, heading, isEdit, onSave, onClose }: {
           </div>
         </form>
 
-        {/* Footer */}
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-200 shrink-0">
           <button type="button" onClick={onClose}
-            className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">
-            Cancel
-          </button>
+            className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">Cancel</button>
           <button onClick={submit} disabled={busy}
             className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl disabled:opacity-50">
             <Save size={13} /> {busy ? 'Saving…' : 'Save Risk'}
@@ -208,7 +195,7 @@ function StatusPill({ risk, onUpdate }: { risk: RegisteredRisk; onUpdate: (id: s
           <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden w-36">
             {STATUS_FLOW.map(st => (
               <button key={st} onClick={() => { onUpdate(risk.id, st); setOpen(false); }}
-                className={`flex items-center gap-2 w-full text-left px-3 py-2 text-xs hover:bg-slate-50 ${st === risk.status ? 'font-semibold' : 'text-slate-600'}`}>
+                className={`flex items-center gap-2 w-full text-left px-3 py-2 text-xs hover:bg-slate-50 ${st === risk.status ? 'font-semibold text-slate-800' : 'text-slate-600'}`}>
                 {STATUS_STYLE[st].icon} {STATUS_STYLE[st].label}
               </button>
             ))}
@@ -219,13 +206,12 @@ function StatusPill({ risk, onUpdate }: { risk: RegisteredRisk; onUpdate: (id: s
   );
 }
 
-// ── Expanded Row Detail ───────────────────────────────────────────────────────
+// ── Expanded Detail ───────────────────────────────────────────────────────────
 
-function ExpandedDetail({ risk }: { risk: RegisteredRisk }) {
+function ExpandedDetail({ risk, colSpan }: { risk: RegisteredRisk; colSpan: number }) {
   return (
     <tr className="bg-indigo-50/30 border-b border-slate-100">
-      <td />
-      <td colSpan={9} className="px-5 py-4">
+      <td colSpan={colSpan} className="px-5 py-4">
         <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
           <div>
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Description</p>
@@ -265,38 +251,63 @@ function ExpandedDetail({ risk }: { risk: RegisteredRisk }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
+type SourceFilter = 'all' | 'ai' | 'manual';
+
 export function RisksModule() {
   const { filters } = useFilterStore();
   const project = filters.project;
 
-  const [risks, setRisks]         = useState<RegisteredRisk[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [syncing, setSyncing]     = useState(false);
-  const [error, setError]         = useState('');
-  const [expanded, setExpanded]   = useState<string | null>(null);
-  const [adding, setAdding]       = useState(false);
-  const [editing, setEditing]     = useState<RegisteredRisk | null>(null);
-  const [deleting, setDeleting]   = useState<string | null>(null);
+  const [risks, setRisks]       = useState<RegisteredRisk[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [syncing, setSyncing]   = useState(false);
+  const [bgSyncing, setBgSyncing] = useState(false);
+  const [error, setError]       = useState('');
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [adding, setAdding]     = useState(false);
+  const [editing, setEditing]   = useState<RegisteredRisk | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  // Filters
+  // Selection for bulk actions
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Filters — default: manual source, all statuses
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('manual');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sevFilter, setSevFilter]       = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('open');
   const [search, setSearch]             = useState('');
 
-  const load = useCallback(async () => {
+  // Load stored register (fast, no ADO call)
+  const load = useCallback(async (quiet = false) => {
     if (!project) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     try {
       const data = await api.getRiskRegister(project);
       setRisks(data);
       setError('');
     } catch (ex: any) {
-      setError(ex.message);
+      if (!quiet) setError(ex.message);
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, [project]);
 
+  // Background AI sync — fires silently after initial load
+  const bgSyncRef = useRef(false);
+  const bgSync = useCallback(async () => {
+    if (!project || bgSyncRef.current) return;
+    bgSyncRef.current = true;
+    setBgSyncing(true);
+    try {
+      const data = await api.syncRisks(project);
+      setRisks(data);
+    } catch {
+      // silent — background failure doesn't show an error
+    } finally {
+      setBgSyncing(false);
+    }
+  }, [project]);
+
+  // Explicit re-scan button
   const sync = useCallback(async () => {
     if (!project) return;
     setSyncing(true);
@@ -311,14 +322,21 @@ export function RisksModule() {
     }
   }, [project]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    bgSyncRef.current = false;
+    load().then(() => bgSync());
+  }, [load, bgSync]);
+
+  // Clear selection when filter changes
+  useEffect(() => { setSelected(new Set()); }, [sourceFilter, statusFilter, sevFilter, search]);
 
   const filtered = useMemo(() => {
     const SEV: Record<RiskSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
-    const ST:  Record<RiskStatus, number>   = { open: 0, mitigating: 1, accepted: 2, resolved: 3 };
+    const ST:  Record<RiskStatus,   number> = { open: 0, mitigating: 1, accepted: 2, resolved: 3 };
     let r = [...risks];
-    if (sevFilter !== 'all')    r = r.filter(x => x.severity === sevFilter);
+    if (sourceFilter !== 'all') r = r.filter(x => x.source === sourceFilter);
     if (statusFilter !== 'all') r = r.filter(x => x.status === statusFilter);
+    if (sevFilter !== 'all')    r = r.filter(x => x.severity === sevFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       r = r.filter(x =>
@@ -329,7 +347,7 @@ export function RisksModule() {
       );
     }
     return r.sort((a, b) => ST[a.status] - ST[b.status] || SEV[a.severity] - SEV[b.severity]);
-  }, [risks, sevFilter, statusFilter, search]);
+  }, [risks, sourceFilter, statusFilter, sevFilter, search]);
 
   const counts = useMemo(() => ({
     open:       risks.filter(r => r.status === 'open').length,
@@ -342,22 +360,61 @@ export function RisksModule() {
     manual:     risks.filter(r => r.source === 'manual').length,
   }), [risks]);
 
+  // Selection helpers
+  const allFilteredIds   = filtered.map(r => r.id);
+  const allSelected      = allFilteredIds.length > 0 && allFilteredIds.every(id => selected.has(id));
+  const someSelected     = allFilteredIds.some(id => selected.has(id));
+  const selectedInView   = filtered.filter(r => selected.has(r.id));
+  const canBulkResolve   = selectedInView.some(r => r.status !== 'resolved');
+  const canBulkReopen    = selectedInView.some(r => r.status === 'resolved' || r.status === 'accepted');
+
+  function toggleOne(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+  function toggleAll() {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(allFilteredIds));
+    }
+  }
+
+  // Bulk status update
+  const [bulkBusy, setBulkBusy] = useState(false);
+  async function bulkUpdateStatus(status: RiskStatus) {
+    const ids = [...selected];
+    setBulkBusy(true);
+    try {
+      await Promise.all(ids.map(id => api.updateRisk(project, id, { status })));
+      const now = new Date().toISOString();
+      setRisks(prev => prev.map(r => ids.includes(r.id) ? { ...r, status, updatedAt: now } : r));
+      setSelected(new Set());
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  // Single status update (from pill dropdown)
+  async function handleStatusUpdate(id: string, status: RiskStatus) {
+    await api.updateRisk(project, id, { status });
+    setRisks(prev => prev.map(r => r.id === id ? { ...r, status, updatedAt: new Date().toISOString() } : r));
+  }
+
   async function handleAdd(f: FormFields) {
     await api.createRisk(project, f);
-    await load();
+    await load(true);
     setAdding(false);
   }
 
   async function handleEdit(f: FormFields) {
     if (!editing) return;
     await api.updateRisk(project, editing.id, f);
-    await load();
+    await load(true);
     setEditing(null);
-  }
-
-  async function handleStatusUpdate(id: string, status: RiskStatus) {
-    await api.updateRisk(project, id, { status });
-    setRisks(prev => prev.map(r => r.id === id ? { ...r, status, updatedAt: new Date().toISOString() } : r));
   }
 
   async function handleDelete(id: string) {
@@ -374,9 +431,10 @@ export function RisksModule() {
     dueDate: editing.dueDate ?? '',
   } : undefined;
 
+  const COL_SPAN = 11; // checkbox + expand + id + risk + sev + cat + status + owner + due + source + actions
+
   return (
     <div className="p-6 space-y-4">
-      {/* AI Strip */}
       <AiSummaryStrip section="risks" />
 
       {/* ── Header ── */}
@@ -385,88 +443,135 @@ export function RisksModule() {
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <AlertTriangle size={20} className="text-orange-500" />
             Risk Register
+            {bgSyncing && (
+              <span className="flex items-center gap-1 text-xs font-normal text-slate-400 ml-1">
+                <RefreshCw size={11} className="animate-spin" /> syncing AI…
+              </span>
+            )}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            {risks.length} risks total · {counts.ai} AI-detected · {counts.manual} manual
+            {risks.length} total · {counts.ai} AI-detected · {counts.manual} manual
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={sync} disabled={syncing}
-            title="Scan ADO for new risks"
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors">
             <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
             {syncing ? 'Scanning…' : 'Scan for AI Risks'}
           </button>
-
           <button onClick={() => setAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-lg shadow-sm transition-colors">
-            <Plus size={15} />
-            Add Manual Risk
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors">
+            <Plus size={15} /> Add Manual Risk
           </button>
         </div>
       </div>
 
-      {/* ── Summary Stats ── */}
+      {/* ── Summary Cards ── */}
       <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: 'Open',       val: counts.open,       color: 'border-l-red-500',     num: 'text-red-600',     bg: 'bg-red-50/50'     },
-          { label: 'Mitigating', val: counts.mitigating, color: 'border-l-amber-500',   num: 'text-amber-700',   bg: 'bg-amber-50/50'   },
-          { label: 'Accepted',   val: counts.accepted,   color: 'border-l-slate-400',   num: 'text-slate-600',   bg: 'bg-slate-50'      },
-          { label: 'Resolved',   val: counts.resolved,   color: 'border-l-emerald-500', num: 'text-emerald-700', bg: 'bg-emerald-50/50' },
-        ].map(s => (
-          <button key={s.label}
-            onClick={() => setStatusFilter(statusFilter === s.label.toLowerCase() ? 'all' : s.label.toLowerCase())}
-            className={`${s.bg} border border-slate-200 border-l-4 ${s.color} rounded-xl px-4 py-3 text-left hover:brightness-95 transition-all ${statusFilter === s.label.toLowerCase() ? 'ring-2 ring-indigo-300' : ''}`}>
-            <p className={`text-2xl font-bold ${s.num}`}>{s.val}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+        {([
+          ['open',       counts.open,       'border-l-red-500',     'text-red-600',     'bg-red-50/50'    ],
+          ['mitigating', counts.mitigating, 'border-l-amber-500',   'text-amber-700',   'bg-amber-50/50'  ],
+          ['accepted',   counts.accepted,   'border-l-slate-400',   'text-slate-600',   'bg-slate-50'     ],
+          ['resolved',   counts.resolved,   'border-l-emerald-500', 'text-emerald-700', 'bg-emerald-50/50'],
+        ] as const).map(([key, val, border, num, bg]) => (
+          <button key={key}
+            onClick={() => setStatusFilter(p => p === key ? 'all' : key)}
+            className={`${bg} border border-slate-200 border-l-4 ${border} rounded-xl px-4 py-3 text-left hover:brightness-95 transition-all ${statusFilter === key ? 'ring-2 ring-indigo-300' : ''}`}>
+            <p className={`text-2xl font-bold ${num}`}>{val}</p>
+            <p className="text-xs text-slate-500 mt-0.5 capitalize">{key}</p>
           </button>
         ))}
       </div>
 
       {/* ── Filter Bar ── */}
-      <div className="flex items-center gap-3 flex-wrap bg-white border border-slate-200 rounded-xl px-4 py-3">
-        {/* Status quick-filter */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-400 font-medium">Status:</span>
-          {(['all', ...STATUS_FLOW] as const).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)}
-              className={`px-2.5 py-1 text-xs rounded-full capitalize transition-colors ${
-                statusFilter === s
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}>
-              {s === 'all' ? 'All' : STATUS_STYLE[s].label}
-            </button>
-          ))}
+      <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 space-y-2.5">
+        {/* Row 1: Source + Status */}
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Source filter — prominent */}
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+            {([['all', 'All Risks'], ['manual', 'Manual'], ['ai', 'AI Detected']] as [SourceFilter, string][]).map(([v, label]) => (
+              <button key={v} onClick={() => setSourceFilter(v)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  sourceFilter === v ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                {v === 'manual' ? <User size={11} /> : v === 'ai' ? <Bot size={11} /> : null}
+                {label}
+                <span className={`text-[10px] font-bold px-1 rounded-full ${sourceFilter === v ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-500'}`}>
+                  {v === 'all' ? risks.length : v === 'manual' ? counts.manual : counts.ai}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="w-px h-4 bg-slate-200" />
+
+          {/* Status filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400">Status:</span>
+            {(['all', ...STATUS_FLOW] as const).map(s => (
+              <button key={s} onClick={() => setStatusFilter(s)}
+                className={`px-2.5 py-1 text-xs rounded-full capitalize transition-colors ${
+                  statusFilter === s ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}>
+                {s === 'all' ? 'All' : STATUS_STYLE[s].label}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-px h-4 bg-slate-200" />
+
+          {/* Severity filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-400">Severity:</span>
+            {(['all', ...SEV_ORDER] as const).map(s => (
+              <button key={s} onClick={() => setSevFilter(s)}
+                className={`px-2.5 py-1 text-xs rounded-full capitalize transition-colors ${
+                  sevFilter === s ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}>
+                {s === 'all' ? 'All' : SEV_STYLE[s].label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Search title, owner, ID…"
+            className="ml-auto px-3 py-1.5 text-xs border border-slate-200 rounded-lg outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 bg-white text-slate-800 w-52" />
         </div>
-
-        <div className="w-px h-4 bg-slate-200" />
-
-        {/* Severity quick-filter */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-slate-400 font-medium">Severity:</span>
-          {(['all', ...SEV_ORDER] as const).map(s => (
-            <button key={s} onClick={() => setSevFilter(s)}
-              className={`px-2.5 py-1 text-xs rounded-full capitalize transition-colors ${
-                sevFilter === s
-                  ? 'bg-indigo-600 text-white font-semibold'
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}>
-              {s === 'all' ? 'All' : SEV_STYLE[s].label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search */}
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search by title, owner, ID…"
-          className="ml-auto px-3 py-1.5 text-xs border border-slate-200 rounded-lg outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-100 bg-white text-slate-800 w-52" />
       </div>
 
       {/* ── Error ── */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
           <AlertTriangle size={14} /> {error}
-          <button onClick={load} className="ml-auto text-xs underline">Retry</button>
+          <button onClick={() => load()} className="ml-auto text-xs underline">Retry</button>
+        </div>
+      )}
+
+      {/* ── Bulk Action Bar ── */}
+      {someSelected && (
+        <div className="sticky top-4 z-30 bg-indigo-700 text-white rounded-xl px-5 py-3 flex items-center gap-4 shadow-lg">
+          <CheckSquare size={16} className="shrink-0" />
+          <span className="text-sm font-semibold">{selectedInView.length} risk{selectedInView.length > 1 ? 's' : ''} selected</span>
+          <div className="flex items-center gap-2 ml-2">
+            {canBulkResolve && (
+              <button onClick={() => bulkUpdateStatus('resolved')} disabled={bulkBusy}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 rounded-lg disabled:opacity-50 transition-colors">
+                <CheckCircle size={13} /> Resolve Selected
+              </button>
+            )}
+            {canBulkReopen && (
+              <button onClick={() => bulkUpdateStatus('open')} disabled={bulkBusy}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 rounded-lg disabled:opacity-50 transition-colors">
+                <RotateCcw size={13} /> Reopen Selected
+              </button>
+            )}
+            <button onClick={() => bulkUpdateStatus('mitigating')} disabled={bulkBusy}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 rounded-lg disabled:opacity-50 transition-colors">
+              <TrendingUp size={13} /> Mark Mitigating
+            </button>
+          </div>
+          <button onClick={() => setSelected(new Set())} className="ml-auto text-white/60 hover:text-white">
+            <X size={16} />
+          </button>
         </div>
       )}
 
@@ -483,7 +588,14 @@ export function RisksModule() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="w-8 px-3 py-3" />
+                  {/* Select all */}
+                  <th className="w-10 px-3 py-3">
+                    {filtered.length > 0 && (
+                      <input type="checkbox" checked={allSelected} onChange={toggleAll}
+                        className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer accent-indigo-600" />
+                    )}
+                  </th>
+                  <th className="w-8 px-1 py-3" />
                   <th className="px-3 py-3 text-left whitespace-nowrap">ID</th>
                   <th className="px-3 py-3 text-left">Risk</th>
                   <th className="px-3 py-3 text-left whitespace-nowrap">Severity</th>
@@ -498,43 +610,62 @@ export function RisksModule() {
               <tbody>
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="py-16 text-center">
+                    <td colSpan={COL_SPAN} className="py-16 text-center">
                       <div className="flex flex-col items-center gap-3 text-slate-400">
                         <Shield size={36} className="opacity-25" />
                         <p className="font-medium text-slate-500">
-                          {risks.length === 0 ? 'No risks in register yet' : 'No risks match the current filters'}
+                          {risks.length === 0
+                            ? 'No risks in register yet'
+                            : sourceFilter === 'manual'
+                              ? 'No manual risks — add one below'
+                              : 'No risks match the current filters'}
                         </p>
-                        {risks.length === 0 && (
-                          <div className="flex items-center gap-3 mt-1">
-                            <button onClick={() => setAdding(true)}
-                              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">
-                              <Plus size={13} /> Add Manual Risk
-                            </button>
-                            <span className="text-xs text-slate-400">or</span>
-                            <button onClick={sync}
-                              className="flex items-center gap-1.5 px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">
-                              <RefreshCw size={13} /> Scan for AI Risks
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3 mt-1">
+                          <button onClick={() => setAdding(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">
+                            <Plus size={13} /> Add Manual Risk
+                          </button>
+                          {risks.length === 0 && (
+                            <>
+                              <span className="text-xs text-slate-400">or</span>
+                              <button onClick={sync}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50">
+                                <RefreshCw size={13} /> Scan for AI Risks
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
                 )}
+
                 {filtered.map(risk => {
-                  const isOverdue = risk.dueDate
+                  const isOverdue = !!(risk.dueDate
                     && risk.status !== 'resolved' && risk.status !== 'accepted'
-                    && new Date(risk.dueDate) < new Date();
+                    && new Date(risk.dueDate) < new Date());
+                  const isChecked  = selected.has(risk.id);
+                  const isExpanded = expanded === risk.id;
 
                   return (
                     <>
                       <tr key={risk.id}
-                        className={`border-b border-slate-100 hover:bg-slate-50/70 transition-colors ${expanded === risk.id ? 'bg-indigo-50/20' : ''}`}>
-                        {/* Expand toggle */}
-                        <td className="px-3 py-3">
+                        className={`border-b border-slate-100 transition-colors ${
+                          isChecked   ? 'bg-indigo-50/40' :
+                          isExpanded  ? 'bg-slate-50/80' :
+                          'hover:bg-slate-50/60'}`}>
+
+                        {/* Checkbox */}
+                        <td className="px-3 py-3 w-10">
+                          <input type="checkbox" checked={isChecked} onChange={() => toggleOne(risk.id)}
+                            className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 cursor-pointer accent-indigo-600" />
+                        </td>
+
+                        {/* Expand */}
+                        <td className="px-1 py-3 w-8">
                           <button onClick={() => setExpanded(e => e === risk.id ? null : risk.id)}
                             className="text-slate-300 hover:text-indigo-500 transition-colors">
-                            {expanded === risk.id ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                            {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
                           </button>
                         </td>
 
@@ -549,7 +680,9 @@ export function RisksModule() {
                         <td className="px-3 py-3 max-w-sm">
                           <p className="text-sm font-medium text-slate-800 line-clamp-1">{risk.title}</p>
                           {risk.mitigation && (
-                            <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 italic">Mitigation: {risk.mitigation}</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 italic">
+                              Mitigation: {risk.mitigation}
+                            </p>
                           )}
                         </td>
 
@@ -566,7 +699,7 @@ export function RisksModule() {
                           <span className="text-xs text-slate-500">{CAT_MAP[risk.category] ?? risk.category}</span>
                         </td>
 
-                        {/* Status (clickable pill) */}
+                        {/* Status pill */}
                         <td className="px-3 py-3 whitespace-nowrap">
                           <StatusPill risk={risk} onUpdate={handleStatusUpdate} />
                         </td>
@@ -585,12 +718,10 @@ export function RisksModule() {
                           </span>
                         </td>
 
-                        {/* Source badge */}
+                        {/* Source */}
                         <td className="px-3 py-3 whitespace-nowrap">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                            risk.source === 'ai'
-                              ? 'bg-purple-100 text-purple-700'
-                              : 'bg-emerald-100 text-emerald-700'}`}>
+                            risk.source === 'ai' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'}`}>
                             {risk.source === 'ai' ? <Bot size={10} /> : <User size={10} />}
                             {risk.source === 'ai' ? 'AI' : 'Manual'}
                           </span>
@@ -599,14 +730,20 @@ export function RisksModule() {
                         {/* Actions */}
                         <td className="px-3 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-0.5">
-                            <button onClick={() => setEditing(risk)}
-                              title="Edit"
+                            {/* Undo resolve — prominent on resolved rows */}
+                            {risk.status === 'resolved' && (
+                              <button onClick={() => handleStatusUpdate(risk.id, 'open')}
+                                title="Reopen"
+                                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg border border-slate-200 hover:border-amber-200 transition-colors mr-1">
+                                <RotateCcw size={11} /> Reopen
+                              </button>
+                            )}
+                            <button onClick={() => setEditing(risk)} title="Edit"
                               className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                               <Edit2 size={13} />
                             </button>
                             {risk.source === 'manual' && (
-                              <button onClick={() => setDeleting(risk.id)}
-                                title="Delete"
+                              <button onClick={() => setDeleting(risk.id)} title="Delete"
                                 className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                                 <Trash2 size={13} />
                               </button>
@@ -615,8 +752,7 @@ export function RisksModule() {
                         </td>
                       </tr>
 
-                      {/* Expanded detail row */}
-                      {expanded === risk.id && <ExpandedDetail key={`exp-${risk.id}`} risk={risk} />}
+                      {isExpanded && <ExpandedDetail key={`exp-${risk.id}`} risk={risk} colSpan={COL_SPAN} />}
                     </>
                   );
                 })}
@@ -625,52 +761,43 @@ export function RisksModule() {
           </div>
         )}
 
-        {/* Table footer */}
         {!loading && filtered.length > 0 && (
           <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-400">
-            <span>Showing {filtered.length} of {risks.length} risks</span>
+            <span>
+              {someSelected
+                ? `${selectedInView.length} of ${filtered.length} selected`
+                : `${filtered.length} of ${risks.length} risks`}
+            </span>
             <span>{counts.critical} critical · {counts.high} high</span>
           </div>
         )}
       </div>
 
-      {/* ── Add modal ── */}
+      {/* ── Modals ── */}
       {adding && (
-        <RiskFormModal
-          heading="Add Manual Risk"
-          onSave={handleAdd}
-          onClose={() => setAdding(false)}
-        />
+        <RiskFormModal heading="Add Manual Risk" onSave={handleAdd} onClose={() => setAdding(false)} />
       )}
 
-      {/* ── Edit modal ── */}
       {editing && (
         <RiskFormModal
-          heading={`Edit Risk — ${editing.displayId}`}
-          initial={editInitial}
-          isEdit
-          onSave={handleEdit}
-          onClose={() => setEditing(null)}
+          heading={`Edit — ${editing.displayId}`}
+          initial={editInitial} isEdit
+          onSave={handleEdit} onClose={() => setEditing(null)}
         />
       )}
 
-      {/* ── Delete confirm ── */}
       {deleting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.6)' }}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
             <h3 className="font-semibold text-slate-800 mb-2">Delete this risk?</h3>
             <p className="text-sm text-slate-500 mb-5">
-              This cannot be undone. To keep it for history, mark it as Resolved instead.
+              Permanent. To keep it in the register, mark it as Resolved instead.
             </p>
             <div className="flex gap-3 justify-end">
               <button onClick={() => setDeleting(null)}
-                className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">
-                Cancel
-              </button>
+                className="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50">Cancel</button>
               <button onClick={() => handleDelete(deleting)}
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl">
-                Delete
-              </button>
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl">Delete</button>
             </div>
           </div>
         </div>
