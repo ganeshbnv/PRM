@@ -135,11 +135,13 @@ Your job is to INTERPRET and ANALYSE — not restate the numbers. Be opinionated
   } catch (err) {
     const msg = (err as Error).message ?? '';
     console.warn('[AI Chat] Ollama error:', msg);
-    // Return something useful even without Ollama
-    if (lines.length > 0) {
-      answer = `Ollama is busy right now, but here's the raw data:\n\n${contextBlock}`;
+    const isUnreachable = msg.includes('ECONNREFUSED') || msg.includes('fetch failed') || msg.includes('ENOTFOUND');
+    if (isUnreachable) {
+      answer = `AI service is not reachable (${OLLAMA_HOST}). Make sure Ollama is running on the server.\n\nRaw data:\n\n${contextBlock}`;
+    } else if (lines.length > 0) {
+      answer = `AI is unavailable (${msg}). Raw data:\n\n${contextBlock}`;
     } else {
-      answer = 'The AI service is currently unavailable. Please try again in a moment.';
+      answer = `AI service unavailable: ${msg}`;
     }
   }
 
