@@ -16,11 +16,10 @@ function proj(req: Request): string {
   return p;
 }
 
-// GET /api/risk-register?project=  — sync AI risks then return merged register
+// GET /api/risk-register?project=  — return stored register (no blocking ADO sync)
 router.get('/', wrap(async (req) => {
   const project = proj(req);
-  const aiRisks = await risksSvc.getRisks(project, {});
-  return reg.syncAiRisks(aiRisks, project);
+  return reg.list(project);
 }));
 
 // POST /api/risk-register/sync?project=  — force re-sync AI risks
