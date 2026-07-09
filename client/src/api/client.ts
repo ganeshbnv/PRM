@@ -32,7 +32,7 @@ export default client;
 
 import type {
   WorkItem, SprintStats, GitRepository, GitCommit,
-  GitPullRequest, EngineerActivity, BranchSummary, Risk, GlobalFilters,
+  GitPullRequest, EngineerActivity, BranchSummary, Risk, GlobalFilters, RegisteredRisk,
 } from '../types';
 
 type Filters = Partial<GlobalFilters>;
@@ -83,9 +83,23 @@ export const api = {
       '/ai/analyze', { params: { section, project } }
     ).then((r) => r.data),
 
-  // Risks
+  // Risks (legacy — raw AI-detected, used by aiAnalyze)
   getRisks: (project: string, thresholds: Record<string, number> = {}) =>
     client.get<Risk[]>('/risks', { params: { project, ...thresholds } }).then((r) => r.data),
+
+  // Risk Register (persistent: AI + manual, full CRUD)
+  getRiskRegister: (project: string) =>
+    client.get<RegisteredRisk[]>('/risk-register', { params: { project } }).then((r) => r.data),
+  syncRisks: (project: string) =>
+    client.post<RegisteredRisk[]>('/risk-register/sync', null, { params: { project } }).then((r) => r.data),
+  createRisk: (project: string, data: {
+    severity: string; category: string; title: string; description: string;
+    owner?: string; impact?: string; mitigation?: string; dueDate?: string;
+  }) => client.post<RegisteredRisk>('/risk-register', { ...data, project }).then((r) => r.data),
+  updateRisk: (project: string, id: string, data: Partial<RegisteredRisk>) =>
+    client.patch<RegisteredRisk>(`/risk-register/${id}`, data, { params: { project } }).then((r) => r.data),
+  deleteRisk: (project: string, id: string) =>
+    client.delete<{ ok: boolean }>(`/risk-register/${id}`, { params: { project } }).then((r) => r.data),
 
   // Audit log (admin only)
   getAuditLog: (params: {

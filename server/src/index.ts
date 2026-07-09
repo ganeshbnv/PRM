@@ -1,9 +1,6 @@
 import dotenv from 'dotenv';
 import path from 'path';
-
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-dotenv.config({ path: path.resolve(__dirname, '../.env'), override: true });
-
 import express from 'express';
 import cors from 'cors';
 import router from './routes/index';
@@ -12,6 +9,7 @@ import usersRouter from './routes/users';
 import aiChatRouter from './routes/aiChat';
 import aiAnalyzeRouter from './routes/aiAnalyze';
 import auditRouter from './routes/audit';
+import riskRegisterRouter from './routes/riskRegister';
 import { requireAuth } from './middleware/auth';
 import { auditLog } from './middleware/auditLog';
 import { errorHandler } from './middleware/errorHandler';
@@ -19,11 +17,6 @@ import { ensureSuperAdmin } from './services/users';
 
 const app = express();
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
-const OLLAMA_HOST = process.env.OLLAMA_HOST ?? 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
-
-console.log(`[startup] Ollama host: ${OLLAMA_HOST}`);
-console.log(`[startup] Ollama model: ${OLLAMA_MODEL}`);
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -36,6 +29,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/ai/chat', aiChatRouter);
 app.use('/api/ai/analyze', aiAnalyzeRouter);
 app.use('/api/audit', auditRouter);
+app.use('/api/risk-register', requireAuth, riskRegisterRouter);
 app.use('/api', requireAuth, auditLog, router);
 
 // ── Password reset page (server-rendered, no Vite dependency) ─────────────────

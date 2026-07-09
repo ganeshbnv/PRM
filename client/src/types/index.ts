@@ -121,6 +121,33 @@ export interface Risk {
   detectedAt: string;
 }
 
+export type RiskStatus   = 'open' | 'mitigating' | 'resolved' | 'accepted';
+export type RiskSource   = 'ai' | 'manual';
+export type RiskCategory =
+  | 'board' | 'bug' | 'pr' | 'wiki' | 'engineer' | 'pipeline'
+  | 'technical' | 'resource' | 'schedule' | 'external' | 'manual';
+
+export interface RegisteredRisk {
+  id: string;
+  displayId: string;
+  source: RiskSource;
+  severity: RiskSeverity;
+  category: RiskCategory;
+  title: string;
+  description: string;
+  status: RiskStatus;
+  owner?: string;
+  impact?: string;
+  mitigation?: string;
+  dueDate?: string;
+  artifactId?: string | number;
+  artifactType?: string;
+  detectedAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  project: string;
+}
+
 // ── Global filter state ───────────────────────────────────────────────────────
 
 export interface GlobalFilters {

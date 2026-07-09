@@ -7,23 +7,7 @@ import * as risksSvc from '../services/risks';
 
 const router = Router();
 
-function normalizeOllamaBaseUrl(rawHost?: string): string {
-  const value = (rawHost ?? process.env.OLLAMA_HOST ?? '').trim();
-  if (!value) return 'http://localhost:11434';
-
-  const withoutSlash = value.replace(/\/+$/, '');
-  if (/^https?:\/\//i.test(withoutSlash)) {
-    return withoutSlash;
-  }
-
-  if (['0.0.0.0', '0.0.0.0:11434', '::', '[::]'].includes(withoutSlash)) {
-    return 'http://127.0.0.1:11434';
-  }
-
-  return `http://${withoutSlash}`;
-}
-
-const OLLAMA_HOST  = normalizeOllamaBaseUrl(process.env.OLLAMA_HOST);
+const OLLAMA_HOST  = process.env.OLLAMA_HOST  ?? 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
 const DEFAULT_PROJECT = process.env.ADO_PROJECT ?? 'Patient Engagment Platform';
 
