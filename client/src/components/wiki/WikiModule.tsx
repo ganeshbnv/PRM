@@ -24,7 +24,6 @@ import Superscript from '@tiptap/extension-superscript';
 import CharacterCount from '@tiptap/extension-character-count';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight, common } from 'lowlight';
-import JSZip from 'jszip';
 import {
   Plus, ChevronRight, ChevronDown, Bold, Italic, Underline as UnderlineIcon,
   Link as LinkIcon, ArrowLeft, Trash2, MessageSquare,
@@ -138,23 +137,19 @@ function flattenPageIds(nodes: WPageNode[]): { id: string; title: string; emoji:
   return result;
 }
 
-async function exportNodesToZip(nodes: WPageNode[], zipName: string) {
+async function exportNodesToMarkdown(nodes: WPageNode[], exportName: string) {
   const ids = flattenPageIds(nodes);
   if (!ids.length) { alert('No pages to export'); return; }
-  const zip = new JSZip();
-  await Promise.all(ids.map(async p => {
-    try {
-      const page = await wikiPages.get(p.id);
-      const md = `# ${p.emoji} ${p.title}\n\n${htmlToMarkdown(page.content || '')}\n`;
-      const safe = p.title.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || p.id;
-      zip.file(`${safe}.md`, md);
-    } catch { /* skip if fetch fails */ }
-  }));
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `${zipName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'wiki-export'}.zip`; a.click();
-  URL.revokeObjectURL(url);
+  const pages = await Promise.allSettled(ids.map(p => wikiPages.get(p.id)));
+  let md = `# ${exportName}\n\nExported ${new Date().toLocaleString()}\n\n${'='.repeat(60)}\n\n`;
+  for (let i = 0; i < ids.length; i++) {
+    const r = pages[i];
+    if (r.status === 'rejected') continue;
+    const page = r.value;
+    md += `## ${ids[i].emoji} ${ids[i].title}\n\n${htmlToMarkdown(page.content || '')}\n\n${'─'.repeat(60)}\n\n`;
+  }
+  const safe = exportName.replace(/[^a-zA-Z0-9_\- ]/g, '').trim() || 'wiki-export';
+  triggerDownload(md, `${safe}.md`);
 }
 
 function Ago({ date }: { date: string }) {
@@ -1108,15 +1103,15 @@ function SpaceCard({ space, onSelect, onDeleted, currentUser, onSpaceUpdated }: 
               setMenuOpen(false); setMenuPos(null);
               try {
                 const tree = await wikiPages.tree(space.key);
-                await exportNodesToZip(tree, space.name);
+                await exportNodesToMarkdown(tree, space.name);
               } catch { alert('Could not fetch space pages for export'); }
             }}
             className="w-full text-left flex items-center gap-2.5 px-3 py-2 text-gray-300 hover:bg-white/6 hover:text-white transition-colors"
           >
             <PackageOpen size={12} className="text-emerald-400 flex-shrink-0" />
             <div>
-              <div>Export space (ZIP)</div>
-              <div className="text-label text-gray-600 mt-0.5">All pages as Markdown</div>
+              <div>Export space</div>
+              <div className="text-label text-gray-600 mt-0.5">All pages as .md</div>
             </div>
           </button>
 
@@ -1406,7 +1401,7 @@ function PageTreeItem({ node, depth, activeId, onSelect, onAdd, drag, onRenamed,
         onClick={async () => {
           setMenuOpen(false); setMenuPos(null);
           if (node.isFolder) {
-            await exportNodesToZip(node.children, node.title || 'folder-export');
+            await exportNodesToMarkdown(node.children, node.title || 'folder-export');
           } else {
             try {
               const page = await wikiPages.get(node.id);
@@ -1419,8 +1414,8 @@ function PageTreeItem({ node, depth, activeId, onSelect, onAdd, drag, onRenamed,
       >
         <FileDown size={12} className="text-emerald-400 flex-shrink-0" />
         <div>
-          <div>{node.isFolder ? 'Export folder (ZIP)' : 'Export as Markdown'}</div>
-          <div className="text-label text-gray-600 mt-0.5">{node.isFolder ? 'All pages as .zip' : 'Download .md file'}</div>
+          <div>{node.isFolder ? 'Export folder' : 'Export as Markdown'}</div>
+          <div className="text-label text-gray-600 mt-0.5">{node.isFolder ? 'All pages as .md' : 'Download .md file'}</div>
         </div>
       </button>
 
