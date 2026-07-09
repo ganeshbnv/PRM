@@ -1,8 +1,7 @@
 import type { SprintStats } from './boards';
 import type { WorkItem } from '../models/ado';
 
-const OLLAMA_HOST  = process.env.OLLAMA_HOST  ?? 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
+import { OLLAMA_HOST, OLLAMA_MODEL } from '../utils/ollama';
 
 export interface AiInsight {
   healthScore: number;

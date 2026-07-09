@@ -5,10 +5,9 @@ import * as engineersSvc from '../services/engineers';
 import * as reposSvc from '../services/repos';
 import * as risksSvc from '../services/risks';
 
-const router = Router();
+import { OLLAMA_HOST, OLLAMA_MODEL } from '../utils/ollama';
 
-const OLLAMA_HOST  = process.env.OLLAMA_HOST  ?? 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'qwen3.5:4b';
+const router = Router();
 const DEFAULT_PROJECT = process.env.ADO_PROJECT ?? 'Patient Engagment Platform';
 
 // 120 s — must survive queued background AI insight requests ahead of it
