@@ -33,6 +33,7 @@ export default client;
 import type {
   WorkItem, SprintStats, GitRepository, GitCommit,
   GitPullRequest, EngineerActivity, BranchSummary, Risk, GlobalFilters, RegisteredRisk,
+  RepoContributorsResult,
 } from '../types';
 
 type Filters = Partial<GlobalFilters>;
@@ -56,6 +57,8 @@ export const api = {
     client.get<GitRepository[]>('/repos', { params: { project } }).then((r) => r.data),
   getAllCommits: (f: Filters) =>
     client.get<GitCommit[]>('/repos/commits/all', { params: f }).then((r) => r.data),
+  getRepoContributors: (f: Filters) =>
+    client.get<RepoContributorsResult>('/repos/contributors', { params: f }).then((r) => r.data),
   getAllPRs: (project: string, status = 'all') =>
     client.get<GitPullRequest[]>('/repos/prs/all', { params: { project, status } }).then((r) => r.data),
 

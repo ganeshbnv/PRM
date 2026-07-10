@@ -91,6 +91,24 @@ export interface PipelineRun {
   pipelineName: string;
 }
 
+export interface ContributorStat {
+  name:         string;
+  email:        string;
+  totalCommits: number;
+  repoBreakdown: { repoName: string; commits: number }[];
+  dailyActivity: { date: string; commits: number }[];
+  firstCommit:  string | null;
+  lastCommit:   string | null;
+  topRepo:      string | null;
+}
+
+export interface RepoContributorsResult {
+  contributors: ContributorStat[];
+  dailyTotals:  { date: string; commits: number }[];
+  repoTotals:   { repoName: string; commits: number }[];
+  totalCommits: number;
+}
+
 export interface BranchSummary {
   repoId:     string;
   repoName:   string;

@@ -75,6 +75,10 @@ async function fetchAllCommitsForBranch(
 export async function getAllCommits(
   project: string, fromDate?: string, toDate?: string
 ): Promise<Array<GitCommit & { repoId: string; repoName: string }>> {
+  const topKey = `allcommits:top:${project}:${fromDate ?? ''}:${toDate ?? ''}`;
+  const hit = cache.get<Array<GitCommit & { repoId: string; repoName: string }>>(topKey);
+  if (hit !== undefined) return hit;
+
   const repos = await getRepositories(project);
   const seen    = new Set<string>();
   const results: Array<GitCommit & { repoId: string; repoName: string }> = [];
@@ -138,7 +142,77 @@ export async function getAllCommits(
   }));
 
   console.log(`[repos] getAllCommits TOTAL: ${results.length} unique commits from ${repos.length} repos`);
+  cache.set(topKey, results);
   return results;
+}
+
+// ── Contributor aggregation ───────────────────────────────────────────────────
+
+export interface ContributorStat {
+  name:         string;
+  email:        string;
+  totalCommits: number;
+  repoBreakdown: { repoName: string; commits: number }[];
+  dailyActivity: { date: string; commits: number }[];
+  firstCommit:  string | null;
+  lastCommit:   string | null;
+  topRepo:      string | null;
+}
+
+export interface RepoContributorsResult {
+  contributors: ContributorStat[];
+  dailyTotals:  { date: string; commits: number }[];
+  repoTotals:   { repoName: string; commits: number }[];
+  totalCommits: number;
+}
+
+export async function getRepoContributors(
+  project: string, fromDate?: string, toDate?: string
+): Promise<RepoContributorsResult> {
+  const cacheKey = `repo-contributors:${project}:${fromDate ?? ''}:${toDate ?? ''}`;
+  return cache.cached(cacheKey, async () => {
+    const allCommits = await getAllCommits(project, fromDate, toDate);
+
+    const authorMap = new Map<string, { name: string; email: string; commits: typeof allCommits }>();
+    for (const c of allCommits) {
+      const key = c.author.email.toLowerCase();
+      if (!authorMap.has(key)) authorMap.set(key, { name: c.author.name, email: c.author.email, commits: [] });
+      authorMap.get(key)!.commits.push(c);
+    }
+
+    const contributors: ContributorStat[] = Array.from(authorMap.values())
+      .sort((a, b) => b.commits.length - a.commits.length)
+      .map(({ name, email, commits }) => {
+        const repoMap: Record<string, number> = {};
+        const dayMap:  Record<string, number> = {};
+        let first: string | null = null;
+        let last:  string | null = null;
+        for (const c of commits) {
+          repoMap[c.repoName] = (repoMap[c.repoName] ?? 0) + 1;
+          const day = c.author.date.slice(0, 10);
+          dayMap[day] = (dayMap[day] ?? 0) + 1;
+          if (!first || c.author.date < first) first = c.author.date;
+          if (!last  || c.author.date > last)  last  = c.author.date;
+        }
+        const repoBreakdown = Object.entries(repoMap)
+          .sort((a, b) => b[1] - a[1])
+          .map(([repoName, cnt]) => ({ repoName, commits: cnt }));
+        const dailyActivity = Object.keys(dayMap).sort().map(date => ({ date, commits: dayMap[date] }));
+        return { name, email, totalCommits: commits.length, repoBreakdown, dailyActivity, firstCommit: first, lastCommit: last, topRepo: repoBreakdown[0]?.repoName ?? null };
+      });
+
+    const dayTotal:  Record<string, number> = {};
+    const repoTotal: Record<string, number> = {};
+    for (const c of allCommits) {
+      const day = c.author.date.slice(0, 10);
+      dayTotal[day]       = (dayTotal[day]       ?? 0) + 1;
+      repoTotal[c.repoName] = (repoTotal[c.repoName] ?? 0) + 1;
+    }
+    const dailyTotals = Object.keys(dayTotal).sort().map(date => ({ date, commits: dayTotal[date] }));
+    const repoTotals  = Object.entries(repoTotal).sort((a, b) => b[1] - a[1]).map(([repoName, commits]) => ({ repoName, commits }));
+
+    return { contributors, dailyTotals, repoTotals, totalCommits: allCommits.length };
+  });
 }
 
 // ── Pull requests ─────────────────────────────────────────────────────────────
