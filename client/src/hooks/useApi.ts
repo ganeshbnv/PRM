@@ -24,6 +24,7 @@ export function useApi<T>(
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setData(null);
     fetcher()
       .then((d) => { if (!cancelled) { setData(d); setLoading(false); } })
       .catch((e: Error) => { if (!cancelled) { setError(e.message); setLoading(false); } });

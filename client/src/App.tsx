@@ -963,11 +963,11 @@ function Dashboard({ user }: { user: AuthUser }) {
           </div>
         ) : (
           <main className={cn('flex-1 overflow-hidden', !nopad && 'overflow-y-auto p-3 sm:p-6')}>
-            {tab === 'bugs'      && <BugsModule />}
-            {tab === 'engineers' && <EngineersModule />}
-            {tab === 'repos'     && <ReposModule />}
+            {tab === 'bugs'      && <BugsModule      key={filters.project} />}
+            {tab === 'engineers' && <EngineersModule key={filters.project} />}
+            {tab === 'repos'     && <ReposModule     key={filters.project} />}
             {tab === 'wiki'      && <WikiModule />}
-            {tab === 'risks'     && <RisksModule />}
+            {tab === 'risks'     && <RisksModule     key={filters.project} />}
           </main>
         )}
       </div>
